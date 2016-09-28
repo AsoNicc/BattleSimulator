@@ -28,6 +28,7 @@ public class ExpCalculator {
         else return (int)Math.floor(num);
     }
 
+    /* Unused until PKMN Gen III */
     private static short erratic(byte n){
         if(n <= 50) return (short)Round(Math.pow(n, 3)*(100 - n)/50f);
         else if(n <= 68) return (short)Round(Math.pow(n, 3)*(150 - n)/100f);
@@ -35,6 +36,7 @@ public class ExpCalculator {
         else return (short)Round(Math.pow(n, 3)*(160 - n)/100f);
     }
 
+    /* Unused until PKMN Gen III */
     private static short flux(byte n){
         if(n <= 15) return (short)Round(Math.pow(n, 3)*((((n + 1)/3f) + 24)/50f));
         else if(n <= 36) return (short)Round(Math.pow(n, 3)*((n + 14)/50f));
