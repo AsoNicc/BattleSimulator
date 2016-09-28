@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">MainActivity</string>
+    <string name="buff">Buff</string>
+    <string name="error_code">Error 404</string>
+    <string name="forfeit">Forfeit</string>
+    <string name="handle">Handle</string>
+    <string name="move1">Move 1</string>
+    <string name="move2">Move 2</string>
+    <string name="move3">Move 3</string>
+    <string name="move4">Move 4</string>
+    <string name="moves">Moves</string>
+    <string name="pkmn1">Pokemon 1</string>
+    <string name="pkmn2">Pokemon 2</string>
+    <string name="pkmn3">Pokemon 3</string>
+    <string name="pkmn4">Pokemon 4</string>
+    <string name="pkmn5">Pokemon 5</string>
+    <string name="pkmn6">Pokemon 6</string>
+    <string name="swap">Swap</string>
+</resources>
