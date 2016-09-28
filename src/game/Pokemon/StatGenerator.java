@@ -13,6 +13,8 @@ import java.util.Random;
 public class StatGenerator {
     private static final Random gen = new Random();
     private static final byte[] order = new byte[3];
+    private final String nature = Nature();
+    private final float INCREASE = 1.1F, DECREASE = 0.9F, NEUTRAL = 1F;
     protected short HP, Atk, Def, SpA, SpD, Spe;
     
     /* Method used for generating stats of a random pokemon */
@@ -44,22 +46,101 @@ public class StatGenerator {
             /* REMINDER If total EVs > 510, handle situation @tp before assigning */
              
             HP = (short)Round(((2*bHP + ivHP + (((choice == 0)? evHP += order[0] : ((choice2 == 0)? evHP += order[1] : ((choice3 == 0)? evHP += order[2] : evHP))))/4f + 100)*LVL)/100f + 10);            
-            Atk = (short)Round((((2*bAtk + ivAtk + ((choice == 1)? evAtk += order[0] : ((choice2 == 1)? evAtk += order[1] : ((choice3 == 1)? evAtk += order[2] : evAtk)))/4f)*LVL)/100f + 5)*1/*<-Nature*/);            
-            Def = (short)Round((((2*bDef + ivDef + ((choice == 2)? evDef += order[0] : ((choice2 == 2)? evDef += order[1] : ((choice3 == 2)? evDef += order[2] : evDef)))/4f)*LVL)/100f + 5)*1/*<-Nature*/);            
-            SpA = (short)Round((((2*bSpA + ivSpA + ((choice == 3)? evSpA += order[0] : ((choice2 == 3)? evSpA += order[1] : ((choice3 == 3)? evSpA += order[2] : evSpA)))/4f)*LVL)/100f + 5)*1/*<-Nature*/);            
-            SpD = (short)Round((((2*bSpD + ivSpD + ((choice == 4)? evSpD += order[0] : ((choice2 == 4)? evSpD += order[1] : ((choice3 == 4)? evSpD += order[2] : evSpD)))/4f)*LVL)/100f + 5)*1/*<-Nature*/);            
-            Spe = (short)Round((((2*bSpe + ivSpe + ((choice == 5)? evSpe += order[0] : ((choice2 == 5)? evSpe += order[1] : ((choice3 == 5)? evSpe += order[2] : evSpe)))/4f)*LVL)/100f + 5)*1/*<-Nature*/);
+            Atk = (short)Round((((2*bAtk + ivAtk + ((choice == 1)? evAtk += order[0] : ((choice2 == 1)? evAtk += order[1] : ((choice3 == 1)? evAtk += order[2] : evAtk)))/4f)*LVL)/100f + 5)*Nature("Atk"));            
+            Def = (short)Round((((2*bDef + ivDef + ((choice == 2)? evDef += order[0] : ((choice2 == 2)? evDef += order[1] : ((choice3 == 2)? evDef += order[2] : evDef)))/4f)*LVL)/100f + 5)*Nature("Def"));            
+            SpA = (short)Round((((2*bSpA + ivSpA + ((choice == 3)? evSpA += order[0] : ((choice2 == 3)? evSpA += order[1] : ((choice3 == 3)? evSpA += order[2] : evSpA)))/4f)*LVL)/100f + 5)*Nature("SpA"));            
+            SpD = (short)Round((((2*bSpD + ivSpD + ((choice == 4)? evSpD += order[0] : ((choice2 == 4)? evSpD += order[1] : ((choice3 == 4)? evSpD += order[2] : evSpD)))/4f)*LVL)/100f + 5)*Nature("SpD"));            
+            Spe = (short)Round((((2*bSpe + ivSpe + ((choice == 5)? evSpe += order[0] : ((choice2 == 5)? evSpe += order[1] : ((choice3 == 5)? evSpe += order[2] : evSpe)))/4f)*LVL)/100f + 5)*Nature("Spe"));
         }
     }
     
-    protected static byte[] StatGenerator(){
+    protected static byte[] generate(){
         evSpread();
         return order;
     }
-    
-    /* Fill w/ proper data */
-    private float Nature(String token){
-        return 1f;
+       
+    private float Nature(String stat){
+        if(nature.equals("Lonely")){
+            if(stat.equals("Atk")) return INCREASE;
+            if(stat.equals("Def")) return DECREASE;
+        }
+        if(nature.equals("Brave")){
+            if(stat.equals("Atk")) return INCREASE;
+            if(stat.equals("Spe")) return DECREASE;
+        }
+        if(nature.equals("Adamant")){
+            if(stat.equals("Atk")) return INCREASE;
+            if(stat.equals("SpA")) return DECREASE;
+        }
+        if(nature.equals("Naughty")){
+            if(stat.equals("Atk")) return INCREASE;
+            if(stat.equals("SpD")) return DECREASE;
+        }
+        if(nature.equals("Bold")){
+            if(stat.equals("Def")) return INCREASE;
+            if(stat.equals("Atk")) return DECREASE;
+        }
+        if(nature.equals("Relaxed")){
+            if(stat.equals("Def")) return INCREASE;
+            if(stat.equals("Spe")) return DECREASE;
+        }
+        if(nature.equals("Impish")){
+            if(stat.equals("Def")) return INCREASE;
+            if(stat.equals("SpA")) return DECREASE;
+        }
+        if(nature.equals("Lax")){
+            if(stat.equals("Def")) return INCREASE;
+            if(stat.equals("SpD")) return DECREASE;
+        }
+        if(nature.equals("Timid")){
+            if(stat.equals("Spe")) return INCREASE;
+            if(stat.equals("Atk")) return DECREASE;
+        }
+        if(nature.equals("Hasty")){
+            if(stat.equals("Spe")) return INCREASE;
+            if(stat.equals("Def")) return DECREASE;
+        }
+        if(nature.equals("Jolly")){
+            if(stat.equals("Spe")) return INCREASE;
+            if(stat.equals("SpA")) return DECREASE;
+        }
+        if(nature.equals("Naive")){
+            if(stat.equals("Spe")) return INCREASE;
+            if(stat.equals("SpD")) return DECREASE;
+        }
+        if(nature.equals("Modest")){
+            if(stat.equals("SpA")) return INCREASE;
+            if(stat.equals("Atk")) return DECREASE;
+        }
+        if(nature.equals("Mild")){
+            if(stat.equals("SpA")) return INCREASE;
+            if(stat.equals("Def")) return DECREASE;
+        }
+        if(nature.equals("Quiet")){
+            if(stat.equals("SpA")) return INCREASE;
+            if(stat.equals("Spe")) return DECREASE;
+        }
+        if(nature.equals("Rash")){
+            if(stat.equals("SpA")) return INCREASE;
+            if(stat.equals("SpD")) return DECREASE;
+        }
+        if(nature.equals("Calm")){
+            if(stat.equals("SpD")) return INCREASE;
+            if(stat.equals("Atk")) return DECREASE;
+        }
+        if(nature.equals("Gentle")){
+            if(stat.equals("SpD")) return INCREASE;
+            if(stat.equals("Def")) return DECREASE;
+        }
+        if(nature.equals("Sassy")){
+            if(stat.equals("SpD")) return INCREASE;
+            if(stat.equals("Spe")) return DECREASE;
+        }
+        if(nature.equals("Careful")){
+            if(stat.equals("SpD")) return INCREASE;
+            if(stat.equals("SpA")) return DECREASE;
+        }
+        return NEUTRAL;
     }
     
     private int Round(double num){
@@ -75,6 +156,36 @@ public class StatGenerator {
         else if(num == 4) return "SpD";
         else if(num == 5) return "Spe";
         else return "";
+    }
+    
+    private String Nature(){
+        int num = gen.nextInt(25);
+        
+        if(num == 0) return "Hardy";
+        if(num == 1) return "Lonely";
+        if(num == 2) return "Brave";
+        if(num == 3) return "Adamant";
+        if(num == 4) return "Naughty";
+        if(num == 5) return "Bold";
+        if(num == 6) return "Docile";
+        if(num == 7) return "Relaxed";
+        if(num == 8) return "Impish";
+        if(num == 9) return "Lax";
+        if(num == 10) return "Timid";
+        if(num == 11) return "Hasty";
+        if(num == 12) return "Serious";
+        if(num == 13) return "Jolly";
+        if(num == 14) return "Naive";
+        if(num == 15) return "Modest";
+        if(num == 16) return "Mild";
+        if(num == 17) return "Quiet";
+        if(num == 18) return "Bashful";
+        if(num == 19) return "Rash";
+        if(num == 20) return "Calm";
+        if(num == 21) return "Gentle";
+        if(num == 22) return "Sassy";
+        if(num == 23) return "Careful";
+        return "Quirky";     
     }
     
     private static void evSpread(){
