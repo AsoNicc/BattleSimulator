@@ -11,8 +11,8 @@ import java.util.Random;
  * @author Nick
  */
 public class StatGenerator {
-    private final Random gen = new Random();
-    private final byte[] order = new byte[3];
+    private static final Random gen = new Random();
+    private static final byte[] order = new byte[3];
     protected short HP, Atk, Def, SpA, SpD, Spe;
     
     /* Method used for generating stats of a random pokemon */
@@ -52,7 +52,7 @@ public class StatGenerator {
         }
     }
     
-    protected byte[] StatGenerator(){
+    protected static byte[] StatGenerator(){
         evSpread();
         return order;
     }
@@ -77,7 +77,7 @@ public class StatGenerator {
         else return "";
     }
     
-    private void evSpread(){
+    private static void evSpread(){
         byte num1, num2, num3, sup1, sup2 = 0, sup3 = 0, temp, temp2;
         
         /* Generate three random ints */
@@ -157,7 +157,7 @@ public class StatGenerator {
         System.out.println(order[0] + ", " + order[1] + ", " + order[2]);
     }
     
-    private byte random(){
+    private static byte random(){
         double num = gen.nextGaussian();
         
         if(num <= 0.25) return 1;
@@ -166,7 +166,7 @@ public class StatGenerator {
         else return 4;
     }
 
-    private void arrange(byte token1, byte token2, byte token3) {
+    private static void arrange(byte token1, byte token2, byte token3) {
         order[2] = (byte)Math.min(token1, Math.min(token2, token3));
         order[0] = (byte)Math.max(token1, Math.max(token2, token3));
         
