@@ -28,7 +28,7 @@ public class Animated extends View {
     private final float PLACEMENT_X = 1.25f, PLACEMENT_X2 = 0.5f, 
             PLACEMENT_Y = 1.0f, PLACEMENT_Y2 = 1.0f;
     private AssetManager assets;
-    private Battle battle;
+    private MainActivity battle;
     private final Paint brush = new Paint();
     private int contender, height, time, width, x, y;
     private boolean draw;

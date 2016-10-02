@@ -26,7 +26,7 @@ import static java.lang.Thread.sleep;
 import java.util.Iterator;
 import java.util.Set;
 
-public class Battle extends Activity implements OnClickListener, OnTouchListener {
+public class MainActivity extends Activity implements OnClickListener, OnTouchListener {
     private Animated surface;
     private boolean activeMove = true, error = false,  held = false, initialState = true, 
             killHold = false, newTouch = true, touchClear = true, touched_user, touched_opponent;
