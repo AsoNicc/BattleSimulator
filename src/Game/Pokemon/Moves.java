@@ -32,7 +32,7 @@ public final class Moves extends Activity {
          * Increase or decrease in accuracy translates & converts up or down, 
          * respectively, according to the scale */
         
-        /* Evasiveness affects dodge timer. Dodge timer to hold a dodge is 5 secs */
+        /* Evasiveness affects the dodge timer. Dodge timer length is 5 secs */
         loadDetails(new String[]{"1", "Pound", "Normal", "Physical", "1", "40", "TRACKING", "null"}); //
         loadDetails(new String[]{"2", "Karate Chop", "Fighting", "Physical", "1", "50", "TRACKING", "High critical hit ratio."}); //
         loadDetails(new String[]{"3", "Double Slap", "Normal", "Physical", "1", "15", "TARGET", "Hits 2-5 times."}); //
