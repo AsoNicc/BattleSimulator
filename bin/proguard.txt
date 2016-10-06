@@ -1,0 +1,14 @@
+# view land\res/layout-land/battlefield.xml #generated:14
+# view res/layout/battlefield.xml #generated:14
+-keep class Game.Pokemon.Animated { <init>(...); }
+
+# view AndroidManifest.xml #generated:12
+-keep class Game.Pokemon.Battle { <init>(...); }
+
+# view AndroidManifest.xml #generated:21
+-keep class Game.Pokemon.Moves { <init>(...); }
+
+# view land\res/layout-land/battlefield.xml #generated:42
+# view res/layout/battlefield.xml #generated:42
+-keep class Game.Pokemon.WrappingSlidingDrawer { <init>(...); }
+

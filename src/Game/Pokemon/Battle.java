@@ -24,6 +24,7 @@ import android.widget.SpinnerAdapter;
 import android.widget.TextView;
 import static java.lang.Thread.sleep;
 import java.util.Iterator;
+import java.util.Random;
 import java.util.Set;
 
 public class Battle extends Activity implements OnClickListener, OnTouchListener {
@@ -47,6 +48,7 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
     private LinearLayout drawer;
     private final LinearLayout.LayoutParams FULL_MATCH_PARAMS = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
     private Moves load; // Temp var used to init. SharedPref data
+    private final Random gen = new Random();
     private static SharedPreferences moveData;
     private static final String STATE_POKEMON = "pokemon", STATE_FRAME = "frame", STATE_IMAGE_ID = "iv";
     private static String MOVE1[], MOVE2[], MOVE3[], MOVE4[];
@@ -956,7 +958,7 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         if(move == 1){
             if(MOVE1 == null){
                 try {
-                    Set<String> tempSet = moveData.getStringSet("Absorb", null); // Retrieve HashSet & store in Set var
+                    Set<String> tempSet = moveData.getStringSet(String.valueOf(gen.nextInt(164) + 1), null); // Retrieve HashSet & store in Set var
                     Iterator index = tempSet.iterator(); // Create an interator
                     MOVE1 = new String[tempSet.size()]; // Instantiate MOVE1 array
                     
@@ -972,11 +974,11 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
                 }
             }
             
-            text.setText(MOVE1[0] + ", " + MOVE1[1] + ", " + MOVE1[2] + ", " + MOVE1[3] + ", " + MOVE1[4] + ", " + MOVE1[5]);
+            text.setText(MOVE1[0] + ", " + MOVE1[1] + ", " + MOVE1[2] + ", " + MOVE1[3] + ", " + MOVE1[4] + ", " + MOVE1[5] + ", " + MOVE1[6] + ", " + MOVE1[7]);
         } else if(move == 2) {
             if(MOVE2 == null){
                 try {
-                    Set<String> tempSet = moveData.getStringSet("Light Screen", null); // Retrieve HashSet & store in Set var
+                    Set<String> tempSet = moveData.getStringSet(String.valueOf(gen.nextInt(164) + 1), null); // Retrieve HashSet & store in Set var
                     Iterator index = tempSet.iterator(); // Create an interator
                     MOVE2 = new String[tempSet.size()]; // Instantiate MOVE2 array
                     
@@ -992,11 +994,11 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
                 }
             }
             
-            text.setText(MOVE2[0] + ", " + MOVE2[1] + ", " + MOVE2[2] + ", " + MOVE2[3] + ", " + MOVE2[4] + ", " + MOVE2[5]);
+            text.setText(MOVE2[0] + ", " + MOVE2[1] + ", " + MOVE2[2] + ", " + MOVE2[3] + ", " + MOVE2[4] + ", " + MOVE2[5] + ", " + MOVE2[6] + ", " + MOVE2[7]);
         } else if(move == 3) {
             if(MOVE3 == null){
                 try {
-                    Set<String> tempSet = moveData.getStringSet("Lovely Kiss", null); // Retrieve HashSet & store in Set var
+                    Set<String> tempSet = moveData.getStringSet(String.valueOf(gen.nextInt(164) + 1), null); // Retrieve HashSet & store in Set var
                     Iterator index = tempSet.iterator(); // Create an interator
                     MOVE3 = new String[tempSet.size()]; // Instantiate MOVE3 array
                     
@@ -1012,11 +1014,11 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
                 }
             }
             
-            text.setText(MOVE3[0] + ", " + MOVE3[1] + ", " + MOVE3[2] + ", " + MOVE3[3] + ", " + MOVE3[4] + ", " + MOVE3[5]);
+            text.setText(MOVE3[0] + ", " + MOVE3[1] + ", " + MOVE3[2] + ", " + MOVE3[3] + ", " + MOVE3[4] + ", " + MOVE3[5] + ", " + MOVE3[6] + ", " + MOVE3[7]);
         } else if(move == 4) {
             if(MOVE4 == null){
                 try {
-                    Set<String> tempSet = moveData.getStringSet("Wrap", null); // Retrieve HashSet & store in Set var
+                    Set<String> tempSet = moveData.getStringSet(String.valueOf(gen.nextInt(164) + 1), null); // Retrieve HashSet & store in Set var
                     Iterator index = tempSet.iterator(); // Create an interator
                     MOVE4 = new String[tempSet.size()]; // Instantiate MOVE4 array
                     
@@ -1032,7 +1034,7 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
                 }
             }
             
-            text.setText(MOVE4[0] + ", " + MOVE4[1] + ", " + MOVE4[2] + ", " + MOVE4[3] + ", " + MOVE4[4] + ", " + MOVE4[5]);
+            text.setText(MOVE4[0] + ", " + MOVE4[1] + ", " + MOVE4[2] + ", " + MOVE4[3] + ", " + MOVE4[4] + ", " + MOVE4[5] + ", " + MOVE4[6] + ", " + MOVE4[7]);
         }
     }
 }
