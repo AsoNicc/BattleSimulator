@@ -183,7 +183,8 @@ public class Animated extends View {
                        i = 1;
                        stream = assets.open("sprites/" + pokemon + "/" + orientation + "/frame_" + i + ".png");
                        decodeResizedBitmapFromAssets(LARGEST_WIDTH, LARGEST_HEIGHT);
-                    } catch (Exception var28) {                       
+                    } catch (Exception var28) {
+                        Battle.text.setText("Cannot find opponent sprite!");
                     }
                 }
             }
@@ -207,6 +208,7 @@ public class Animated extends View {
                         stream = assets.open("sprites/" + pokemon + "/" + orientation + "/frame_" + j + ".png");
                         decodeResizedBitmapFromAssets(LARGEST_WIDTH, LARGEST_HEIGHT);
                     } catch (Exception var24) {
+                        Battle.text.setText("Cannot find user sprite!");
                     }
                 }
             } finally {

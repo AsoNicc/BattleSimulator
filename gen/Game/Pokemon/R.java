@@ -27,8 +27,9 @@ public final class R {
         public static final int frame_330=0x7f02000a;
         public static final int frame_60=0x7f02000b;
         public static final int frame_90=0x7f02000c;
-        public static final int ic_launcher=0x7f02000d;
-        public static final int silver_bubble=0x7f02000e;
+        public static final int greenball=0x7f02000d;
+        public static final int ic_launcher=0x7f02000e;
+        public static final int silver_bubble=0x7f02000f;
     }
     public static final class id {
         public static final int Animated=0x7f060002;

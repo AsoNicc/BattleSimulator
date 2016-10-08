@@ -15,6 +15,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
 import android.view.ViewGroup.LayoutParams;
+import android.view.Window;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.FrameLayout;
@@ -60,8 +61,9 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         try {
             super.onCreate(savedInstanceState);
             setContentView(R.layout.battlefield);
+            
             surface = new Animated(this);
-
+            
             text = (TextView)findViewById(R.id.tvException);
         
 //            if(true){
@@ -78,7 +80,7 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
             } else text.setText("Moves already set");
             
             // Check whether we're recreating a previously destroyed instance
-            if (savedInstanceState != null) {
+            if(savedInstanceState != null){
                 initialState = false;
 
                 // Restore value of members from saved state
@@ -155,7 +157,7 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
     }
     
     private void initialize(){
-        ActionBar actionBar = getActionBar();        
+        ActionBar actionBar = getActionBar();
         actionBar.setBackgroundDrawable(new ColorDrawable(Color.RED));
         
         // Adapter
@@ -220,7 +222,7 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
             viewer.setOnTouchListener(this); // Retry
         }
         
-//        startDrawerAnimation();
+//        startDrawerAnimation();*/
     }
 
     private void startDrawerAnimation(){

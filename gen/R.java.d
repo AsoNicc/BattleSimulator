@@ -12,6 +12,7 @@ C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\res\drawable-hdpi\frame
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\res\drawable-hdpi\frame_330.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\res\drawable-hdpi\frame_60.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\res\drawable-hdpi\frame_90.png \
+C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\res\drawable-hdpi\greenball.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\res\drawable-hdpi\ic_launcher.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\res\drawable-hdpi\silver_bubble.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\res\drawable-ldpi\battleground.png \
@@ -27,6 +28,7 @@ C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\res\drawable-ldpi\frame
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\res\drawable-ldpi\frame_330.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\res\drawable-ldpi\frame_60.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\res\drawable-ldpi\frame_90.png \
+C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\res\drawable-ldpi\greenball.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\res\drawable-ldpi\ic_launcher.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\res\drawable-ldpi\silver_bubble.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\res\drawable-mdpi\battleground.png \
@@ -42,6 +44,7 @@ C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\res\drawable-mdpi\frame
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\res\drawable-mdpi\frame_330.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\res\drawable-mdpi\frame_60.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\res\drawable-mdpi\frame_90.png \
+C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\res\drawable-mdpi\greenball.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\res\drawable-mdpi\ic_launcher.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\res\drawable-mdpi\silver_bubble.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\res\drawable-xhdpi\battleground.png \
@@ -57,6 +60,7 @@ C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\res\drawable-xhdpi\fram
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\res\drawable-xhdpi\frame_330.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\res\drawable-xhdpi\frame_60.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\res\drawable-xhdpi\frame_90.png \
+C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\res\drawable-xhdpi\greenball.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\res\drawable-xhdpi\ic_launcher.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\res\drawable-xhdpi\silver_bubble.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\res\layout\battlefield.xml \
@@ -76,6 +80,7 @@ C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\res\drawable-hdpi\f
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\res\drawable-hdpi\frame_330.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\res\drawable-hdpi\frame_60.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\res\drawable-hdpi\frame_90.png \
+C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\res\drawable-hdpi\greenball.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\res\drawable-hdpi\ic_launcher.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\res\drawable-hdpi\silver_bubble.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\res\drawable-ldpi\battleground.png \
@@ -91,6 +96,7 @@ C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\res\drawable-ldpi\f
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\res\drawable-ldpi\frame_330.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\res\drawable-ldpi\frame_60.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\res\drawable-ldpi\frame_90.png \
+C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\res\drawable-ldpi\greenball.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\res\drawable-ldpi\ic_launcher.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\res\drawable-ldpi\silver_bubble.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\res\drawable-mdpi\battleground.png \
@@ -106,6 +112,7 @@ C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\res\drawable-mdpi\f
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\res\drawable-mdpi\frame_330.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\res\drawable-mdpi\frame_60.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\res\drawable-mdpi\frame_90.png \
+C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\res\drawable-mdpi\greenball.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\res\drawable-mdpi\ic_launcher.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\res\drawable-mdpi\silver_bubble.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\res\drawable-xhdpi\battleground.png \
@@ -121,6 +128,7 @@ C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\res\drawable-xhdpi\
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\res\drawable-xhdpi\frame_330.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\res\drawable-xhdpi\frame_60.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\res\drawable-xhdpi\frame_90.png \
+C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\res\drawable-xhdpi\greenball.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\res\drawable-xhdpi\ic_launcher.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\res\drawable-xhdpi\silver_bubble.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\AndroidManifest.xml \

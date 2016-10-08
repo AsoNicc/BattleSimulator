@@ -205,7 +205,7 @@ public final class Moves extends Activity {
     private void loadDetails(String[] set){
         HashSet values = new HashSet();
 
-        for(int i = 0; i < set.length; i++) values.add(i + "_" + set[0]);
+        for(int i = 0; i < set.length; i++) values.add(i + "_" + set[i]);
 
         editor.putStringSet(set[0], values);
     }
