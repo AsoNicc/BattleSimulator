@@ -44,6 +44,9 @@ public class Animated extends View {
         initialize(context);
     }
 
+    /* For the utilization of custom views, provide these following two case
+     * constructors parameters 'Context, AttributeSet'. Also, give the 
+     * constructor(s) public access. */
     public Animated(Context context, AttributeSet attribs){
         super(context, attribs);
         initialize(context);
@@ -56,19 +59,19 @@ public class Animated extends View {
 
     private void initialize(Context context){
         assets = context.getAssets();
-        orientation = "front";
         setPokemon("bulbasaur");
         i = 0;
         j = 0;
         time = 10;
         draw = true;
-        options = new Options();
         HEALTH_BAR_SIZE = LARGEST_WIDTH*1.5f;
         
         try {
+            orientation = "front";
             contender = 1;
             stream = assets.open("sprites/" + pokemon + "/" + orientation + "/frame_" + i.toString() + ".png");
             decodeResizedBitmapFromAssets(LARGEST_WIDTH, LARGEST_HEIGHT);
+            
             orientation = "back";
             contender = 2;
             stream = assets.open("sprites/" + pokemon + "/" + orientation + "/frame_" + j.toString() + ".png");
@@ -79,6 +82,7 @@ public class Animated extends View {
                 contender = 1;
                 stream = assets.open("sprites/" + pokemon + "/" + orientation + "/frame_" + i.toString() + ".png");
                 decodeResizedBitmapFromAssets(LARGEST_WIDTH, LARGEST_HEIGHT);
+                
                 orientation = "back";
                 contender = 2;
                 stream = assets.open("sprites/" + pokemon + "/" + orientation + "/frame_" + j.toString() + ".png");
@@ -91,6 +95,7 @@ public class Animated extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
+        
         OPPONENT_FRAME_TOPLEFT_X = 1.25f*(2*canvas.getWidth()/3.0f - options2.outWidth/2.0f) + shift_x;
         OPPONENT_FRAME_TOPRIGHT_X = OPPONENT_FRAME_TOPLEFT_X + frame.getWidth();
         OPPONENT_FRAME_TOPLEFT_Y = 1.0f*(9*canvas.getHeight()/20.0f + LARGEST_HEIGHT/2.0f - options2.outHeight);
@@ -99,6 +104,7 @@ public class Animated extends View {
         OPPONENT_FRAME_BOTTOMRIGHT_X = OPPONENT_FRAME_TOPRIGHT_X;
         OPPONENT_FRAME_BOTTOMLEFT_Y = OPPONENT_FRAME_TOPLEFT_Y + (float)frame.getHeight();
         OPPONENT_FRAME_BOTTOMRIGHT_Y = OPPONENT_FRAME_BOTTOMLEFT_Y;
+        
         canvas.drawBitmap(frame, OPPONENT_FRAME_TOPLEFT_X, OPPONENT_FRAME_TOPLEFT_Y, null);
         brush.setStyle(Paint.Style.STROKE);
         brush.setColor(Color.argb(128, 255, 255, 255));
@@ -124,9 +130,10 @@ public class Animated extends View {
         
         if(pokemon.equals("nidorang")) temp = "Nidoran♀";
         else if(pokemon.equals("nidoranb")) temp = "Nidoran♂";
-        else temp = pokemon.substring(0, 1).toUpperCase() + pokemon.substring(1) + "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\tLVL???";
+        else temp = pokemon.substring(0, 1).toUpperCase() + pokemon.substring(1) + "\tLVL???";
 
         canvas.drawText(temp, OPPONENT_FRAME_TOPLEFT_X + frame.getWidth()/2.0f - HEALTH_BAR_SIZE/2.0f, OPPONENT_FRAME_TOPLEFT_Y - 50.0f, brush);
+        
         USER_FRAME_TOPLEFT_X = 0.5f*(canvas.getWidth()/3.0f - options.outWidth/2.0f) - shift_x2;
         USER_FRAME_TOPRIGHT_X = USER_FRAME_TOPLEFT_X + frame2.getWidth();
         USER_FRAME_TOPLEFT_Y = 1.0f*(13*canvas.getHeight()/20.0f + LARGEST_HEIGHT/2.0f - options.outHeight);
@@ -135,7 +142,9 @@ public class Animated extends View {
         USER_FRAME_BOTTOMRIGHT_X = USER_FRAME_TOPRIGHT_X;
         USER_FRAME_BOTTOMLEFT_Y = USER_FRAME_TOPLEFT_Y + frame2.getHeight();
         USER_FRAME_BOTTOMRIGHT_Y = USER_FRAME_BOTTOMLEFT_Y;
+        
         canvas.drawBitmap(frame2, USER_FRAME_TOPLEFT_X, USER_FRAME_TOPLEFT_Y, null);
+        
         brush.setStyle(Paint.Style.STROKE);
         brush.setColor(Color.argb(128, 255, 255, 255));
         brush.setStrokeWidth(10.0f);
@@ -160,7 +169,7 @@ public class Animated extends View {
         
         if(pokemon.equals("nidorang")) temp = "Nidoran♀";
         else if(pokemon.equals("nidoranb")) temp = "Nidoran♂";
-        else temp = pokemon.substring(0, 1).toUpperCase() + pokemon.substring(1) + "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\tLVL???";
+        else temp = pokemon.substring(0, 1).toUpperCase() + pokemon.substring(1) + "\tLVL???";
         
         canvas.drawText(temp, USER_FRAME_TOPLEFT_X + frame2.getWidth()/2.0f - HEALTH_BAR_SIZE/2.0f, USER_FRAME_TOPLEFT_Y - 50.0f, brush);
         
@@ -275,26 +284,26 @@ public class Animated extends View {
     }
 
     private void decodeResizedBitmapFromAssets(int reqWidth, int reqHeight){
-        if (contender == 1) {
+        if(contender == 1){
             options = new Options();
-            options.inJustDecodeBounds = false;
-            options.inDensity = 1;
-            options.inTargetDensity = 4;
-            options.inScaled = true;
+//            options.inJustDecodeBounds = false;
+//            options.inDensity = 1;
+//            options.inTargetDensity = 4;
+//            options.inScaled = true;
             frame = BitmapFactory.decodeStream(stream, null, options);
-            return;
+        } else {        
+            options2 = new Options();
+//            options2.inJustDecodeBounds = false;
+//            options2.inDensity = 1;
+//            options2.inTargetDensity = 5;
+//            options2.inScaled = true;
+            frame2 = BitmapFactory.decodeStream(stream, null, options2);
         }
-        options2 = new Options();
-        options2.inJustDecodeBounds = false;
-        options2.inDensity = 1;
-        options2.inTargetDensity = 5;
-        options2.inScaled = true;
-        frame2 = BitmapFactory.decodeStream(stream, null, options2);
     }
 
     private void setLargest(){
         try {
-            folders = assets.list("sprites");
+            folders = assets.list("fol");
             
             for(String folder : folders){
                 files = assets.list("sprites/" + folder + "/" + orientation);
@@ -308,20 +317,20 @@ public class Animated extends View {
     }
 
     protected final void setPokemon(String name){
-        if (name.charAt(name.length() - 1) == '♀') pokemon = "nidorang";
-        else if (name.charAt(name.length() - 1) == '♂') pokemon = "nidoranb";
+        if(name.charAt(name.length() - 1) == '♀') pokemon = "nidorang";
+        else if(name.charAt(name.length() - 1) == '♂') pokemon = "nidoranb";
         else pokemon = name;
     }
 
     private int getHealthBarColor(int percentage){
-        if (percentage == 100) return Color.argb(255, 0, 128, 0);
-        if (percentage > 75 && percentage < 100) return Color.argb(255, 34, 139, 34);
-        if (percentage > 50 && percentage <= 75) return Color.argb(255, 50, 205, 50);
-        if (percentage > 38 && percentage <= 50) return Color.argb(255, 173, 255, 47);
-        if (percentage > 25 && percentage <= 38) return Color.argb(255, 255, 255, 0);        
-        if (percentage > 17 && percentage <= 25) return Color.argb(255, 255, 69, 0);        
-        if (percentage > 10 && percentage <= 17) return Color.argb(255, 255, 0, 0);        
-        if (percentage <= 0 || percentage > 10) return Color.argb(255, 255, 255, 255);        
+        if(percentage == 100) return Color.argb(255, 0, 128, 0);
+        if(percentage > 75 && percentage < 100) return Color.argb(255, 34, 139, 34);
+        if(percentage > 50 && percentage <= 75) return Color.argb(255, 50, 205, 50);
+        if(percentage > 38 && percentage <= 50) return Color.argb(255, 173, 255, 47);
+        if(percentage > 25 && percentage <= 38) return Color.argb(255, 255, 255, 0);        
+        if(percentage > 17 && percentage <= 25) return Color.argb(255, 255, 69, 0);        
+        if(percentage > 10 && percentage <= 17) return Color.argb(255, 255, 0, 0);        
+        if(percentage <= 0 || percentage > 10) return Color.argb(255, 255, 255, 255);        
         return Color.argb(255, 139, 0, 0);
     }
 }
