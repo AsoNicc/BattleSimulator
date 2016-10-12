@@ -9,11 +9,8 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
-import android.graphics.Point;
 import android.util.AttributeSet;
-import android.view.Display;
 import android.view.View;
-import android.view.WindowManager;
 import java.io.InputStream;
 
 public class Animated extends View {
@@ -27,13 +24,14 @@ public class Animated extends View {
             USER_FRAME_TOPRIGHT_X, USER_FRAME_TOPRIGHT_Y;
     protected static String pokemon;
     protected static int shift_x = 0, shift_x2 = 0, shift_y = 0, shift_y2 = 0;
-    protected int LARGEST_HEIGHT = 0, LARGEST_WIDTH = 0;
+    /*protected int LARGEST_HEIGHT = 0, LARGEST_WIDTH = 0;/*/protected int LARGEST_HEIGHT = 181, LARGEST_WIDTH = 217; //*/
     private final float PLACEMENT_X = 1.25f, PLACEMENT_X2 = 0.5f, 
             PLACEMENT_Y = 1.0f, PLACEMENT_Y2 = 1.0f;
     private AssetManager asset;
     private Battle battle;
     private final Paint brush = new Paint();
-    private int contender, height, time, width, x, y, FIXED_FRAME;
+    private final int FIXED_FRAME = Battle.ARENABOX;
+    private int contender, height, time, width, x, y;
     private boolean draw;
     private String[] frames, files, folders;
     private Bitmap opponent, user;
@@ -41,6 +39,7 @@ public class Animated extends View {
     private Options Opponent_Options, User_Options;
     private String orientation, temp, Largest_Width_Details, Largest_Height_Details;
     private InputStream stream;
+    private float AVG_WIDTH, AVG_HEIGHT;
 
     public Animated(Context context){
         super(context);
@@ -60,15 +59,11 @@ public class Animated extends View {
         initialize(context);
     }
 
-    private void initialize(Context context){
-//        WindowManager window = (WindowManager)context.getSystemService(Context.WINDOW_SERVICE);
-//        Display screen = window.getDefaultDisplay();
-//        Point size = new Point();
-//        screen.getSize(size);
-//        FIXED_FRAME = Math.min(size.x, size.y);
-//        Battle.text.setText("Width = " + size.x + " | Height = " + size.y);
+    private void initialize(Context context){      
         asset = context.getAssets();
-//        setLargest();
+        setLargest();
+        
+        /* Init. default vars */
         setPokemon("bulbasaur");
         i = 0;
         j = 0;
@@ -284,17 +279,11 @@ public class Animated extends View {
     private void decodeResizedBitmapFromAssets(int reqWidth, int reqHeight){
         if(contender == 1){
             Opponent_Options = new Options();
-//            Opponent_Options.inJustDecodeBounds = false;
-//            Opponent_Options.inDensity = 1;
-//            Opponent_Options.inTargetDensity = 4;
-//            Opponent_Options.inScaled = true;
+
             opponent = BitmapFactory.decodeStream(stream, null, Opponent_Options);
         } else {        
             User_Options = new Options();
-//            User_Options.inJustDecodeBounds = false;
-//            User_Options.inDensity = 1;
-//            User_Options.inTargetDensity = 5;
-//            User_Options.inScaled = true;
+
             user = BitmapFactory.decodeStream(stream, null, User_Options);
         }
     }
@@ -302,6 +291,7 @@ public class Animated extends View {
     /* Method used for designing the UI, arranging elements throughout */
     private void setLargest(){
         Options options;
+        int sum_width = 0, sum_height = 0, count = 0;
         
         try {
             folders = asset.list("sprites");
@@ -315,10 +305,15 @@ public class Animated extends View {
                     for(String file : frames){
                         options = new Options();
                         opponent = BitmapFactory.decodeStream(asset.open("sprites/" + folder + "/" + fileFolder + "/" + file), null, options);
+                        count++;
+                        
+                        sum_width += options.outWidth;
                         if(options.outWidth > LARGEST_WIDTH){
                             LARGEST_WIDTH = options.outWidth;
                             Largest_Width_Details = "sprites/" + folder + "/" + fileFolder + "/" + file + " " + String.valueOf(LARGEST_WIDTH);
                         }
+                        
+                        sum_height += options.outHeight;
                         if(options.outHeight > LARGEST_HEIGHT){
                             LARGEST_HEIGHT = options.outHeight;
                             Largest_Height_Details = "sprites/" + folder + "/" + fileFolder + "/" + file + " " + String.valueOf(LARGEST_HEIGHT);
@@ -327,6 +322,10 @@ public class Animated extends View {
                 }
             }
         } catch (Exception e) {
+        } finally {
+            AVG_WIDTH = ((float)sum_width)/count;
+            AVG_HEIGHT = ((float)sum_height)/count;
+            Battle.text.setText("Avg. width = " + AVG_WIDTH + " | Avg. height = " + AVG_HEIGHT);
         }
     }
 

@@ -3,12 +3,15 @@ package Game.Pokemon;
 import android.app.ActionBar;
 import android.app.ActionBar.OnNavigationListener;
 import android.app.Activity;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.graphics.Color;
+import android.graphics.Point;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.Handler;
+import android.view.Display;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
@@ -16,6 +19,7 @@ import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
 import android.view.ViewGroup.LayoutParams;
 import android.view.Window;
+import android.view.WindowManager;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.FrameLayout;
@@ -39,6 +43,7 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
     private Handler handler;
     private ImageView viewer;
     private int frame;
+    protected static int ARENABOX;
     private static int BACKGROUND_ID, SWAP_AND_FORFEIT_ID, BUFF_ID, FORFEIT_ID, MOVES_AND_BUFF_ID, MOVES_ID, SWAP_ID;
     private final int ANGLE = 45, BOUND = 75, MARGIN = 25, MOVES_ROW1_ID = 2131165202, 
             MOVES_ROW2_ID = 2131165203, TEAM_ROW1_ID = 2131165204, TEAM_ROW2_ID = 2131165205, 
@@ -61,10 +66,16 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         try {
             super.onCreate(savedInstanceState);
             setContentView(R.layout.battlefield);
+            text = (TextView)findViewById(R.id.tvException);
             
+            WindowManager window = (WindowManager)getSystemService(Context.WINDOW_SERVICE);
+            Display screen = window.getDefaultDisplay();
+            Point size = new Point();
+            screen.getSize(size);
+            ARENABOX = Math.min(size.x, size.y);
+            text.setText("Width = " + size.x + " | Height = " + size.y);
             surface = new Animated(this);
             
-            text = (TextView)findViewById(R.id.tvException);
         
 //            if(true){
 //                edit = (getSharedPreferences("genOneMoveList", MODE_PRIVATE)).edit();
@@ -77,7 +88,7 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
                 load = new Moves(this);
                 moveData = getSharedPreferences("genOneMoveList", MODE_PRIVATE);
                 text.setText("Moves have not been set");    
-            } else text.setText("Moves already set");
+            } //else text.setText("Moves already set");
             
             // Check whether we're recreating a previously destroyed instance
             if(savedInstanceState != null){
