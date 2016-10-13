@@ -30,7 +30,7 @@ public class Animated extends View {
     private AssetManager asset;
     private Battle battle;
     private final Paint brush = new Paint();
-    private final int FIXED_FRAME = Battle.ARENABOX;
+//    private final int FIXED_FRAME = Battle.ARENABOX;
     private int contender, height, time, width, x, y;
     private boolean draw;
     private String[] frames, files, folders;

@@ -43,7 +43,7 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
     private Handler handler;
     private ImageView viewer;
     private int frame;
-    protected static int ARENABOX;
+//    protected static int ARENABOX;
     private static int BACKGROUND_ID, SWAP_AND_FORFEIT_ID, BUFF_ID, FORFEIT_ID, MOVES_AND_BUFF_ID, MOVES_ID, SWAP_ID;
     private final int ANGLE = 45, BOUND = 75, MARGIN = 25, MOVES_ROW1_ID = 2131165202, 
             MOVES_ROW2_ID = 2131165203, TEAM_ROW1_ID = 2131165204, TEAM_ROW2_ID = 2131165205, 
@@ -72,8 +72,8 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
             Display screen = window.getDefaultDisplay();
             Point size = new Point();
             screen.getSize(size);
-            ARENABOX = Math.min(size.x, size.y);
-            text.setText("Width = " + size.x + " | Height = " + size.y);
+//            ARENABOX = Math.min(size.x, size.y);
+//            text.setText("Width = " + size.x + " | Height = " + size.y);
             surface = new Animated(this);
             
         
