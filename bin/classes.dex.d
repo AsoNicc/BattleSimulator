@@ -1,7 +1,6 @@
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes.dex : \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Animated$1.class \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Animated.class \
-C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\BaseStats.class \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Battle$1.class \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Battle$2.class \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Battle$3.class \
@@ -9,8 +8,6 @@ C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemo
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Battle.class \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\BuildConfig.class \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\ExpCalculator.class \
-C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Moves.class \
-C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\MyBringBack.class \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\R$array.class \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\R$attr.class \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\R$drawable.class \
@@ -18,6 +15,9 @@ C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemo
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\R$layout.class \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\R$string.class \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\R.class \
+C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Settings$BaseStats.class \
+C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Settings$Moves.class \
+C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Settings$Orient.class \
+C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Settings.class \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\StatGenerator.class \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\WrappingSlidingDrawer.class \
-C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\dexedLibs\android-support-v4-fa5b24989295873923e00716056cf754.jar \

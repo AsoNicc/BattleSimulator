@@ -3,19 +3,22 @@ package Game.Pokemon;
 import android.app.ActionBar;
 import android.app.ActionBar.OnNavigationListener;
 import android.app.Activity;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.graphics.Color;
+import android.graphics.Point;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.Handler;
+import android.view.Display;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
 import android.view.ViewGroup.LayoutParams;
-import android.view.Window;
+import android.view.WindowManager;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.FrameLayout;
@@ -29,6 +32,7 @@ import java.util.Random;
 import java.util.Set;
 
 public class Battle extends Activity implements OnClickListener, OnTouchListener {
+    protected static int ARENABOX, screen_width, screen_height;
     private Animated surface;
     private boolean activeMove = true, error = false,  held = false, initialState = true, 
             killHold = false, newTouch = true, touchClear = true, touched_user, touched_opponent;
@@ -48,36 +52,45 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
             PKMN6_ID = 2131165215, X_ID = 2131165216, TOUCH_LATENCY_TIME = 500, ILLEGAL_HOLD_TIMER = 500;
     private LinearLayout drawer;
     private final LinearLayout.LayoutParams FULL_MATCH_PARAMS = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
-    private Moves load; // Temp var used to init. SharedPref data
     private final Random gen = new Random();
     private static SharedPreferences moveData;
     private static final String STATE_POKEMON = "pokemon", STATE_FRAME = "frame", STATE_IMAGE_ID = "iv";
     private static String MOVE1[], MOVE2[], MOVE3[], MOVE4[];
     public static TextView text;
-    private static SharedPreferences.Editor edit;
     
     @Override
     protected void onCreate(Bundle savedInstanceState){
         try {
             super.onCreate(savedInstanceState);
-            setContentView(R.layout.battlefield);
+            setContentView(R.layout.battlefield); //Set layout
+            text = (TextView)findViewById(R.id.tvException); //Prep for debugging use
+            
+            /* Used in determining postions of sprites, and sprtie frames */
+            WindowManager window = (WindowManager)getSystemService(Context.WINDOW_SERVICE);
+            Display screen = window.getDefaultDisplay();
+            Point size = new Point();
+            screen.getSize(size);
+            screen_width = size.x;
+            screen_height = size.y;
+            ARENABOX = Math.min(screen_width, screen_height);
+            text.setText("Width = " + size.x + " | Height = " + size.y);
+            
+//            /* Used to clear EVERY SharedPreferences */
+//            if(true){
+//                Settings load = new Settings(this);
+//                load.clearAll();
+//            }
             
             surface = new Animated(this);
             
-            text = (TextView)findViewById(R.id.tvException);
-        
-//            if(true){
-//                edit = (getSharedPreferences("genOneMoveList", MODE_PRIVATE)).edit();
-//                edit.clear();
-//                edit.commit();
-//            }
-
+            /* Used to setup SharedPreferences, if it has not been set */
             moveData = getSharedPreferences("genOneMoveList", MODE_PRIVATE);
-            if(!moveData.getBoolean("setState", false)){ 
-                load = new Moves(this);
+            if(!moveData.getBoolean("setState", false)){
+                Settings load = new Settings(this);
+                load.setMoves();
                 moveData = getSharedPreferences("genOneMoveList", MODE_PRIVATE);
                 text.setText("Moves have not been set");    
-            } else text.setText("Moves already set");
+            } //else text.setText("Moves already set");
             
             // Check whether we're recreating a previously destroyed instance
             if(savedInstanceState != null){
@@ -94,24 +107,6 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         } catch(Exception e) {
             text.setText(e.toString());
         }
-    }
-    
-    @Override
-    protected void onPause(){
-        super.onPause();
-        // Unregister any active listeners 
-        /* No relative listeners @ this moment */
-        
-        // Adjust any synchronious variables here
-        /* No synchronious variables @ this moment */
-        
-        // Tie together any running thread variables
-        /* No running threads @ this moment */
-        
-        // Nullify the global thread variables for reuse
-        /* No global thread variables @ this moment */
-        
-        /* NOTE: I would like to save the state of variables in Animated */
     }
     
     @Override
@@ -134,29 +129,9 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         frame = savedInstanceState.getInt(STATE_FRAME);
         BACKGROUND_ID = savedInstanceState.getInt(STATE_IMAGE_ID);
     }
-
-    @Override
-    protected void onResume(){
-        super.onResume();
-        
-        // Re-register any active listeners 
-        /* No relative listeners @ this moment */
-        
-        // Re-adjust any synchronious variables here, as needed
-        /* No synchronious variables @ this moment */
-        
-        // Create new instances of any running thread variables
-        /* No running threads @ this moment */
-        
-        /* NOTE: I would like to reset the state of variables in Animated */
-    }
-    
-    @Override
-    protected void onDestroy(){
-        super.onDestroy();
-    }
     
     private void initialize(){
+        /* Setup ActionBar, presentation of actionBar varies w/ target SDK */
         ActionBar actionBar = getActionBar();
         actionBar.setBackgroundDrawable(new ColorDrawable(Color.RED));
         
@@ -888,7 +863,7 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
                         delta_y = event_x;
 
                         if(Math.atan2((y - event_y), (x - event_x))*(180/Math.PI) < ANGLE){ // Make sure delta motion has made less than ?° angle
-                            Animated.shift_x2 = (int)(x - event_x); // Shift user sprite
+                            Animated.user_shift_x = (int)(x - event_x); // Shift user sprite
 
                             killHold = true; // Kill determination of hold thread
                             Thread move = new Thread(){ 
@@ -905,13 +880,13 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
                             move.start(); //Exec. the embedded class above
                         } // else, swipe angle is too high or low. Not a feasible R-to-L motion
                     } else if(event_x > delta_x){ //...started moving left-to-right, ERROR
-                        Animated.shift_x2 = 0; // Reset shift
+                        Animated.user_shift_x = 0; // Reset shift
                         delta_x = null;
                         delta_y = null;
                         error = true; // Invalid touch event
                     } // else not moving right-to-left, NEVER back-tracked left-to-right
                 } // else treat as though it is still a held ACTION_DOWN event
-            } else Animated.shift_x2 = 0; // Reset shift because ACTION_MOVE lasted too long
+            } else Animated.user_shift_x = 0; // Reset shift because ACTION_MOVE lasted too long
         } else if(event.getAction() == MotionEvent.ACTION_UP){
             touchClear = true;
             
@@ -937,7 +912,7 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
             activeMove = true;
             killHold = false;
             error = false;
-            Animated.shift_x2 = 0;            
+            Animated.user_shift_x = 0;            
         }
 
         return true; // Allows for constant read of TouchEvents
