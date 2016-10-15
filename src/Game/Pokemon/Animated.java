@@ -41,7 +41,7 @@ public class Animated extends View {
     private static Options Opponent_Options, User_Options;
     private String orientation, temp;
     private InputStream stream;
-
+    
     public Animated(Context context){
         super(context);
         initialize(context);
@@ -123,30 +123,30 @@ public class Animated extends View {
         //Draw bitmap from TopLeft, downward
         canvas.drawBitmap(opponent, OPPONENT_FRAME_TOPLEFT_X, OPPONENT_FRAME_TOPLEFT_Y, null);
         
-        brush.setStyle(Paint.Style.STROKE);
+        brush.setStyle(Paint.Style.FILL);
         brush.setColor(Color.argb(128, 255, 255, 255));
         brush.setStrokeWidth(10f);
         //canvas.drawRect(left (x-val), top (y-val), right (x-val), bottom (y-val), Paint)
         canvas.drawRect(Round( OPPONENT_FRAME_TOPLEFT_X + opponent.getWidth()/2f - HEALTH_BAR_LENGTH/2f ), 
-                OPPONENT_FRAME_TOPLEFT_Y - 40, 
+                Round( (OPPONENT_FRAME_TOPLEFT_Y - 40)*adjust(pokemon) ), 
                 Round( OPPONENT_FRAME_TOPLEFT_X + opponent.getWidth()/2f + HEALTH_BAR_LENGTH/2f ), 
-                OPPONENT_FRAME_TOPRIGHT_Y - 30, 
+                Round( (OPPONENT_FRAME_TOPRIGHT_Y - 30)*adjust(pokemon) ), 
                 brush);
-        brush.setStyle(Paint.Style.STROKE);
+        brush.setStyle(Paint.Style.FILL);
         brush.setColor(getHealthBarColor(50));
         brush.setStrokeWidth(10.0f);
         //canvas.drawRect(left (x-val), top (y-val), right (x-val), bottom (y-val), Paint)
         canvas.drawRect(Round( OPPONENT_FRAME_TOPLEFT_X + opponent.getWidth()/2f - HEALTH_BAR_LENGTH/2f ), 
-                OPPONENT_FRAME_TOPLEFT_Y - 40, 
+                Round( (OPPONENT_FRAME_TOPLEFT_Y - 40)*adjust(pokemon) ), 
                 Round( OPPONENT_FRAME_TOPLEFT_X + opponent.getWidth()/2f + HEALTH_BAR_LENGTH/2f - (0.5f*HEALTH_BAR_LENGTH) ), 
-                OPPONENT_FRAME_TOPRIGHT_Y - 30, 
+                Round( (OPPONENT_FRAME_TOPRIGHT_Y - 30)*adjust(pokemon) ), 
                 brush);
         brush.setColor(Color.argb(255, 255, 255, 255));
         brush.setStyle(Paint.Style.FILL);
         brush.setTextSize(25.0f);
         canvas.drawText("HP", 
                 Round( OPPONENT_FRAME_TOPLEFT_X + opponent.getWidth()/2f - HEALTH_BAR_LENGTH/2f - 50/*px*/ ), 
-                OPPONENT_FRAME_TOPLEFT_Y - 25/*px*/, 
+                Round( (OPPONENT_FRAME_TOPLEFT_Y - 25/*px*/)*adjust(pokemon) ), 
                 brush);
         brush.setTextSize(35);
         
@@ -158,7 +158,7 @@ public class Animated extends View {
         //Draw opponent name text
         canvas.drawText(temp, 
                 Round( OPPONENT_FRAME_TOPLEFT_X + opponent.getWidth()/2f - HEALTH_BAR_LENGTH/2f ), 
-                OPPONENT_FRAME_TOPLEFT_Y - 50/*px*/, 
+                Round( (OPPONENT_FRAME_TOPLEFT_Y - 50/*px*/)*adjust(pokemon) ), 
                 brush);
         
         //Evaluate user hitbox
@@ -174,31 +174,31 @@ public class Animated extends View {
         //Draw bitmap from TopLeft, downward        
         canvas.drawBitmap(user, USER_FRAME_TOPLEFT_X, USER_FRAME_TOPLEFT_Y, null);
         
-        brush.setStyle(Paint.Style.STROKE);
+        brush.setStyle(Paint.Style.FILL);
         brush.setColor(Color.argb(128, 255, 255, 255));
-        brush.setStrokeWidth(10.0f);
+        brush.setStrokeWidth(10);
         //canvas.drawRect(left (x-val), top (y-val), right (x-val), bottom (y-val), Paint)
         canvas.drawRect(((config.orientation == Configuration.ORIENTATION_PORTRAIT)?
                 Round( USER_FRAME_TOPLEFT_X + user.getWidth()/2f - HEALTH_BAR_LENGTH/4f )
                 : Round( USER_FRAME_TOPLEFT_X + user.getWidth()/2f - HEALTH_BAR_LENGTH/2f) ), 
-                USER_FRAME_TOPLEFT_Y - 40, 
+                Round( (USER_FRAME_TOPLEFT_Y - 40)*adjust(pokemon) ), 
                 ((config.orientation == Configuration.ORIENTATION_PORTRAIT)? 
                         Round( USER_FRAME_TOPLEFT_X + user.getWidth()/2f + HEALTH_BAR_LENGTH*3/4f )
                         : Round( USER_FRAME_TOPLEFT_X + user.getWidth()/2f + HEALTH_BAR_LENGTH/2f) ), 
-                USER_FRAME_TOPRIGHT_Y - 30, 
+                Round( (USER_FRAME_TOPRIGHT_Y - 30)*adjust(pokemon) ), 
                 brush);
-        brush.setStyle(Paint.Style.STROKE);
+        brush.setStyle(Paint.Style.FILL);
         brush.setColor(getHealthBarColor(75));
         brush.setStrokeWidth(10);
         //canvas.drawRect(left (x-val), top (y-val), right (x-val), bottom (y-val), Paint)
         canvas.drawRect(((config.orientation == Configuration.ORIENTATION_PORTRAIT)?
                 Round( USER_FRAME_TOPLEFT_X + user.getWidth()/2f - HEALTH_BAR_LENGTH/4f )
                 : Round( USER_FRAME_TOPLEFT_X + user.getWidth()/2f - HEALTH_BAR_LENGTH/2f) ), 
-                USER_FRAME_TOPLEFT_Y - 40, 
+                Round( (USER_FRAME_TOPLEFT_Y - 40)*adjust(pokemon) ), 
                 ((config.orientation == Configuration.ORIENTATION_PORTRAIT)?
                         Round( USER_FRAME_TOPLEFT_X + user.getWidth()/2f + HEALTH_BAR_LENGTH*3/4f - (0.25f*HEALTH_BAR_LENGTH) )
                         : Round( USER_FRAME_TOPLEFT_X + user.getWidth()/2f + HEALTH_BAR_LENGTH/2f - (0.25f*HEALTH_BAR_LENGTH)) ), 
-                USER_FRAME_TOPRIGHT_Y - 30, 
+                Round( (USER_FRAME_TOPRIGHT_Y - 30)*adjust(pokemon) ), 
                 brush);
         brush.setColor(Color.argb(255, 255, 255, 255));
         brush.setStyle(Paint.Style.FILL);
@@ -206,7 +206,7 @@ public class Animated extends View {
         canvas.drawText("HP", ((config.orientation == Configuration.ORIENTATION_PORTRAIT)? 
                 Round( USER_FRAME_TOPLEFT_X + user.getWidth()/2f - HEALTH_BAR_LENGTH/4f - 50/*px*/ )
                 : Round( USER_FRAME_TOPLEFT_X + user.getWidth()/2f - HEALTH_BAR_LENGTH/2f - 50/*px*/) ), 
-                USER_FRAME_TOPLEFT_Y - 25/*px*/, 
+                Round( (USER_FRAME_TOPLEFT_Y - 25/*px*/)*adjust(pokemon) ), 
                 brush);
         brush.setTextSize(35);
         
@@ -219,7 +219,7 @@ public class Animated extends View {
         canvas.drawText(temp, ((config.orientation == Configuration.ORIENTATION_PORTRAIT)? 
                 Round( USER_FRAME_TOPLEFT_X + user.getWidth()/2f - HEALTH_BAR_LENGTH/4f )
                 : Round( USER_FRAME_TOPLEFT_X + user.getWidth()/2f - HEALTH_BAR_LENGTH/2f) ), 
-                USER_FRAME_TOPLEFT_Y - 50/*px*/, 
+                Round( (USER_FRAME_TOPLEFT_Y - 50/*px*/)*adjust(pokemon) ), 
                 brush);
         
         /* This block changes the frame of all sprites */
@@ -326,5 +326,22 @@ public class Animated extends View {
     private int Round(double num){
         if(num/((int)num) >= .5 ) return (int)Math.ceil(num);
         else return (int)Math.floor(num);
+    }
+
+    private float adjust(String pkmn) {
+        if(pkmn.equals("charizard") ||
+            pkmn.equals("golbat") ||
+            pkmn.equals("articuno") ||
+            pkmn.equals("moltres")
+        ) return 1.33f;
+        else if(pkmn.equals("pidgeot") ||
+            pkmn.equals("fearow") ||
+            pkmn.equals("raichu") ||
+            pkmn.equals("onix") ||
+            pkmn.equals("aerodactyl") ||
+            pkmn.equals("zapdos")
+        ) return 1.25f;
+        
+        return 1;
     }
 }

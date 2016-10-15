@@ -87,7 +87,7 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
                 load.setMoves();
                 moveData = getSharedPreferences("genOneMoveList", MODE_PRIVATE);
                 text.setText("Moves have not been set");    
-            } else text.setText(Math.log(0) + "");
+            } //else text.setText("Moves already set");
             
             // Check whether we're recreating a previously destroyed instance
             if(savedInstanceState != null){
