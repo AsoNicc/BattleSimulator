@@ -4,6 +4,7 @@ import android.content.Context;
 import static android.content.Context.MODE_PRIVATE;
 import android.content.SharedPreferences;
 import android.content.res.AssetManager;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.BitmapFactory.Options;
@@ -29,6 +30,7 @@ public class Animated extends View {
     private final float USER_PLACEMENT_X = 1.0f, OPPONENT_PLACEMENT_X = 0.9f, 
             USER_PLACEMENT_Y = 0.9f, OPPONENT_PLACEMENT_Y = 1f;
     private AssetManager asset;
+    private static Configuration config; 
     private final Paint brush = new Paint();
     private float AVG_SPRITE_WIDTH, AVG_SPRITE_HEIGHT;
     private static float scaleFactor;
@@ -60,7 +62,8 @@ public class Animated extends View {
 
     private void initialize(Context context){
         asset = context.getAssets(); //Link assets
-        
+        config = getResources().getConfiguration();
+            
         /* Used to setup SharedPreferences, if it has not been set */
         SharedPreferences objects = context.getSharedPreferences("objects", MODE_PRIVATE);
         if(!objects.getBoolean("setState", false)){
@@ -122,35 +125,41 @@ public class Animated extends View {
         
         brush.setStyle(Paint.Style.STROKE);
         brush.setColor(Color.argb(128, 255, 255, 255));
-        brush.setStrokeWidth(10.0f);
+        brush.setStrokeWidth(10f);
         //canvas.drawRect(left (x-val), top (y-val), right (x-val), bottom (y-val), Paint)
-        canvas.drawRect(OPPONENT_FRAME_TOPLEFT_X + opponent.getWidth()/2.0f - HEALTH_BAR_LENGTH/2.0f, 
-                OPPONENT_FRAME_TOPLEFT_Y - 40.0f, 
-                OPPONENT_FRAME_TOPLEFT_X + opponent.getWidth()/2.0f + HEALTH_BAR_LENGTH/2.0f, 
-                OPPONENT_FRAME_TOPRIGHT_Y - 30.0f, 
+        canvas.drawRect(Round( OPPONENT_FRAME_TOPLEFT_X + opponent.getWidth()/2f - HEALTH_BAR_LENGTH/2f ), 
+                OPPONENT_FRAME_TOPLEFT_Y - 40, 
+                Round( OPPONENT_FRAME_TOPLEFT_X + opponent.getWidth()/2f + HEALTH_BAR_LENGTH/2f ), 
+                OPPONENT_FRAME_TOPRIGHT_Y - 30, 
                 brush);
         brush.setStyle(Paint.Style.STROKE);
         brush.setColor(getHealthBarColor(50));
         brush.setStrokeWidth(10.0f);
         //canvas.drawRect(left (x-val), top (y-val), right (x-val), bottom (y-val), Paint)
-        canvas.drawRect(OPPONENT_FRAME_TOPLEFT_X + opponent.getWidth()/2.0f - HEALTH_BAR_LENGTH/2.0f, 
-                OPPONENT_FRAME_TOPLEFT_Y - 40.0f, 
-                OPPONENT_FRAME_TOPLEFT_X + opponent.getWidth()/2.0f + HEALTH_BAR_LENGTH/2.0f - (0.5f*HEALTH_BAR_LENGTH), 
-                OPPONENT_FRAME_TOPRIGHT_Y - 30.0f, 
+        canvas.drawRect(Round( OPPONENT_FRAME_TOPLEFT_X + opponent.getWidth()/2f - HEALTH_BAR_LENGTH/2f ), 
+                OPPONENT_FRAME_TOPLEFT_Y - 40, 
+                Round( OPPONENT_FRAME_TOPLEFT_X + opponent.getWidth()/2f + HEALTH_BAR_LENGTH/2f - (0.5f*HEALTH_BAR_LENGTH) ), 
+                OPPONENT_FRAME_TOPRIGHT_Y - 30, 
                 brush);
         brush.setColor(Color.argb(255, 255, 255, 255));
         brush.setStyle(Paint.Style.FILL);
         brush.setTextSize(25.0f);
-        canvas.drawText("HP", OPPONENT_FRAME_TOPLEFT_X + opponent.getWidth()/2.0f - HEALTH_BAR_LENGTH/2.0f - 50.0f/*px*/, OPPONENT_FRAME_TOPLEFT_Y - 25.0f/*px*/, brush);
-        brush.setTextSize(35.0f);
+        canvas.drawText("HP", 
+                Round( OPPONENT_FRAME_TOPLEFT_X + opponent.getWidth()/2f - HEALTH_BAR_LENGTH/2f - 50/*px*/ ), 
+                OPPONENT_FRAME_TOPLEFT_Y - 25/*px*/, 
+                brush);
+        brush.setTextSize(35);
         
         /* Get opponent Pokemon name text */
         if(pokemon.equals("nidorang")) temp = "Nidoran♀";
         else if(pokemon.equals("nidoranb")) temp = "Nidoran♂";
-        else temp = pokemon.substring(0, 1).toUpperCase() + pokemon.substring(1) + "\tLVL???";
+        else temp = pokemon.substring(0, 1).toUpperCase() + pokemon.substring(1) + "\t\t\tLVL???";
 
         //Draw opponent name text
-        canvas.drawText(temp, OPPONENT_FRAME_TOPLEFT_X + opponent.getWidth()/2.0f - HEALTH_BAR_LENGTH/2.0f, OPPONENT_FRAME_TOPLEFT_Y - 50.0f/*px*/, brush);
+        canvas.drawText(temp, 
+                Round( OPPONENT_FRAME_TOPLEFT_X + opponent.getWidth()/2f - HEALTH_BAR_LENGTH/2f ), 
+                OPPONENT_FRAME_TOPLEFT_Y - 50/*px*/, 
+                brush);
         
         //Evaluate user hitbox
         USER_FRAME_BOTTOMLEFT_X = Round( ((canvas.getWidth()/6f) - (user.getWidth()/2f))*USER_PLACEMENT_X ) - user_shift_x;
@@ -169,33 +178,49 @@ public class Animated extends View {
         brush.setColor(Color.argb(128, 255, 255, 255));
         brush.setStrokeWidth(10.0f);
         //canvas.drawRect(left (x-val), top (y-val), right (x-val), bottom (y-val), Paint)
-        canvas.drawRect(USER_FRAME_TOPLEFT_X + user.getWidth()/2.0f - HEALTH_BAR_LENGTH/2.0f, 
-                USER_FRAME_TOPLEFT_Y - 40.0f, 
-                USER_FRAME_TOPLEFT_X + user.getWidth()/2.0f + HEALTH_BAR_LENGTH/2.0f, 
-                USER_FRAME_TOPRIGHT_Y - 30.0f, 
+        canvas.drawRect(((config.orientation == Configuration.ORIENTATION_PORTRAIT)?
+                Round( USER_FRAME_TOPLEFT_X + user.getWidth()/2f - HEALTH_BAR_LENGTH/4f )
+                : Round( USER_FRAME_TOPLEFT_X + user.getWidth()/2f - HEALTH_BAR_LENGTH/2f) ), 
+                USER_FRAME_TOPLEFT_Y - 40, 
+                ((config.orientation == Configuration.ORIENTATION_PORTRAIT)? 
+                        Round( USER_FRAME_TOPLEFT_X + user.getWidth()/2f + HEALTH_BAR_LENGTH*3/4f )
+                        : Round( USER_FRAME_TOPLEFT_X + user.getWidth()/2f + HEALTH_BAR_LENGTH/2f) ), 
+                USER_FRAME_TOPRIGHT_Y - 30, 
                 brush);
         brush.setStyle(Paint.Style.STROKE);
         brush.setColor(getHealthBarColor(75));
-        brush.setStrokeWidth(10.0f);
+        brush.setStrokeWidth(10);
         //canvas.drawRect(left (x-val), top (y-val), right (x-val), bottom (y-val), Paint)
-        canvas.drawRect(USER_FRAME_TOPLEFT_X + user.getWidth()/2.0f - HEALTH_BAR_LENGTH/2.0f, 
-                USER_FRAME_TOPLEFT_Y - 40.0f, 
-                USER_FRAME_TOPLEFT_X + user.getWidth()/2.0f + HEALTH_BAR_LENGTH/2.0f - (0.25f*HEALTH_BAR_LENGTH), 
-                USER_FRAME_TOPRIGHT_Y - 30.0f, 
+        canvas.drawRect(((config.orientation == Configuration.ORIENTATION_PORTRAIT)?
+                Round( USER_FRAME_TOPLEFT_X + user.getWidth()/2f - HEALTH_BAR_LENGTH/4f )
+                : Round( USER_FRAME_TOPLEFT_X + user.getWidth()/2f - HEALTH_BAR_LENGTH/2f) ), 
+                USER_FRAME_TOPLEFT_Y - 40, 
+                ((config.orientation == Configuration.ORIENTATION_PORTRAIT)?
+                        Round( USER_FRAME_TOPLEFT_X + user.getWidth()/2f + HEALTH_BAR_LENGTH*3/4f - (0.25f*HEALTH_BAR_LENGTH) )
+                        : Round( USER_FRAME_TOPLEFT_X + user.getWidth()/2f + HEALTH_BAR_LENGTH/2f - (0.25f*HEALTH_BAR_LENGTH)) ), 
+                USER_FRAME_TOPRIGHT_Y - 30, 
                 brush);
         brush.setColor(Color.argb(255, 255, 255, 255));
         brush.setStyle(Paint.Style.FILL);
-        brush.setTextSize(25.0f);
-        canvas.drawText("HP", USER_FRAME_TOPLEFT_X + user.getWidth()/2.0f - HEALTH_BAR_LENGTH/2.0f - 50.0f/*px*/, USER_FRAME_TOPLEFT_Y - 25.0f/*px*/, brush);
-        brush.setTextSize(35.0f);
+        brush.setTextSize(25);
+        canvas.drawText("HP", ((config.orientation == Configuration.ORIENTATION_PORTRAIT)? 
+                Round( USER_FRAME_TOPLEFT_X + user.getWidth()/2f - HEALTH_BAR_LENGTH/4f - 50/*px*/ )
+                : Round( USER_FRAME_TOPLEFT_X + user.getWidth()/2f - HEALTH_BAR_LENGTH/2f - 50/*px*/) ), 
+                USER_FRAME_TOPLEFT_Y - 25/*px*/, 
+                brush);
+        brush.setTextSize(35);
         
         /* Get user Pokemon name text */
         if(pokemon.equals("nidorang")) temp = "Nidoran♀";
         else if(pokemon.equals("nidoranb")) temp = "Nidoran♂";
-        else temp = pokemon.substring(0, 1).toUpperCase() + pokemon.substring(1) + "\tLVL???";
+        else temp = pokemon.substring(0, 1).toUpperCase() + pokemon.substring(1) + "\t\t\tLVL???";
         
         //Draw user name text
-        canvas.drawText(temp, USER_FRAME_TOPLEFT_X + user.getWidth()/2.0f - HEALTH_BAR_LENGTH/2.0f, USER_FRAME_TOPLEFT_Y - 50.0f/*px*/, brush);
+        canvas.drawText(temp, ((config.orientation == Configuration.ORIENTATION_PORTRAIT)? 
+                Round( USER_FRAME_TOPLEFT_X + user.getWidth()/2f - HEALTH_BAR_LENGTH/4f )
+                : Round( USER_FRAME_TOPLEFT_X + user.getWidth()/2f - HEALTH_BAR_LENGTH/2f) ), 
+                USER_FRAME_TOPLEFT_Y - 50/*px*/, 
+                brush);
         
         /* This block changes the frame of all sprites */
         if(draw){

@@ -32,7 +32,7 @@ import java.util.Random;
 import java.util.Set;
 
 public class Battle extends Activity implements OnClickListener, OnTouchListener {
-    protected static int ARENABOX, screen_width, screen_height;
+    protected static int ARENABOX;
     private Animated surface;
     private boolean activeMove = true, error = false,  held = false, initialState = true, 
             killHold = false, newTouch = true, touchClear = true, touched_user, touched_opponent;
@@ -70,10 +70,7 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
             Display screen = window.getDefaultDisplay();
             Point size = new Point();
             screen.getSize(size);
-            screen_width = size.x;
-            screen_height = size.y;
-            ARENABOX = Math.min(screen_width, screen_height);
-            text.setText("Width = " + size.x + " | Height = " + size.y);
+            ARENABOX = Math.min(size.x, size.y);
             
 //            /* Used to clear EVERY SharedPreferences */
 //            if(true){
@@ -90,7 +87,7 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
                 load.setMoves();
                 moveData = getSharedPreferences("genOneMoveList", MODE_PRIVATE);
                 text.setText("Moves have not been set");    
-            } //else text.setText("Moves already set");
+            } else text.setText(Math.log(0) + "");
             
             // Check whether we're recreating a previously destroyed instance
             if(savedInstanceState != null){
