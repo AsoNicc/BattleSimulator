@@ -153,12 +153,18 @@ public class Animated extends View {
         /* Get opponent Pokemon name text */
         if(pokemon.equals("nidorang")) temp = "Nidoran♀";
         else if(pokemon.equals("nidoranb")) temp = "Nidoran♂";
-        else temp = pokemon.substring(0, 1).toUpperCase() + pokemon.substring(1) + "\t\t\tLVL???";
+        else temp = pokemon.substring(0, 1).toUpperCase() + pokemon.substring(1) + " | LVL???";
 
         //Draw opponent name text
         canvas.drawText(temp, 
                 Round( OPPONENT_FRAME_TOPLEFT_X + opponent.getWidth()/2f - HEALTH_BAR_LENGTH/2f ), 
                 Round( (OPPONENT_FRAME_TOPLEFT_Y - 50/*px*/)*adjust(pokemon) ), 
+                brush);
+        
+        //Draw opponent HP number
+        canvas.drawText("???/???", 
+                Round( OPPONENT_FRAME_TOPLEFT_X + opponent.getWidth()/2f - HEALTH_BAR_LENGTH/2f ), 
+                Round( (OPPONENT_FRAME_TOPLEFT_Y - 5/*px*/)*adjust(pokemon) ), 
                 brush);
         
         //Evaluate user hitbox
@@ -213,13 +219,20 @@ public class Animated extends View {
         /* Get user Pokemon name text */
         if(pokemon.equals("nidorang")) temp = "Nidoran♀";
         else if(pokemon.equals("nidoranb")) temp = "Nidoran♂";
-        else temp = pokemon.substring(0, 1).toUpperCase() + pokemon.substring(1) + "\t\t\tLVL???";
+        else temp = pokemon.substring(0, 1).toUpperCase() + pokemon.substring(1) + " | LVL???";
         
         //Draw user name text
         canvas.drawText(temp, ((config.orientation == Configuration.ORIENTATION_PORTRAIT)? 
                 Round( USER_FRAME_TOPLEFT_X + user.getWidth()/2f - HEALTH_BAR_LENGTH/4f )
                 : Round( USER_FRAME_TOPLEFT_X + user.getWidth()/2f - HEALTH_BAR_LENGTH/2f) ), 
                 Round( (USER_FRAME_TOPLEFT_Y - 50/*px*/)*adjust(pokemon) ), 
+                brush);
+        
+        //Draw user HP numbers
+        canvas.drawText("???/???", ((config.orientation == Configuration.ORIENTATION_PORTRAIT)? 
+                Round( USER_FRAME_TOPLEFT_X + user.getWidth()/2f - HEALTH_BAR_LENGTH/4f )
+                : Round( USER_FRAME_TOPLEFT_X + user.getWidth()/2f - HEALTH_BAR_LENGTH/2f) ), 
+                Round( (USER_FRAME_TOPLEFT_Y - 5/*px*/)*adjust(pokemon) ), 
                 brush);
         
         /* This block changes the frame of all sprites */

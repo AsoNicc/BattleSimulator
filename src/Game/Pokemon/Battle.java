@@ -36,14 +36,14 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
     private Animated surface;
     private boolean activeMove = true, error = false,  held = false, initialState = true, 
             killHold = false, newTouch = true, touchClear = true, touched_user, touched_opponent;
-    private Button pokeball, buff, close, moves, forfeit, move1, move2, move3, move4, pkmn1, pkmn2, pkmn3, pkmn4, pkmn5, pkmn6, swap;
+    private Button pokeball, buff, cheer, close, moves, forfeit, move1, move2, move3, move4, pkmn1, pkmn2, pkmn3, pkmn4, pkmn5, pkmn6, swap;
     private Configuration config; 
     private Float delta_x, delta_y, event_x, event_y, x, y;
     private FrameLayout layout;
     private Handler handler;
     private ImageView viewer;
     private int frame;
-    private static int BACKGROUND_ID, SWAP_AND_FORFEIT_ID, BUFF_ID, FORFEIT_ID, MOVES_AND_BUFF_ID, MOVES_ID, SWAP_ID;
+    private static int BACKGROUND_ID, CHEER_ID, SWAP_AND_FORFEIT_ID, BUFF_ID, FORFEIT_ID, MOVES_AND_BUFF_ID, MOVES_ID, SWAP_ID;
     private final int ANGLE = 45, BOUND = 75, MARGIN = 25, MOVES_ROW1_ID = 2131165202, 
             MOVES_ROW2_ID = 2131165203, TEAM_ROW1_ID = 2131165204, TEAM_ROW2_ID = 2131165205, 
             MOVE1_ID = 2131165206, MOVE2_ID = 2131165207, MOVE3_ID = 2131165208, 
@@ -161,6 +161,7 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
 
         // Link IDs w/ variables
         viewer = (ImageView)findViewById(R.id.ivBackground);
+        cheer = (Button)findViewById(R.id.bCheer);
         pokeball = (Button)findViewById(R.id.bHandle);
         drawer = (LinearLayout)findViewById(R.id.llDrawerContents);
         
@@ -172,6 +173,7 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         
         // Hold Button & Layout id constants for reuse
         BACKGROUND_ID = R.id.ivBackground;
+        CHEER_ID = R.id.bCheer;
         MOVES_AND_BUFF_ID = R.id.llMovesAndBuff;
         SWAP_AND_FORFEIT_ID = R.id.llSwapAndForfeit;
         MOVES_ID = R.id.bMoves;
@@ -180,6 +182,7 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         FORFEIT_ID = R.id.bForfeit;
         
         // Set up onClick listeners
+        cheer.setOnClickListener(this);
         moves.setOnClickListener(this);
         swap.setOnClickListener(this);
         buff.setOnClickListener(this);
@@ -284,6 +287,9 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         } else if(v.getId() == PKMN6_ID){
             // NOTHING YET
             text.setText("Pokemon 6");
+        } else if(v.getId() == CHEER_ID){
+            // NOTHING YET
+            text.setText("Go!!!");
         }
     }
 

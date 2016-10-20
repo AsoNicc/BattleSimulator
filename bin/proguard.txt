@@ -5,7 +5,7 @@
 # view AndroidManifest.xml #generated:14
 -keep class Game.Pokemon.Battle { <init>(...); }
 
-# view land\res/layout-land/battlefield.xml #generated:42
-# view res/layout/battlefield.xml #generated:42
+# view land\res/layout-land/battlefield.xml #generated:64
+# view res/layout/battlefield.xml #generated:64
 -keep class Game.Pokemon.WrappingSlidingDrawer { <init>(...); }
 
