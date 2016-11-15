@@ -21,7 +21,9 @@ import java.util.HashSet;
 public class Settings extends Activity {
     private Context context;
     private SharedPreferences.Editor editor;
-    private boolean delete = false;
+    private boolean collect = false, delete = false;
+    private float speedSum = 0;
+    private int latestIndex;
     
     public Settings(Context inst){
         context = inst;
@@ -163,6 +165,8 @@ public class Settings extends Activity {
                 return;
             }
             
+            //Set flag to collect speed stat for avg
+            collect = true;
             //{"#", "Name", "HP", "Attack", "Defense", "Sp Attack", "Sp Defense", "Speed", "ExpYield"} // NOTE2SELF
             loadDetails(new String[]{"1", "Bulbasaur", "45", "49", "49", "65", "65", "45", "64"}); //
             loadDetails(new String[]{"2", "Ivysaur", "60", "62", "63", "80", "80", "60", "142"}); //
@@ -330,6 +334,9 @@ public class Settings extends Activity {
     //        loadDetails(new String[]{"150MX", "Mewtwo (Mega Mewtwo X)", "106", "190", "100", "154", "100", "130", "306"}); //
     //        loadDetails(new String[]{"150MY", "Mewtwo (Mega Mewtwo Y)", "106", "150", "70", "194", "120", "140", "306"}); //
             loadDetails(new String[]{"151", "Mew", "100", "100", "100", "100", "100", "100", "270"}); //
+            //Stop counting speed sum
+            collect = false;
+            editor.putInt("avg_speed", Round(speedSum/latestIndex));
             editor.putBoolean("setState", true);
             editor.commit();
         }
@@ -541,6 +548,16 @@ public class Settings extends Activity {
 
         for(int i = 0; i < set.length; i++) values.add(i + "_" + set[i]);
 
+        if(collect){ //Gather data for speed avg
+            speedSum += Float.parseFloat(set[7]);
+            latestIndex = Integer.parseInt(set[0]);
+        }
+        
         editor.putStringSet(set[0], values);
+    }
+    
+    private int Round(double num){
+        if(num/((int)num) >= .5 ) return (int)Math.ceil(num);
+        else return (int)Math.floor(num);
     }
 }

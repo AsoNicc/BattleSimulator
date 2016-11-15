@@ -11,6 +11,9 @@ import android.graphics.BitmapFactory.Options;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Path;
+import android.graphics.Path.FillType;
+import android.graphics.Point;
 import android.util.AttributeSet;
 import android.view.View;
 import java.io.InputStream;
@@ -25,18 +28,27 @@ public class Animated extends View {
             USER_FRAME_BOTTOMRIGHT_Y, USER_FRAME_TOPLEFT_X, USER_FRAME_TOPLEFT_Y,
             USER_FRAME_TOPRIGHT_X, USER_FRAME_TOPRIGHT_Y;
     protected static String pokemon;
-    protected static int user_shift_x = 0, opponent_shift_x = 0, opponent_shift_y = 0, user_shift_y = 0;
+    protected static int user_shift_x = 0, opponent_shift_x = 0, 
+            user_shift_y = 0, opponent_shift_y = 0,
+            user_speed_inc = 5, opponent_speed_inc = 1,
+            user_speed_percentage = 0, opponent_speed_percentage = 0;
     protected int LARGEST_HEIGHT, LARGEST_WIDTH;
     private final float USER_PLACEMENT_X = 1.0f, OPPONENT_PLACEMENT_X = 0.9f, 
             USER_PLACEMENT_Y = 0.9f, OPPONENT_PLACEMENT_Y = 1f;
     private AssetManager asset;
     private static Configuration config; 
+    private Point leftPoint, rightPoint, tip;
     private final Paint brush = new Paint();
+    private Path draw;
     private float AVG_SPRITE_WIDTH, AVG_SPRITE_HEIGHT;
-    private static float scaleFactor;
-    private int contender, time, FIXED_FRAME;
-    private boolean draw;
-    private static Bitmap opponent, user;
+    private static float scaleFactor, commandEnd_startAct_x, speedbar_start_y,
+            speedbar_end_x, speedbar_end_y, speedbar_start_x, action_start_x,
+            opponent_speed, user_speed;
+    private int contender, time;
+    private final int FIXED_FRAME = Round(Battle.ARENABOX/3f), GAP = 5,
+            POINTER_SIDE = 10, SPEED_TEXT_SIZE = 25;
+    private boolean nextFrame;
+    private static Bitmap opponent, opponent_icon, user, user_icon;
     private Integer i, j;
     private static Options Opponent_Options, User_Options;
     private String orientation, temp;
@@ -78,8 +90,6 @@ public class Animated extends View {
         AVG_SPRITE_WIDTH = objects.getFloat("avg_width", 0); //Defaults to 0 if not found
         AVG_SPRITE_HEIGHT = objects.getFloat("avg_height", 0); //Defaults to 0 if not found
         
-        FIXED_FRAME = Round(Battle.ARENABOX/3f);
-        
         float tempVar = (FIXED_FRAME/((AVG_SPRITE_WIDTH + AVG_SPRITE_HEIGHT)/2));
         scaleFactor = (tempVar > 1)? Round(Math.sqrt(tempVar)) : tempVar;
         
@@ -87,7 +97,7 @@ public class Animated extends View {
         i = 0;
         j = 0;
         time = 0;
-        draw = true;
+        nextFrame = true;
         HEALTH_BAR_LENGTH = Round(LARGEST_WIDTH*1.4);
         
         try {
@@ -235,8 +245,216 @@ public class Animated extends View {
                 Round( (USER_FRAME_TOPLEFT_Y - 5/*px*/)*adjust(pokemon) ), 
                 brush);
         
+        /** This block draws the speed meter **/
+        /* Begin speed meter for opponent */
+        speedbar_start_x = Round( canvas.getWidth()*11/20f );
+        speedbar_end_x = (config.orientation == Configuration.ORIENTATION_PORTRAIT)? 
+                Round( (canvas.getWidth()*11/20f + LARGEST_WIDTH*2) )
+                : Round( (canvas.getWidth()*11/20f + LARGEST_WIDTH*3.5) );
+        speedbar_start_y = Round( canvas.getHeight()*11/20f );
+        speedbar_end_y = Round( canvas.getHeight()*11/20f + 10 );
+        commandEnd_startAct_x = (config.orientation == Configuration.ORIENTATION_PORTRAIT)? 
+                        Round( (canvas.getWidth()*11/20f + LARGEST_WIDTH*2) - (LARGEST_WIDTH*2)*0.2 ) 
+                        : Round( (canvas.getWidth()*11/20f + LARGEST_WIDTH*3.5) - (LARGEST_WIDTH*3.5)*0.2 );
+        action_start_x = commandEnd_startAct_x;
+        //COMMAND portion of speed meter
+        brush.setStyle(Paint.Style.FILL);
+        brush.setColor(Color.argb(128, 255, 255, 255));
+        brush.setStrokeWidth(10f);
+        //canvas.drawRect(left (x-val), top (y-val), right (x-val), bottom (y-val), Paint)
+        canvas.drawRect(speedbar_start_x, 
+                speedbar_start_y, 
+                commandEnd_startAct_x, 
+                speedbar_end_y, 
+                brush);
+        //ACTION portion of speed meter
+        brush.setStyle(Paint.Style.FILL);
+        brush.setColor(Color.argb(192, 255, 255, 0));
+        brush.setStrokeWidth(10f);
+        
+        while(action_start_x < speedbar_end_x){ //Draws [][][][][][]...
+            //canvas.drawRect(left (x-val), top (y-val), right (x-val), bottom (y-val), Paint)
+            canvas.drawRect(action_start_x += GAP, 
+                    speedbar_start_y, 
+                    action_start_x += GAP, 
+                    speedbar_end_y, 
+                    brush);
+        }
+        
+        //Reset action_start_x variable
+        action_start_x = commandEnd_startAct_x;
+        
+        //COMMAND SPEED BAR (opponent)
+        opponent_speed = (config.orientation == Configuration.ORIENTATION_PORTRAIT)? 
+                        Round( canvas.getWidth()*11/20f + LARGEST_WIDTH*2 )*(opponent_speed_percentage/100f)
+                        : Round( canvas.getWidth()*11/20f + LARGEST_WIDTH*3.5 )*(opponent_speed_percentage/100f);
+        brush.setStyle(Paint.Style.FILL);
+        brush.setColor(Color.argb(128, 0, 0, 139));
+        brush.setStrokeWidth(10f);
+        //canvas.drawRect(left (x-val), top (y-val), right (x-val), bottom (y-val), Paint)
+        canvas.drawRect(speedbar_start_x, 
+                speedbar_start_y, 
+                Math.min( speedbar_start_x + opponent_speed, commandEnd_startAct_x ),                        
+                speedbar_end_y, 
+                brush);
+        
+        if(speedbar_start_x + opponent_speed > commandEnd_startAct_x){
+            brush.setStyle(Paint.Style.FILL);
+            brush.setColor(Color.argb(255, 139, 0, 0));
+            brush.setStrokeWidth(10f);
+            //canvas.drawRect(left (x-val), top (y-val), right (x-val), bottom (y-val), Paint)
+        
+            while(action_start_x < speedbar_start_x + opponent_speed && action_start_x < speedbar_end_x){ //Draws [][][][][][]...
+                //canvas.drawRect(left (x-val), top (y-val), right (x-val), bottom (y-val), Paint)
+                canvas.drawRect(action_start_x += GAP, 
+                        speedbar_start_y, 
+                        Math.min( (action_start_x + GAP), (speedbar_start_x + opponent_speed) ), 
+                        speedbar_end_y, 
+                        brush);
+                
+                action_start_x += GAP;
+            }
+        }
+        
+        if(opponent_speed_percentage < 100) opponent_speed_percentage = Math.min(opponent_speed_percentage + opponent_speed_inc, 100);
+        /* End speed meter for opponent */
+        
+        /* Opponent pointer & icon */
+        brush.setStrokeWidth(4);
+        brush.setColor(Color.argb(255, 135, 206, 235));
+        brush.setStyle(Paint.Style.FILL_AND_STROKE);
+        brush.setAntiAlias(true);
+
+        tip = new Point(Round( Math.min(speedbar_start_x + opponent_speed, action_start_x) ), Round( speedbar_start_y - 10));
+        leftPoint = new Point(Round( tip.x - POINTER_SIDE*Math.sin((30/*degrees*/*Math.PI)/180/*radians*/) ), Round(tip.y - POINTER_SIDE*Math.cos((30/*degrees*/*Math.PI)/180/*radians*/)));
+        rightPoint = new Point(Round( tip.x + POINTER_SIDE*Math.sin((30/*degrees*/*Math.PI)/180/*radians*/) ), leftPoint.y);
+        
+        draw = new Path();
+        draw.setFillType(FillType.EVEN_ODD);
+        draw.moveTo(tip.x, tip.y);
+        draw.lineTo(leftPoint.x, leftPoint.y);
+        draw.lineTo(rightPoint.x, rightPoint.y);
+        draw.close();
+
+        canvas.drawPath(draw, brush);
+        
+        //Draw icon bitmap from TopLeft, downward
+        canvas.drawBitmap(opponent_icon, 
+                Round( tip.x - opponent_icon.getWidth()/2f ), 
+                leftPoint.y - opponent_icon.getHeight() - 5, 
+                null);
+        /* End of pointer & icon */
+        
+        /* Beginning of speed meter textual info */
+        brush.setColor(Color.argb(255, 255, 255, 255));
+        brush.setStyle(Paint.Style.FILL);
+        brush.setTextSize(SPEED_TEXT_SIZE);
+        canvas.drawText("COMMAND > > >", 
+                speedbar_start_x, 
+                speedbar_start_y + SPEED_TEXT_SIZE + 10, 
+                brush);
+        canvas.drawText("ACTION", (config.orientation == Configuration.ORIENTATION_PORTRAIT)?
+                        commandEnd_startAct_x
+                        : commandEnd_startAct_x, 
+                speedbar_start_y + SPEED_TEXT_SIZE + 10, 
+                brush);
+        /* End of speed meter textual info */
+        
+        /* Begin speed meter for user */
+        speedbar_start_y += SPEED_TEXT_SIZE + 10 + 10;
+        speedbar_end_y = speedbar_start_y + 10;
+        action_start_x = commandEnd_startAct_x;
+        //COMMAND portion of speed meter
+        brush.setStyle(Paint.Style.FILL);
+        brush.setColor(Color.argb(128, 255, 255, 255));
+        brush.setStrokeWidth(10f);
+        //canvas.drawRect(left (x-val), top (y-val), right (x-val), bottom (y-val), Paint)
+        canvas.drawRect(speedbar_start_x, 
+                speedbar_start_y, 
+                commandEnd_startAct_x, 
+                speedbar_end_y, 
+                brush);
+        //ACTION portion of speed meter
+        brush.setStyle(Paint.Style.FILL);
+        brush.setColor(Color.argb(192, 255, 255, 0));
+        brush.setStrokeWidth(10f);
+        
+        while(action_start_x < speedbar_end_x){ //Draws [][][][][][]...
+            //canvas.drawRect(left (x-val), top (y-val), right (x-val), bottom (y-val), Paint)
+            canvas.drawRect(action_start_x += GAP, 
+                    speedbar_start_y, 
+                    action_start_x += GAP, 
+                    speedbar_end_y, 
+                    brush);
+        }
+        
+        //Reset action_start_x variable
+        action_start_x = commandEnd_startAct_x;
+        
+        //COMMAND SPEED BAR (opponent)
+        user_speed = (config.orientation == Configuration.ORIENTATION_PORTRAIT)? 
+                        Round( canvas.getWidth()*11/20f + LARGEST_WIDTH*2 )*(user_speed_percentage/100f)
+                        : Round( canvas.getWidth()*11/20f + LARGEST_WIDTH*3.5 )*(user_speed_percentage/100f);
+        brush.setStyle(Paint.Style.FILL);
+        brush.setColor(Color.argb(128, 0, 0, 139));
+        brush.setStrokeWidth(10f);
+        //canvas.drawRect(left (x-val), top (y-val), right (x-val), bottom (y-val), Paint)
+        canvas.drawRect(speedbar_start_x, 
+                speedbar_start_y, 
+                Math.min( speedbar_start_x + user_speed, commandEnd_startAct_x ),                        
+                speedbar_end_y, 
+                brush);
+        
+        if(speedbar_start_x + user_speed > commandEnd_startAct_x){
+            brush.setStyle(Paint.Style.FILL);
+            brush.setColor(Color.argb(255, 139, 0, 0));
+            brush.setStrokeWidth(10f);
+            //canvas.drawRect(left (x-val), top (y-val), right (x-val), bottom (y-val), Paint)
+        
+            while(action_start_x < speedbar_start_x + user_speed && action_start_x < speedbar_end_x){ //Draws [][][][][][]...
+                //canvas.drawRect(left (x-val), top (y-val), right (x-val), bottom (y-val), Paint)
+                canvas.drawRect(action_start_x += GAP, 
+                        speedbar_start_y, 
+                        Math.min( (action_start_x + GAP), (speedbar_start_x + user_speed) ), 
+                        speedbar_end_y, 
+                        brush);
+                
+                action_start_x += GAP;
+            }
+        }
+        
+        if(user_speed_percentage < 100) user_speed_percentage = Math.min(user_speed_percentage + user_speed_inc, 100);
+        /* End speed meter for user */
+        
+        /* User pointer & icon */
+        brush.setStrokeWidth(4);
+        brush.setColor(Color.argb(255, 135, 206, 235));
+        brush.setStyle(Paint.Style.FILL_AND_STROKE);
+        brush.setAntiAlias(true);
+
+        tip = new Point(Round( Math.min(speedbar_start_x + user_speed, action_start_x) ), Round( speedbar_start_y + 20));
+        leftPoint = new Point(Round( tip.x - POINTER_SIDE*Math.sin((30/*degrees*/*Math.PI)/180/*radians*/) ), Round(tip.y + POINTER_SIDE*Math.cos((30/*degrees*/*Math.PI)/180/*radians*/)));
+        rightPoint = new Point(Round( tip.x + POINTER_SIDE*Math.sin((30/*degrees*/*Math.PI)/180/*radians*/) ), leftPoint.y);
+        
+        draw = new Path();
+        draw.setFillType(FillType.EVEN_ODD);
+        draw.moveTo(tip.x, tip.y);
+        draw.lineTo(leftPoint.x, leftPoint.y);
+        draw.lineTo(rightPoint.x, rightPoint.y);
+        draw.close();
+
+        canvas.drawPath(draw, brush);
+        
+        //Draw icon bitmap from TopLeft, downward
+        canvas.drawBitmap(user_icon, 
+                Round( tip.x - user_icon.getWidth()/2f ), 
+                leftPoint.y + 5, 
+                null);
+        /* End of pointer & icon */
+        /** End block that draws speed meter **/
+        
         /* This block changes the frame of all sprites */
-        if(draw){
+        if(nextFrame){
             orientation = "front";
             contender = 1;
 
@@ -284,7 +502,7 @@ public class Animated extends View {
                     }
                 }
             } finally {
-//                draw = false;
+//                nextFrame = false;
 //                delay();
             }
         }
@@ -300,7 +518,7 @@ public class Animated extends View {
                     Thread.sleep(time);
                 } catch (InterruptedException e) {
                 } finally {
-                    draw = true;
+                    nextFrame = true;
                 }
             }
         }.start();
@@ -312,9 +530,37 @@ public class Animated extends View {
         if(contender == 1){
             unscaledBitmap = BitmapFactory.decodeStream(stream, null, Opponent_Options);
             opponent = Bitmap.createScaledBitmap(unscaledBitmap, Round(Opponent_Options.outWidth*scaleFactor), Round(Opponent_Options.outHeight*scaleFactor), true);
+            
+            try {
+                stream = asset.open("sprites/" + /*opponent*/pokemon + "/front/frame_0.png");
+                unscaledBitmap = BitmapFactory.decodeStream(stream, null, Opponent_Options);
+                opponent_icon = Bitmap.createScaledBitmap(unscaledBitmap, Round(Opponent_Options.outWidth/2f), Round(Opponent_Options.outHeight/2f), true);
+            } catch(Exception e1){
+                try {
+                    stream = asset.open("sprites/" + /*opponent*/pokemon + "/front/frame_1.png");
+                    unscaledBitmap = BitmapFactory.decodeStream(stream, null, Opponent_Options);
+                    opponent_icon = Bitmap.createScaledBitmap(unscaledBitmap, Round(Opponent_Options.outWidth/2f), Round(Opponent_Options.outHeight/2f), true);
+                } catch(Exception e2) {
+                    
+                }   
+            }            
         } else {        
             unscaledBitmap = BitmapFactory.decodeStream(stream, null, User_Options);
             user = Bitmap.createScaledBitmap(unscaledBitmap, Round(User_Options.outWidth*(scaleFactor + 1)), Round(User_Options.outHeight*(scaleFactor + 1)), true);
+            
+            try {
+                stream = asset.open("sprites/" + /*user*/pokemon + "/front/frame_0.png");
+                unscaledBitmap = BitmapFactory.decodeStream(stream, null, Opponent_Options);
+                user_icon = Bitmap.createScaledBitmap(unscaledBitmap, Round(User_Options.outWidth/2f), Round(User_Options.outHeight/2f), true);
+            } catch(Exception e){
+                try {
+                    stream = asset.open("sprites/" + /*user*/pokemon + "/front/frame_1.png");
+                    unscaledBitmap = BitmapFactory.decodeStream(stream, null, Opponent_Options);
+                    user_icon = Bitmap.createScaledBitmap(unscaledBitmap, Round(User_Options.outWidth/2f), Round(User_Options.outHeight/2f), true);
+                } catch(Exception e2) {
+                    
+                }    
+            }
         }
     }
 

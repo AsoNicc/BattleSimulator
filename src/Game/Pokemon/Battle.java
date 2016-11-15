@@ -76,6 +76,7 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
 //            if(true){
 //                Settings load = new Settings(this);
 //                load.clearAll();
+//                //load.SetAll();
 //            }
             
             surface = new Animated(this);
