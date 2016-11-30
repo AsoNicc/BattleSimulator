@@ -15,21 +15,39 @@ public final class R {
     }
     public static final class drawable {
         public static final int battleground=0x7f020000;
-        public static final int cheer=0x7f020001;
-        public static final int frame_0=0x7f020002;
-        public static final int frame_120=0x7f020003;
-        public static final int frame_150=0x7f020004;
-        public static final int frame_180=0x7f020005;
-        public static final int frame_210=0x7f020006;
-        public static final int frame_240=0x7f020007;
-        public static final int frame_270=0x7f020008;
-        public static final int frame_30=0x7f020009;
-        public static final int frame_300=0x7f02000a;
-        public static final int frame_330=0x7f02000b;
-        public static final int frame_60=0x7f02000c;
-        public static final int frame_90=0x7f02000d;
-        public static final int ic_launcher=0x7f02000e;
-        public static final int silver_bubble=0x7f02000f;
+        public static final int bug_bubble=0x7f020001;
+        public static final int cheer=0x7f020002;
+        public static final int dark_bubble=0x7f020003;
+        public static final int dragon_bubble=0x7f020004;
+        public static final int electric_bubble=0x7f020005;
+        public static final int fairy_bubble=0x7f020006;
+        public static final int fighting_bubble=0x7f020007;
+        public static final int fire_bubble=0x7f020008;
+        public static final int flying_bubble=0x7f020009;
+        public static final int frame_0=0x7f02000a;
+        public static final int frame_120=0x7f02000b;
+        public static final int frame_150=0x7f02000c;
+        public static final int frame_180=0x7f02000d;
+        public static final int frame_210=0x7f02000e;
+        public static final int frame_240=0x7f02000f;
+        public static final int frame_270=0x7f020010;
+        public static final int frame_30=0x7f020011;
+        public static final int frame_300=0x7f020012;
+        public static final int frame_330=0x7f020013;
+        public static final int frame_60=0x7f020014;
+        public static final int frame_90=0x7f020015;
+        public static final int ghost_bubble=0x7f020016;
+        public static final int grass_bubble=0x7f020017;
+        public static final int ground_bubble=0x7f020018;
+        public static final int ic_launcher=0x7f020019;
+        public static final int ice_bubble=0x7f02001a;
+        public static final int normal_bubble=0x7f02001b;
+        public static final int poison_bubble=0x7f02001c;
+        public static final int psychic_bubble=0x7f02001d;
+        public static final int rock_bubble=0x7f02001e;
+        public static final int silver_bubble=0x7f02001f;
+        public static final int steel_bubble=0x7f020020;
+        public static final int water_bubble=0x7f020021;
     }
     public static final class id {
         public static final int Animated=0x7f060002;

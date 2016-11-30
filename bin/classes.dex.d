@@ -15,7 +15,8 @@ C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemo
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\R$layout.class \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\R$string.class \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\R.class \
-C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Settings$BaseStats.class \
+C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Settings$BaseInfo.class \
+C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Settings$LearnedMoves.class \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Settings$Moves.class \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Settings$Orient.class \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Settings.class \

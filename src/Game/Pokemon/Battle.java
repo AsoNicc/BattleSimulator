@@ -11,6 +11,7 @@ import android.graphics.Point;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.Handler;
+import android.text.Html;
 import android.view.Display;
 import android.view.Gravity;
 import android.view.MotionEvent;
@@ -42,7 +43,7 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
     private FrameLayout layout;
     private Handler handler;
     private ImageView viewer;
-    private int frame;
+    private int frame, dexNumber;
     private static int BACKGROUND_ID, CHEER_ID, SWAP_AND_FORFEIT_ID, BUFF_ID, FORFEIT_ID, MOVES_AND_BUFF_ID, MOVES_ID, SWAP_ID;
     private final int ANGLE = 45, BOUND = 75, MARGIN = 25, MOVES_ROW1_ID = 2131165202, 
             MOVES_ROW2_ID = 2131165203, TEAM_ROW1_ID = 2131165204, TEAM_ROW2_ID = 2131165205, 
@@ -53,9 +54,9 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
     private LinearLayout drawer;
     private final LinearLayout.LayoutParams FULL_MATCH_PARAMS = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
     private final Random gen = new Random();
-    private static SharedPreferences moveData;
+    private static SharedPreferences moveData, moveSet;
     private static final String STATE_POKEMON = "pokemon", STATE_FRAME = "frame", STATE_IMAGE_ID = "iv";
-    private static String MOVE1[], MOVE2[], MOVE3[], MOVE4[];
+    private String MOVE1[], MOVE2[], MOVE3[], MOVE4[];
     public static TextView text;
     
     @Override
@@ -72,23 +73,14 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
             screen.getSize(size);
             ARENABOX = Math.min(size.x, size.y);
             
-//            /* Used to clear EVERY SharedPreferences */
+            /* Used to clear EVERY SharedPreferences */
 //            if(true){
 //                Settings load = new Settings(this);
 //                load.clearAll();
-//                //load.SetAll();
+//                load.setAll();
 //            }
             
             surface = new Animated(this);
-            
-            /* Used to setup SharedPreferences, if it has not been set */
-            moveData = getSharedPreferences("genOneMoveList", MODE_PRIVATE);
-            if(!moveData.getBoolean("setState", false)){
-                Settings load = new Settings(this);
-                load.setMoves();
-                moveData = getSharedPreferences("genOneMoveList", MODE_PRIVATE);
-                text.setText("Moves have not been set");    
-            } //else text.setText("Moves already set");
             
             // Check whether we're recreating a previously destroyed instance
             if(savedInstanceState != null){
@@ -145,6 +137,9 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
             @Override
             public boolean onNavigationItemSelected(int position, long id){                
                 // Do stuff when navigation item is selected
+                dexNumber = position + 1;
+                loadMoves(dexNumber);
+                
                 if(initialState) surface.setPokemon(items[position]);
                 else initialState = true;
                 //Log.d("NavigationItemSelected", items[position]); // Debug
@@ -256,38 +251,58 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
             else restoreDrawerLayoutPortrait();
         } else if(v.getId() == MOVE1_ID){
             // NOTHING YET
-//            text.setText("Move 1");
             action(1);
         } else if(v.getId() == MOVE2_ID){
             // NOTHING YET
-//            text.setText("Move 2");
             action(2);
         } else if(v.getId() == MOVE3_ID){
             // NOTHING YET
-//            text.setText("Move 3");
             action(3);
         } else if(v.getId() == MOVE4_ID){
             // NOTHING YET
-//            text.setText("Move 4");
             action(4);
         } else if(v.getId() == PKMN1_ID){
             // NOTHING YET
             text.setText("Pokemon 1");
+            /* Send in corresponding dexNo of chosen pokemon HERE */
+            /**/
+            /* Then you load their moves here */
+            loadMoves(dexNumber);
         } else if(v.getId() == PKMN2_ID){
             // NOTHING YET
             text.setText("Pokemon 2");
+            /* Send in corresponding dexNo of chosen pokemon HERE */
+            /**/
+            /* Then you load their moves here */
+            loadMoves(dexNumber);
         } else if(v.getId() == PKMN3_ID){
             // NOTHING YET
             text.setText("Pokemon 3");
+            /* Send in corresponding dexNo of chosen pokemon HERE */
+            /**/
+            /* Then you load their moves here */
+            loadMoves(dexNumber);
         } else if(v.getId() == PKMN4_ID){
             // NOTHING YET
             text.setText("Pokemon 4");
+            /* Send in corresponding dexNo of chosen pokemon HERE */
+            /**/
+            /* Then you load their moves here */
+            loadMoves(dexNumber);
         } else if(v.getId() == PKMN5_ID){
             // NOTHING YET
             text.setText("Pokemon 5");
+            /* Send in corresponding dexNo of chosen pokemon HERE */
+            /**/
+            /* Then you load their moves here */
+            loadMoves(dexNumber);
         } else if(v.getId() == PKMN6_ID){
             // NOTHING YET
             text.setText("Pokemon 6");
+            /* Send in corresponding dexNo of chosen pokemon HERE */
+            /**/
+            /* Then you load their moves here */
+            loadMoves(dexNumber);
         } else if(v.getId() == CHEER_ID){
             // NOTHING YET
             text.setText("Go!!!");
@@ -306,42 +321,42 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         
         moves = new Button(this);
         moves.setId(MOVES_ID);
-        moves.setBackgroundResource(R.drawable.silver_bubble);
+        moves.setBackgroundResource(R.drawable.normal_bubble);
         LinearLayout.LayoutParams WRAP_MATCH_WEIGHT_PARAMS = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT, 1f);
         moves.setLayoutParams(WRAP_MATCH_WEIGHT_PARAMS);
         moves.setPadding(0, 0, 0, 0);
         moves.setText(R.string.moves);
-        moves.setTextColor(Color.argb(255, 47, 79, 79));
+        moves.setTextColor(Color.argb(255, 0, 0, 0));
         moves.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
         movesRow.addView(moves);
         
         swap = new Button(this);
         swap.setId(SWAP_ID);
-        swap.setBackgroundResource(R.drawable.silver_bubble);
+        swap.setBackgroundResource(R.drawable.normal_bubble);
         swap.setLayoutParams(WRAP_MATCH_WEIGHT_PARAMS);
         swap.setPadding(0, 0, 0, 0);
         swap.setText(R.string.swap);
-        swap.setTextColor(Color.argb(255, 47, 79, 79));
+        swap.setTextColor(Color.argb(255, 0, 0, 0));
         swap.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
         movesRow.addView(swap);
         
         buff = new Button(this);
         buff.setId(BUFF_ID);
-        buff.setBackgroundResource(R.drawable.silver_bubble);
+        buff.setBackgroundResource(R.drawable.normal_bubble);
         buff.setLayoutParams(WRAP_MATCH_WEIGHT_PARAMS);
         buff.setPadding(0, 0, 0, 0);
         buff.setText(R.string.buff);
-        buff.setTextColor(Color.argb(255, 47, 79, 79));
+        buff.setTextColor(Color.argb(255, 0, 0, 0));
         buff.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
         movesRow.addView(buff);
         
         forfeit = new Button(this);
         forfeit.setId(FORFEIT_ID);
-        forfeit.setBackgroundResource(R.drawable.silver_bubble);
+        forfeit.setBackgroundResource(R.drawable.normal_bubble);
         forfeit.setLayoutParams(WRAP_MATCH_WEIGHT_PARAMS);
         forfeit.setPadding(0, 0, 0, 0);
         forfeit.setText(R.string.forfeit);
-        forfeit.setTextColor(Color.argb(255, 47, 79, 79));
+        forfeit.setTextColor(Color.argb(255, 0, 0, 0));
         forfeit.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
         movesRow.addView(forfeit);
         
@@ -368,22 +383,22 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         
         moves = new Button(this);
         moves.setId(MOVES_ID);
-        moves.setBackgroundResource(R.drawable.silver_bubble);
+        moves.setBackgroundResource(R.drawable.normal_bubble);
         LinearLayout.LayoutParams WRAP_MATCH_WEIGHT_PARAMS = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT, 1f);
         moves.setLayoutParams(WRAP_MATCH_WEIGHT_PARAMS);
         moves.setPadding(0, 0, 0, 0);
         moves.setText(R.string.moves);
-        moves.setTextColor(Color.argb(255, 47, 79, 79));
+        moves.setTextColor(Color.argb(255, 0, 0, 0));
         moves.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
         movesAndBuff.addView(moves);
         
         buff = new Button(this);
         buff.setId(BUFF_ID);
-        buff.setBackgroundResource(R.drawable.silver_bubble);
+        buff.setBackgroundResource(R.drawable.normal_bubble);
         buff.setLayoutParams(WRAP_MATCH_WEIGHT_PARAMS);
         buff.setPadding(0, 0, 0, 0);
         buff.setText(R.string.buff);
-        buff.setTextColor(Color.argb(255, 47, 79, 79));
+        buff.setTextColor(Color.argb(255, 0, 0, 0));
         buff.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
         movesAndBuff.addView(buff);
         
@@ -395,21 +410,21 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         
         swap = new Button(this);
         swap.setId(SWAP_ID);
-        swap.setBackgroundResource(R.drawable.silver_bubble);
+        swap.setBackgroundResource(R.drawable.normal_bubble);
         swap.setLayoutParams(WRAP_MATCH_WEIGHT_PARAMS);
         swap.setPadding(0, 0, 0, 0);
         swap.setText(R.string.swap);
-        swap.setTextColor(Color.argb(255, 47, 79, 79));
+        swap.setTextColor(Color.argb(255, 0, 0, 0));
         swap.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
         swapAndForfeit.addView(swap);
         
         forfeit = new Button(this);
         forfeit.setId(FORFEIT_ID);
-        forfeit.setBackgroundResource(R.drawable.silver_bubble);
+        forfeit.setBackgroundResource(R.drawable.normal_bubble);
         forfeit.setLayoutParams(WRAP_MATCH_WEIGHT_PARAMS);
         forfeit.setPadding(0, 0, 0, 0);
         forfeit.setText(R.string.forfeit);
-        forfeit.setTextColor(Color.argb(255, 47, 79, 79));
+        forfeit.setTextColor(Color.argb(255, 0, 0, 0));
         forfeit.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
         swapAndForfeit.addView(forfeit);
         
@@ -436,13 +451,13 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         
         close = new Button(this);
         close.setId(X_ID);
-        close.setBackgroundResource(R.drawable.silver_bubble);
+        close.setBackgroundResource(R.drawable.normal_bubble);
         LinearLayout.LayoutParams WRAP_HARD_WEIGHT_PARAMS = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, 60, 1f);
         close.setLayoutParams(WRAP_HARD_WEIGHT_PARAMS);
         close.setPadding(0, 0, 0, 0);
         close.setText("X");
-        close.setTextColor(Color.argb(255, 47, 79, 79));
-        close.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
+        close.setTextColor(Color.argb(255, 0, 0, 0));
+        close.setGravity(Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL);
         goBack.addView(close);
         
         LinearLayout movesRow = new LinearLayout(this);
@@ -452,58 +467,94 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         movesRow.setLayoutParams(MATCH_WRAP_WEIGHT_PARAMS);
         movesRow.setOrientation(LinearLayout.HORIZONTAL);
         movesRow.setWeightSum(4f);
+        LinearLayout.LayoutParams FULL_MATCH_WEIGHT_PARAMS = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT, 1f);
         
+        String styledText;
         move1 = new Button(this);
         move1.setId(MOVE1_ID);
-        move1.setBackgroundResource(R.drawable.silver_bubble);
-        LinearLayout.LayoutParams WRAP_MATCH_WEIGHT_PARAMS = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT, 1f);
-        move1.setLayoutParams(WRAP_MATCH_WEIGHT_PARAMS);
+        move1.setLayoutParams(FULL_MATCH_WEIGHT_PARAMS);
         move1.setPadding(0, 0, 0, 0);
-        move1.setText(R.string.move1);
-        move1.setTextColor(Color.argb(255, 47, 79, 79));
-        move1.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
-        movesRow.addView(move1);
         
+        if(MOVE1 != null){
+            move1.setBackgroundResource(buttonBackground(MOVE1[2]));
+            styledText = "<font color='#000000'><b>"
+            + MOVE1[1] + "</b></font>" + "<br/><small><font color='#FFFFFF'>" 
+            + MOVE1[2] + "\t\tPWR:" + ((MOVE1[5].equals("null"))? "---" : MOVE1[5]) + "</font></small>";
+            move1.setText(Html.fromHtml(styledText));
+        } else {
+            move1.setBackgroundResource(R.drawable.normal_bubble);
+            move1.setText("---");
+        }
+        
+        move1.setGravity(Gravity.TOP | Gravity.CENTER_HORIZONTAL);
+        movesRow.addView(move1);
+                
         move2 = new Button(this);
         move2.setId(MOVE2_ID);
-        move2.setBackgroundResource(R.drawable.silver_bubble);
-        move2.setLayoutParams(WRAP_MATCH_WEIGHT_PARAMS);
+        move2.setLayoutParams(FULL_MATCH_WEIGHT_PARAMS);
         move2.setPadding(0, 0, 0, 0);
-        move2.setText(R.string.move2);
-        move2.setTextColor(Color.argb(255, 47, 79, 79));
-        move2.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
-        movesRow.addView(move2);
+            
+        if(MOVE2 != null){
+            move2.setBackgroundResource(buttonBackground(MOVE2[2]));
+            styledText = "<font color='#000000'><b>"
+            + MOVE2[1] + "</b></font>" + "<br/><small><font color='#FFFFFF'>" 
+            + MOVE2[2] + "\t\tPWR:" + ((MOVE2[5].equals("null"))? "---" : MOVE2[5]) + "</font></small>";
+            move2.setText(Html.fromHtml(styledText));
+        } else {
+            move2.setBackgroundResource(R.drawable.normal_bubble);
+            move2.setText("---");
+        }
         
+        move2.setGravity(Gravity.TOP | Gravity.CENTER_HORIZONTAL);
+        movesRow.addView(move2);
+                
         move3 = new Button(this);
         move3.setId(MOVE3_ID);
-        move3.setBackgroundResource(R.drawable.silver_bubble);
-        move3.setLayoutParams(WRAP_MATCH_WEIGHT_PARAMS);
+        move3.setLayoutParams(FULL_MATCH_WEIGHT_PARAMS);
         move3.setPadding(0, 0, 0, 0);
-        move3.setText(R.string.move3);
-        move3.setTextColor(Color.argb(255, 47, 79, 79));
-        move3.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
-        movesRow.addView(move3);
         
+        if(MOVE3 != null){
+            move3.setBackgroundResource(buttonBackground(MOVE3[2]));
+            styledText = "<font color='#000000'><b>"
+            + MOVE3[1] + "</b></font>" + "<br/><small><font color='#FFFFFF'>" 
+            + MOVE3[2] + "\t\tPWR:" + ((MOVE3[5].equals("null"))? "---" : MOVE3[5]) + "</font></small>";
+            move3.setText(Html.fromHtml(styledText));
+        } else {
+            move3.setBackgroundResource(R.drawable.normal_bubble);
+            move3.setText("---");
+        }
+        
+        move3.setGravity(Gravity.TOP | Gravity.CENTER_HORIZONTAL);
+        movesRow.addView(move3);
+                    
         move4 = new Button(this);
         move4.setId(MOVE4_ID);
-        move4.setBackgroundResource(R.drawable.silver_bubble);
-        move4.setLayoutParams(WRAP_MATCH_WEIGHT_PARAMS);
+        move4.setLayoutParams(FULL_MATCH_WEIGHT_PARAMS);
         move4.setPadding(0, 0, 0, 0);
-        move4.setText(R.string.move4);
-        move4.setTextColor(Color.argb(255, 47, 79, 79));
-        move4.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
-        movesRow.addView(move4);
         
+        if(MOVE4 != null){
+            move4.setBackgroundResource(buttonBackground(MOVE4[2]));
+            styledText = "<font color='#000000'><b>"
+            + MOVE4[1] + "</b></font>" + "<br/><small><font color='#FFFFFF'>" 
+            + MOVE4[2] + "\t\tPWR:" + ((MOVE4[5].equals("null"))? "---" : MOVE4[5]) + "</font></small>";
+            move4.setText(Html.fromHtml(styledText));
+        } else {
+            move4.setBackgroundResource(R.drawable.normal_bubble);
+            move4.setText("---");
+        }
+        
+        move4.setGravity(Gravity.TOP | Gravity.CENTER_HORIZONTAL);
+        movesRow.addView(move4);
         // Add layouts
         drawer.addView(goBack);
         drawer.addView(movesRow);
         
         // Set up onClick listeners
         close.setOnClickListener(this);
-        move1.setOnClickListener(this);
-        move2.setOnClickListener(this);
-        move3.setOnClickListener(this);
-        move4.setOnClickListener(this);
+        if(MOVE1 != null) move1.setOnClickListener(this);
+        if(MOVE2 != null) move2.setOnClickListener(this);
+        if(MOVE3 != null) move3.setOnClickListener(this);
+        if(MOVE4 != null) move4.setOnClickListener(this);
     }
 
     private void buildMovesLayoutPortait(){
@@ -518,13 +569,13 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         
         close = new Button(this);
         close.setId(X_ID);
-        close.setBackgroundResource(R.drawable.silver_bubble);
+        close.setBackgroundResource(R.drawable.normal_bubble);
         LinearLayout.LayoutParams WRAP_HARD_WEIGHT_PARAMS = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, 50, 1f);
         close.setLayoutParams(WRAP_HARD_WEIGHT_PARAMS);
         close.setPadding(0, 0, 0, 0);
         close.setText("X");
-        close.setTextColor(Color.argb(255, 47, 79, 79));
-        close.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
+        close.setTextColor(Color.argb(255, 0, 0, 0));
+        close.setGravity(Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL);
         goBack.addView(close);
         
         LinearLayout movesRow1 = new LinearLayout(this);
@@ -534,26 +585,45 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         movesRow1.setLayoutParams(MATCH_WRAP_WEIGHT_PARAMS);
         movesRow1.setOrientation(LinearLayout.HORIZONTAL);
         movesRow1.setWeightSum(2f);
+        LinearLayout.LayoutParams FULL_MATCH_WEIGHT_PARAMS = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT, 1f);
         
+        String styledText;
         move1 = new Button(this);
         move1.setId(MOVE1_ID);
-        move1.setBackgroundResource(R.drawable.silver_bubble);
-        LinearLayout.LayoutParams WRAP_MATCH_WEIGHT_PARAMS = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT, 1f);
-        move1.setLayoutParams(WRAP_MATCH_WEIGHT_PARAMS);
+        move1.setLayoutParams(FULL_MATCH_WEIGHT_PARAMS);
         move1.setPadding(0, 0, 0, 0);
-        move1.setText(R.string.move1);
-        move1.setTextColor(Color.argb(255, 47, 79, 79));
-        move1.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
+        
+        if(MOVE1 != null){
+            move1.setBackgroundResource(buttonBackground(MOVE1[2]));
+            styledText = "<font color='#000000'><b>"
+            + MOVE1[1] + "</b></font>" + "<br/><small><font color='#FFFFFF'>" 
+            + MOVE1[2] + "\t\tPWR:" + ((MOVE1[5].equals("null"))? "---" : MOVE1[5]) + "</font></small>";
+            move1.setText(Html.fromHtml(styledText));
+        } else {
+            move1.setBackgroundResource(R.drawable.normal_bubble);
+            move1.setText("---");
+        }
+        
+        move1.setGravity(Gravity.TOP | Gravity.CENTER_HORIZONTAL);
         movesRow1.addView(move1);
         
         move2 = new Button(this);
         move2.setId(MOVE2_ID);
-        move2.setBackgroundResource(R.drawable.silver_bubble);
-        move2.setLayoutParams(WRAP_MATCH_WEIGHT_PARAMS);
+        move2.setLayoutParams(FULL_MATCH_WEIGHT_PARAMS);
         move2.setPadding(0, 0, 0, 0);
-        move2.setText(R.string.move2);
-        move2.setTextColor(Color.argb(255, 47, 79, 79));
-        move2.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
+        
+        if(MOVE2 != null){
+            move2.setBackgroundResource(buttonBackground(MOVE2[2]));
+            styledText = "<font color='#000000'><b>"
+            + MOVE2[1] + "</b></font>" + "<br/><small><font color='#FFFFFF'>" 
+            + MOVE2[2] + "\t\tPWR:" + ((MOVE2[5].equals("null"))? "---" : MOVE2[5]) + "</font></small>";
+            move2.setText(Html.fromHtml(styledText));
+        } else {
+            move2.setBackgroundResource(R.drawable.normal_bubble);
+            move2.setText("---");
+        }
+        
+        move2.setGravity(Gravity.TOP | Gravity.CENTER_HORIZONTAL);
         movesRow1.addView(move2);
         
         LinearLayout movesRow2 = new LinearLayout(this);
@@ -564,24 +634,41 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         
         move3 = new Button(this);
         move3.setId(MOVE3_ID);
-        move3.setBackgroundResource(R.drawable.silver_bubble);
-        move3.setLayoutParams(WRAP_MATCH_WEIGHT_PARAMS);
+        move3.setLayoutParams(FULL_MATCH_WEIGHT_PARAMS);
         move3.setPadding(0, 0, 0, 0);
-        move3.setText(R.string.move3);
-        move3.setTextColor(Color.argb(255, 47, 79, 79));
-        move3.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
+        
+        if(MOVE3 != null){
+            move3.setBackgroundResource(buttonBackground(MOVE3[2]));
+            styledText = "<font color='#000000'><b>"
+            + MOVE3[1] + "</b></font>" + "<br/><small><font color='#FFFFFF'>" 
+            + MOVE3[2] + "\t\tPWR:" + ((MOVE3[5].equals("null"))? "---" : MOVE3[5]) + "</font></small>";
+            move3.setText(Html.fromHtml(styledText));
+        } else {
+            move3.setBackgroundResource(R.drawable.normal_bubble);
+            move3.setText("---");
+        }
+        
+        move3.setGravity(Gravity.TOP | Gravity.CENTER_HORIZONTAL);
         movesRow2.addView(move3);
         
         move4 = new Button(this);
         move4.setId(MOVE4_ID);
-        move4.setBackgroundResource(R.drawable.silver_bubble);
-        move4.setLayoutParams(WRAP_MATCH_WEIGHT_PARAMS);
+        move4.setLayoutParams(FULL_MATCH_WEIGHT_PARAMS);
         move4.setPadding(0, 0, 0, 0);
-        move4.setText(R.string.move4);
-        move4.setTextColor(Color.argb(255, 47, 79, 79));
-        move4.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
-        movesRow2.addView(move4);
         
+        if(MOVE4 != null){
+            move4.setBackgroundResource(buttonBackground(MOVE4[2]));
+            styledText = "<font color='#000000'><b>"
+            + MOVE4[1] + "</b></font>" + "<br/><small><font color='#FFFFFF'>" 
+            + MOVE4[2] + "\t\tPWR:" + ((MOVE4[5].equals("null"))? "---" : MOVE4[5]) + "</font></small>";
+            move4.setText(Html.fromHtml(styledText));
+        } else {
+            move4.setBackgroundResource(R.drawable.normal_bubble);
+            move4.setText("---");
+        }
+        
+        move4.setGravity(Gravity.TOP | Gravity.CENTER_HORIZONTAL);
+        movesRow2.addView(move4);
         // Add layouts
         drawer.addView(goBack);
         drawer.addView(movesRow1);
@@ -589,10 +676,10 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         
         // Set up onClick listeners
         close.setOnClickListener(this);
-        move1.setOnClickListener(this);
-        move2.setOnClickListener(this);
-        move3.setOnClickListener(this);
-        move4.setOnClickListener(this);
+        if(MOVE1 != null) move1.setOnClickListener(this);
+        if(MOVE2 != null) move2.setOnClickListener(this);
+        if(MOVE3 != null) move3.setOnClickListener(this);
+        if(MOVE4 != null) move4.setOnClickListener(this);
     }
 
     private void buildTeamLayoutLandscape(){
@@ -607,13 +694,13 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         
         close = new Button(this);
         close.setId(X_ID);
-        close.setBackgroundResource(R.drawable.silver_bubble);
+        close.setBackgroundResource(R.drawable.normal_bubble);
         LinearLayout.LayoutParams WRAP_HARD_WEIGHT_PARAMS = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, 60, 1f);
         close.setLayoutParams(WRAP_HARD_WEIGHT_PARAMS);
         close.setPadding(0, 0, 0, 0);
         close.setText("X");
-        close.setTextColor(Color.argb(255, 47, 79, 79));
-        close.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
+        close.setTextColor(Color.argb(255, 0, 0, 0));
+        close.setGravity(Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL);
         goBack.addView(close);
         
         LinearLayout teamRow = new LinearLayout(this);
@@ -626,62 +713,62 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         
         pkmn1 = new Button(this);
         pkmn1.setId(PKMN1_ID);
-        pkmn1.setBackgroundResource(R.drawable.silver_bubble);
-        LinearLayout.LayoutParams WRAP_MATCH_WEIGHT_PARAMS = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT, 1f);
-        pkmn1.setLayoutParams(WRAP_MATCH_WEIGHT_PARAMS);
+        pkmn1.setBackgroundResource(R.drawable.normal_bubble);
+        LinearLayout.LayoutParams FULL_MATCH_WEIGHT_PARAMS = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT, 1f);
+        pkmn1.setLayoutParams(FULL_MATCH_WEIGHT_PARAMS);
         pkmn1.setPadding(0, 0, 0, 0);
         pkmn1.setText(R.string.pkmn1);
-        pkmn1.setTextColor(Color.argb(255, 47, 79, 79));
+        pkmn1.setTextColor(Color.argb(255, 0, 0, 0));
         pkmn1.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
         teamRow.addView(pkmn1);
         
         pkmn2 = new Button(this);
         pkmn2.setId(PKMN2_ID);
-        pkmn2.setBackgroundResource(R.drawable.silver_bubble);
-        pkmn2.setLayoutParams(WRAP_MATCH_WEIGHT_PARAMS);
+        pkmn2.setBackgroundResource(R.drawable.normal_bubble);
+        pkmn2.setLayoutParams(FULL_MATCH_WEIGHT_PARAMS);
         pkmn2.setPadding(0, 0, 0, 0);
         pkmn2.setText(R.string.pkmn2);
-        pkmn2.setTextColor(Color.argb(255, 47, 79, 79));
+        pkmn2.setTextColor(Color.argb(255, 0, 0, 0));
         pkmn2.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
         teamRow.addView(pkmn2);
         
         pkmn3 = new Button(this);
         pkmn3.setId(PKMN3_ID);
-        pkmn3.setBackgroundResource(R.drawable.silver_bubble);
-        pkmn3.setLayoutParams(WRAP_MATCH_WEIGHT_PARAMS);
+        pkmn3.setBackgroundResource(R.drawable.normal_bubble);
+        pkmn3.setLayoutParams(FULL_MATCH_WEIGHT_PARAMS);
         pkmn3.setPadding(0, 0, 0, 0);
         pkmn3.setText(R.string.pkmn3);
-        pkmn3.setTextColor(Color.argb(255, 47, 79, 79));
+        pkmn3.setTextColor(Color.argb(255, 0, 0, 0));
         pkmn3.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
         teamRow.addView(pkmn3);
         
         pkmn4 = new Button(this);
         pkmn4.setId(PKMN4_ID);
-        pkmn4.setBackgroundResource(R.drawable.silver_bubble);
-        pkmn4.setLayoutParams(WRAP_MATCH_WEIGHT_PARAMS);
+        pkmn4.setBackgroundResource(R.drawable.normal_bubble);
+        pkmn4.setLayoutParams(FULL_MATCH_WEIGHT_PARAMS);
         pkmn4.setPadding(0, 0, 0, 0);
         pkmn4.setText(R.string.pkmn4);
-        pkmn4.setTextColor(Color.argb(255, 47, 79, 79));
+        pkmn4.setTextColor(Color.argb(255, 0, 0, 0));
         pkmn4.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
         teamRow.addView(pkmn4);
         
         pkmn5 = new Button(this);
         pkmn5.setId(PKMN5_ID);
-        pkmn5.setBackgroundResource(R.drawable.silver_bubble);
-        pkmn5.setLayoutParams(WRAP_MATCH_WEIGHT_PARAMS);
+        pkmn5.setBackgroundResource(R.drawable.normal_bubble);
+        pkmn5.setLayoutParams(FULL_MATCH_WEIGHT_PARAMS);
         pkmn5.setPadding(0, 0, 0, 0);
         pkmn5.setText(R.string.pkmn5);
-        pkmn5.setTextColor(Color.argb(255, 47, 79, 79));
+        pkmn5.setTextColor(Color.argb(255, 0, 0, 0));
         pkmn5.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
         teamRow.addView(pkmn5);
         
         pkmn6 = new Button(this);
         pkmn6.setId(PKMN6_ID);
-        pkmn6.setBackgroundResource(R.drawable.silver_bubble);
-        pkmn6.setLayoutParams(WRAP_MATCH_WEIGHT_PARAMS);
+        pkmn6.setBackgroundResource(R.drawable.normal_bubble);
+        pkmn6.setLayoutParams(FULL_MATCH_WEIGHT_PARAMS);
         pkmn6.setPadding(0, 0, 0, 0);
         pkmn6.setText(R.string.pkmn6);
-        pkmn6.setTextColor(Color.argb(255, 47, 79, 79));
+        pkmn6.setTextColor(Color.argb(255, 0, 0, 0));
         pkmn6.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
         teamRow.addView(pkmn6);
         
@@ -711,13 +798,13 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         
         close = new Button(this);
         close.setId(X_ID);
-        close.setBackgroundResource(R.drawable.silver_bubble);
+        close.setBackgroundResource(R.drawable.normal_bubble);
         LinearLayout.LayoutParams WRAP_HARD_WEIGHT_PARAMS = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, 50, 1f);
         close.setLayoutParams(WRAP_HARD_WEIGHT_PARAMS);
         close.setPadding(0, 0, 0, 0);
         close.setText("X");
-        close.setTextColor(Color.argb(255, 47, 79, 79));
-        close.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
+        close.setTextColor(Color.argb(255, 0, 0, 0));
+        close.setGravity(Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL);
         goBack.addView(close);
         
         LinearLayout teamRow1 = new LinearLayout(this);
@@ -730,32 +817,32 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         
         pkmn1 = new Button(this);
         pkmn1.setId(PKMN1_ID);
-        pkmn1.setBackgroundResource(R.drawable.silver_bubble);
-        LinearLayout.LayoutParams WRAP_MATCH_WEIGHT_PARAMS = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT, 1f);
-        pkmn1.setLayoutParams(WRAP_MATCH_WEIGHT_PARAMS);
+        pkmn1.setBackgroundResource(R.drawable.normal_bubble);
+        LinearLayout.LayoutParams FULL_MATCH_WEIGHT_PARAMS = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT, 1f);
+        pkmn1.setLayoutParams(FULL_MATCH_WEIGHT_PARAMS);
         pkmn1.setPadding(0, 0, 0, 0);
         pkmn1.setText(R.string.pkmn1);
-        pkmn1.setTextColor(Color.argb(255, 47, 79, 79));
+        pkmn1.setTextColor(Color.argb(255, 0, 0, 0));
         pkmn1.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
         teamRow1.addView(pkmn1);
         
         pkmn2 = new Button(this);
         pkmn2.setId(PKMN2_ID);
-        pkmn2.setBackgroundResource(R.drawable.silver_bubble);
-        pkmn2.setLayoutParams(WRAP_MATCH_WEIGHT_PARAMS);
+        pkmn2.setBackgroundResource(R.drawable.normal_bubble);
+        pkmn2.setLayoutParams(FULL_MATCH_WEIGHT_PARAMS);
         pkmn2.setPadding(0, 0, 0, 0);
         pkmn2.setText(R.string.pkmn2);
-        pkmn2.setTextColor(Color.argb(255, 47, 79, 79));
+        pkmn2.setTextColor(Color.argb(255, 0, 0, 0));
         pkmn2.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
         teamRow1.addView(pkmn2);
         
         pkmn3 = new Button(this);
         pkmn3.setId(PKMN3_ID);
-        pkmn3.setBackgroundResource(R.drawable.silver_bubble);
-        pkmn3.setLayoutParams(WRAP_MATCH_WEIGHT_PARAMS);
+        pkmn3.setBackgroundResource(R.drawable.normal_bubble);
+        pkmn3.setLayoutParams(FULL_MATCH_WEIGHT_PARAMS);
         pkmn3.setPadding(0, 0, 0, 0);
         pkmn3.setText(R.string.pkmn3);
-        pkmn3.setTextColor(Color.argb(255, 47, 79, 79));
+        pkmn3.setTextColor(Color.argb(255, 0, 0, 0));
         pkmn3.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
         teamRow1.addView(pkmn3);
         
@@ -767,31 +854,31 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         
         pkmn4 = new Button(this);
         pkmn4.setId(PKMN4_ID);
-        pkmn4.setBackgroundResource(R.drawable.silver_bubble);
-        pkmn4.setLayoutParams(WRAP_MATCH_WEIGHT_PARAMS);
+        pkmn4.setBackgroundResource(R.drawable.normal_bubble);
+        pkmn4.setLayoutParams(FULL_MATCH_WEIGHT_PARAMS);
         pkmn4.setPadding(0, 0, 0, 0);
         pkmn4.setText(R.string.pkmn4);
-        pkmn4.setTextColor(Color.argb(255, 47, 79, 79));
+        pkmn4.setTextColor(Color.argb(255, 0, 0, 0));
         pkmn4.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
         teamRow2.addView(pkmn4);
         
         pkmn5 = new Button(this);
         pkmn5.setId(PKMN5_ID);
-        pkmn5.setBackgroundResource(R.drawable.silver_bubble);
-        pkmn5.setLayoutParams(WRAP_MATCH_WEIGHT_PARAMS);
+        pkmn5.setBackgroundResource(R.drawable.normal_bubble);
+        pkmn5.setLayoutParams(FULL_MATCH_WEIGHT_PARAMS);
         pkmn5.setPadding(0, 0, 0, 0);
         pkmn5.setText(R.string.pkmn5);
-        pkmn5.setTextColor(Color.argb(255, 47, 79, 79));
+        pkmn5.setTextColor(Color.argb(255, 0, 0, 0));
         pkmn5.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
         teamRow2.addView(pkmn5);
         
         pkmn6 = new Button(this);
         pkmn6.setId(PKMN6_ID);
-        pkmn6.setBackgroundResource(R.drawable.silver_bubble);
-        pkmn6.setLayoutParams(WRAP_MATCH_WEIGHT_PARAMS);
+        pkmn6.setBackgroundResource(R.drawable.normal_bubble);
+        pkmn6.setLayoutParams(FULL_MATCH_WEIGHT_PARAMS);
         pkmn6.setPadding(0, 0, 0, 0);
         pkmn6.setText(R.string.pkmn6);
-        pkmn6.setTextColor(Color.argb(255, 47, 79, 79));
+        pkmn6.setTextColor(Color.argb(255, 0, 0, 0));
         pkmn6.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
         teamRow2.addView(pkmn6);
         
@@ -935,17 +1022,73 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         layout.addView(background, 0); // Add new ImageView to layout          
     }
     
-    private void action(int move){
-        if(move == 1){
+    private int buttonBackground(String token){
+        if(token.equals("BUG")) return R.drawable.bug_bubble;
+        else if(token.equals("DARK")) return R.drawable.dark_bubble;
+        else if(token.equals("DRAGON")) return R.drawable.dragon_bubble;
+        else if(token.equals("ELECTRIC")) return R.drawable.electric_bubble;
+        else if(token.equals("FAIRY")) return R.drawable.fairy_bubble;
+        else if(token.equals("FIGHTING")) return R.drawable.fighting_bubble;
+        else if(token.equals("FIRE")) return R.drawable.fire_bubble;
+        else if(token.equals("FLYING")) return R.drawable.flying_bubble;
+        else if(token.equals("GHOST")) return R.drawable.ghost_bubble;
+        else if(token.equals("GRASS")) return R.drawable.grass_bubble;
+        else if(token.equals("GROUND")) return R.drawable.ground_bubble;
+        else if(token.equals("ICE")) return R.drawable.ice_bubble;
+        else if(token.equals("POISON")) return R.drawable.poison_bubble;
+        else if(token.equals("PSYCHIC")) return R.drawable.psychic_bubble;
+        else if(token.equals("ROCK")) return R.drawable.rock_bubble;
+        else if(token.equals("STEEL")) return R.drawable.steel_bubble;
+        else if(token.equals("WATER")) return R.drawable.water_bubble;
+        else return R.drawable.normal_bubble;
+    }
+    
+    private void loadMoves(int dexNo){
+        /* Used to setup SharedPreferences, if it has not been set */
+        moveData = getSharedPreferences("genOneMoveList", MODE_PRIVATE);
+        if(!moveData.getBoolean("setState", false)){
+            Settings load = new Settings(this);
+            load.setMoves();
+            moveData = getSharedPreferences("genOneMoveList", MODE_PRIVATE);
+            text.setText("Moves have not been set");    
+        } //else text.setText("Moves already set");
+        
+        moveSet = getSharedPreferences("learningSet", MODE_PRIVATE);
+        if(!moveSet.getBoolean("setState", false)){
+            Settings load = new Settings(this);
+            load.setLearnedMoves();
+            moveSet = getSharedPreferences("learningSet", MODE_PRIVATE);
+            text.setText("Gathered moves set");    
+        } //else text.setText("Moves already set");
+        
+        Set<String> tempSet = moveSet.getStringSet(String.valueOf(dexNo), null);
+        Iterator position = tempSet.iterator();
+        String[] learningSet = new String[tempSet.size()];
+        
+        String move, index;
+        int i;
+        while(position.hasNext()){
+            index = "";
+            move = position.next().toString();
+                        
+            for(i = 0; i < move.length(); i++){
+                if(move.charAt(i) == '_') break;
+                else index += move.charAt(i);
+            }
+            
+            learningSet[Integer.parseInt(index)] = move.substring(i + 1);
+        }
+        
+        for(int j = 1; (MOVE1 == null || MOVE2 == null || MOVE3 == null || MOVE4 == null) && j < learningSet.length; j += 2){
             if(MOVE1 == null){
                 try {
-                    Set<String> tempSet = moveData.getStringSet(String.valueOf(gen.nextInt(164) + 1), null); // Retrieve HashSet & store in Set var
-                    Iterator index = tempSet.iterator(); // Create an interator
-                    MOVE1 = new String[tempSet.size()]; // Instantiate MOVE1 array
+                    Set<String> tempSet2 = moveData.getStringSet(learningSet[j + 1], null); // Retrieve HashSet & store in Set var
+                    position = tempSet2.iterator(); // Create an interator
+                    MOVE1 = new String[tempSet2.size()]; // Instantiate MOVE1 array
                     
                     String values; // temp var
-                    while(index.hasNext()){ // Populate details into MOVE1 array
-                        values = index.next().toString(); // Capture obj & convert to String-- iterator then moves to next
+                    while(position.hasNext()){ // Populate details into MOVE1 array
+                        values = position.next().toString(); // Capture obj & convert to String-- iterator then moves to next
                         
                         if(values.length() > 2) MOVE1[Integer.parseInt(values.substring(0, 1))] = values.substring(2);
                         else MOVE1[Integer.parseInt(values.substring(0, 1))] = "";
@@ -953,19 +1096,15 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
                 } catch(Exception cet){
                     text.setText(cet.toString());
                 }
-            }
-            
-            text.setText(MOVE1[0] + ", " + MOVE1[1] + ", " + MOVE1[2] + ", " + MOVE1[3] + ", " + MOVE1[4] + ", " + MOVE1[5] + ", " + MOVE1[6] + ", " + MOVE1[7]);
-        } else if(move == 2) {
-            if(MOVE2 == null){
+            } else if(MOVE2 == null){
                 try {
-                    Set<String> tempSet = moveData.getStringSet(String.valueOf(gen.nextInt(164) + 1), null); // Retrieve HashSet & store in Set var
-                    Iterator index = tempSet.iterator(); // Create an interator
-                    MOVE2 = new String[tempSet.size()]; // Instantiate MOVE2 array
+                    Set<String> tempSet2 = moveData.getStringSet(learningSet[j + 1], null); // Retrieve HashSet & store in Set var
+                    position = tempSet2.iterator(); // Create an interator
+                    MOVE2 = new String[tempSet2.size()]; // Instantiate MOVE2 array
                     
                     String values; // temp var
-                    while(index.hasNext()){ // Populate details into MOVE2 array
-                        values = index.next().toString(); // Capture obj & convert to String-- iterator then moves to next
+                    while(position.hasNext()){ // Populate details into MOVE2 array
+                        values = position.next().toString(); // Capture obj & convert to String-- iterator then moves to next
                         
                         if(values.length() > 2) MOVE2[Integer.parseInt(values.substring(0, 1))] = values.substring(2);
                         else MOVE2[Integer.parseInt(values.substring(0, 1))] = "";
@@ -973,19 +1112,15 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
                 } catch(Exception cet){
                     text.setText(cet.toString());
                 }
-            }
-            
-            text.setText(MOVE2[0] + ", " + MOVE2[1] + ", " + MOVE2[2] + ", " + MOVE2[3] + ", " + MOVE2[4] + ", " + MOVE2[5] + ", " + MOVE2[6] + ", " + MOVE2[7]);
-        } else if(move == 3) {
-            if(MOVE3 == null){
+            } else if(MOVE3 == null){
                 try {
-                    Set<String> tempSet = moveData.getStringSet(String.valueOf(gen.nextInt(164) + 1), null); // Retrieve HashSet & store in Set var
-                    Iterator index = tempSet.iterator(); // Create an interator
-                    MOVE3 = new String[tempSet.size()]; // Instantiate MOVE3 array
+                    Set<String> tempSet2 = moveData.getStringSet(learningSet[j + 1], null); // Retrieve HashSet & store in Set var
+                    position = tempSet2.iterator(); // Create an interator
+                    MOVE3 = new String[tempSet2.size()]; // Instantiate MOVE3 array
                     
                     String values; // temp var
-                    while(index.hasNext()){ // Populate details into MOVE3 array
-                        values = index.next().toString(); // Capture obj & convert to String-- iterator then moves to next
+                    while(position.hasNext()){ // Populate details into MOVE3 array
+                        values = position.next().toString(); // Capture obj & convert to String-- iterator then moves to next
                         
                         if(values.length() > 2) MOVE3[Integer.parseInt(values.substring(0, 1))] = values.substring(2);
                         else MOVE3[Integer.parseInt(values.substring(0, 1))] = "";
@@ -993,19 +1128,15 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
                 } catch(Exception cet){
                     text.setText(cet.toString());
                 }
-            }
-            
-            text.setText(MOVE3[0] + ", " + MOVE3[1] + ", " + MOVE3[2] + ", " + MOVE3[3] + ", " + MOVE3[4] + ", " + MOVE3[5] + ", " + MOVE3[6] + ", " + MOVE3[7]);
-        } else if(move == 4) {
-            if(MOVE4 == null){
+            } else if(MOVE4 == null){
                 try {
-                    Set<String> tempSet = moveData.getStringSet(String.valueOf(gen.nextInt(164) + 1), null); // Retrieve HashSet & store in Set var
-                    Iterator index = tempSet.iterator(); // Create an interator
-                    MOVE4 = new String[tempSet.size()]; // Instantiate MOVE4 array
+                    Set<String> tempSet2 = moveData.getStringSet(learningSet[j + 1], null); // Retrieve HashSet & store in Set var
+                    position = tempSet2.iterator(); // Create an interator
+                    MOVE4 = new String[tempSet2.size()]; // Instantiate MOVE4 array
                     
                     String values; // temp var
-                    while(index.hasNext()){ // Populate details into MOVE4 array
-                        values = index.next().toString(); // Capture obj & convert to String-- iterator then moves to next
+                    while(position.hasNext()){ // Populate details into MOVE4 array
+                        values = position.next().toString(); // Capture obj & convert to String-- iterator then moves to next
                         
                         if(values.length() > 2) MOVE4[Integer.parseInt(values.substring(0, 1))] = values.substring(2);
                         else MOVE4[Integer.parseInt(values.substring(0, 1))] = "";
@@ -1014,7 +1145,17 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
                     text.setText(cet.toString());
                 }
             }
-            
+        }
+    }
+    
+    private void action(int move){
+        if(move == 1){
+           text.setText(MOVE1[0] + ", " + MOVE1[1] + ", " + MOVE1[2] + ", " + MOVE1[3] + ", " + MOVE1[4] + ", " + MOVE1[5] + ", " + MOVE1[6] + ", " + MOVE1[7]);
+        } else if(move == 2) {
+            text.setText(MOVE2[0] + ", " + MOVE2[1] + ", " + MOVE2[2] + ", " + MOVE2[3] + ", " + MOVE2[4] + ", " + MOVE2[5] + ", " + MOVE2[6] + ", " + MOVE2[7]);
+        } else if(move == 3) {
+            text.setText(MOVE3[0] + ", " + MOVE3[1] + ", " + MOVE3[2] + ", " + MOVE3[3] + ", " + MOVE3[4] + ", " + MOVE3[5] + ", " + MOVE3[6] + ", " + MOVE3[7]);
+        } else if(move == 4) {
             text.setText(MOVE4[0] + ", " + MOVE4[1] + ", " + MOVE4[2] + ", " + MOVE4[3] + ", " + MOVE4[4] + ", " + MOVE4[5] + ", " + MOVE4[6] + ", " + MOVE4[7]);
         }
     }
