@@ -13,12 +13,12 @@ import java.util.Random;
 public class StatGenerator {
     private static final Random gen = new Random();
     private static final byte[] order = new byte[3];
-    private final String nature = Nature();
+    protected final String nature = Nature();
     private final float INCREASE = 1.1F, DECREASE = 0.9F, NEUTRAL = 1F;
     protected short HP, Atk, Def, SpA, SpD, Spe;
     
     /* Method used for generating stats of a random pokemon */
-    protected void StatGenrator(short tHP, short tAtk, short tDef, short tSpA, short tSpD, short tSpe, byte limit){
+    StatGenerator(short tHP, short tAtk, short tDef, short tSpA, short tSpD, short tSpe, byte limit){
         /* Both base & iv data sets need to be imported as well as natures */
         final short bHP = tHP, bAtk = tAtk, bDef = tDef, bSpA = tSpA, bSpD = tSpD, bSpe = tSpe;
         
@@ -30,7 +30,7 @@ public class StatGenerator {
         /* Initialize EVs */
         short evHP = 0, evAtk = 0, evDef = 0, evSpA = 0, evSpD = 0, evSpe = 0;
         
-        for(byte LVL = 1; LVL < limit; LVL++){
+        for(byte LVL = 1; LVL <= limit; LVL++){
             /* Choose top three performing attr. randomly */
             int choice = gen.nextInt(6);
             int choice2, choice3;

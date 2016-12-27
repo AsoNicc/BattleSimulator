@@ -26,13 +26,14 @@ public class Animated extends View {
             OPPONENT_FRAME_TOPRIGHT_Y, USER_FRAME_BOTTOMLEFT_X, 
             USER_FRAME_BOTTOMLEFT_Y, USER_FRAME_BOTTOMRIGHT_X, 
             USER_FRAME_BOTTOMRIGHT_Y, USER_FRAME_TOPLEFT_X, USER_FRAME_TOPLEFT_Y,
-            USER_FRAME_TOPRIGHT_X, USER_FRAME_TOPRIGHT_Y;
+            USER_FRAME_TOPRIGHT_X, USER_FRAME_TOPRIGHT_Y,
+            user_shift_x = 0, opponent_shift_x = 0, 
+            user_shift_y = 0, opponent_shift_y = 0;
     protected static String pokemon;
-    protected static int user_shift_x = 0, opponent_shift_x = 0, 
-            user_shift_y = 0, opponent_shift_y = 0,
-            user_speed_inc = 5, opponent_speed_inc = 1,
-            user_speed_percentage = 0, opponent_speed_percentage = 0;
+    protected static float user_speed_inc = 6f/*:= 1sec :. make 6f a final float later*/, opponent_speed_inc = 1f,
+            user_speed_percentage = 0f, opponent_speed_percentage = 0f;
     protected int LARGEST_HEIGHT, LARGEST_WIDTH;
+    protected static short pokemon_HP, pokemon_lvl;
     private final float USER_PLACEMENT_X = 1.0f, OPPONENT_PLACEMENT_X = 0.9f, 
             USER_PLACEMENT_Y = 0.9f, OPPONENT_PLACEMENT_Y = 1f;
     private AssetManager asset;
@@ -144,7 +145,7 @@ public class Animated extends View {
                 brush);
         brush.setStyle(Paint.Style.FILL);
         brush.setColor(getHealthBarColor(50));
-        brush.setStrokeWidth(10.0f);
+        brush.setStrokeWidth(10f);
         //canvas.drawRect(left (x-val), top (y-val), right (x-val), bottom (y-val), Paint)
         canvas.drawRect(Round( OPPONENT_FRAME_TOPLEFT_X + opponent.getWidth()/2f - HEALTH_BAR_LENGTH/2f ), 
                 Round( (OPPONENT_FRAME_TOPLEFT_Y - 40)*adjust(pokemon) ), 
@@ -153,7 +154,7 @@ public class Animated extends View {
                 brush);
         brush.setColor(Color.argb(255, 255, 255, 255));
         brush.setStyle(Paint.Style.FILL);
-        brush.setTextSize(25.0f);
+        brush.setTextSize(25f);
         canvas.drawText("HP", 
                 Round( OPPONENT_FRAME_TOPLEFT_X + opponent.getWidth()/2f - HEALTH_BAR_LENGTH/2f - 50/*px*/ ), 
                 Round( (OPPONENT_FRAME_TOPLEFT_Y - 25/*px*/)*adjust(pokemon) ), 
@@ -163,7 +164,9 @@ public class Animated extends View {
         /* Get opponent Pokemon name text */
         if(pokemon.equals("nidorang")) temp = "Nidoran♀";
         else if(pokemon.equals("nidoranb")) temp = "Nidoran♂";
-        else temp = pokemon.substring(0, 1).toUpperCase() + pokemon.substring(1) + " | LVL???";
+        else temp = pokemon.substring(0, 1).toUpperCase() + pokemon.substring(1); // + ' ' + genderString
+        
+        temp += " | LVL" + pokemon_lvl;
 
         //Draw opponent name text
         canvas.drawText(temp, 
@@ -172,7 +175,7 @@ public class Animated extends View {
                 brush);
         
         //Draw opponent HP number
-        canvas.drawText("???/???", 
+        canvas.drawText(String.valueOf(Round( ((pokemon_HP/2f)/pokemon_HP)*100 /*damage percentage*/ )) + '%', 
                 Round( OPPONENT_FRAME_TOPLEFT_X + opponent.getWidth()/2f - HEALTH_BAR_LENGTH/2f ), 
                 Round( (OPPONENT_FRAME_TOPLEFT_Y - 5/*px*/)*adjust(pokemon) ), 
                 brush);
@@ -229,7 +232,9 @@ public class Animated extends View {
         /* Get user Pokemon name text */
         if(pokemon.equals("nidorang")) temp = "Nidoran♀";
         else if(pokemon.equals("nidoranb")) temp = "Nidoran♂";
-        else temp = pokemon.substring(0, 1).toUpperCase() + pokemon.substring(1) + " | LVL???";
+        else temp = pokemon.substring(0, 1).toUpperCase() + pokemon.substring(1);
+        
+        temp += " | LVL???";
         
         //Draw user name text
         canvas.drawText(temp, ((config.orientation == Configuration.ORIENTATION_PORTRAIT)? 
@@ -250,12 +255,12 @@ public class Animated extends View {
         speedbar_start_x = Round( canvas.getWidth()*11/20f );
         speedbar_end_x = (config.orientation == Configuration.ORIENTATION_PORTRAIT)? 
                 Round( (canvas.getWidth()*11/20f + LARGEST_WIDTH*2) )
-                : Round( (canvas.getWidth()*11/20f + LARGEST_WIDTH*3.5) );
+                : Round( (canvas.getWidth()*11/20f + LARGEST_WIDTH*3.5f) );
         speedbar_start_y = Round( canvas.getHeight()*11/20f );
         speedbar_end_y = Round( canvas.getHeight()*11/20f + 10 );
         commandEnd_startAct_x = (config.orientation == Configuration.ORIENTATION_PORTRAIT)? 
                         Round( (canvas.getWidth()*11/20f + LARGEST_WIDTH*2) - (LARGEST_WIDTH*2)*0.2 ) 
-                        : Round( (canvas.getWidth()*11/20f + LARGEST_WIDTH*3.5) - (LARGEST_WIDTH*3.5)*0.2 );
+                        : Round( (canvas.getWidth()*11/20f + LARGEST_WIDTH*3.5f) - (LARGEST_WIDTH*3.5f)*0.2 );
         action_start_x = commandEnd_startAct_x;
         //COMMAND portion of speed meter
         brush.setStyle(Paint.Style.FILL);
@@ -286,8 +291,8 @@ public class Animated extends View {
         
         //COMMAND SPEED BAR (opponent)
         opponent_speed = (config.orientation == Configuration.ORIENTATION_PORTRAIT)? 
-                        Round( canvas.getWidth()*11/20f + LARGEST_WIDTH*2 )*(opponent_speed_percentage/100f)
-                        : Round( canvas.getWidth()*11/20f + LARGEST_WIDTH*3.5 )*(opponent_speed_percentage/100f);
+                        Round( canvas.getWidth()*11/20f + LARGEST_WIDTH*2 )*(opponent_speed_percentage/100)
+                        : Round( canvas.getWidth()*11/20f + LARGEST_WIDTH*3.5f )*(opponent_speed_percentage/100);
         brush.setStyle(Paint.Style.FILL);
         brush.setColor(Color.argb(128, 0, 0, 139));
         brush.setStrokeWidth(10f);
@@ -393,8 +398,8 @@ public class Animated extends View {
         
         //COMMAND SPEED BAR (opponent)
         user_speed = (config.orientation == Configuration.ORIENTATION_PORTRAIT)? 
-                        Round( canvas.getWidth()*11/20f + LARGEST_WIDTH*2 )*(user_speed_percentage/100f)
-                        : Round( canvas.getWidth()*11/20f + LARGEST_WIDTH*3.5 )*(user_speed_percentage/100f);
+                        ( canvas.getWidth()*11/20f + LARGEST_WIDTH*2 )*(user_speed_percentage/100)
+                        : ( canvas.getWidth()*11/20f + LARGEST_WIDTH*3.5f )*(user_speed_percentage/100);
         brush.setStyle(Paint.Style.FILL);
         brush.setColor(Color.argb(128, 0, 0, 139));
         brush.setStrokeWidth(10f);

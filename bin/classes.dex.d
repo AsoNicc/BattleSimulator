@@ -8,6 +8,7 @@ C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemo
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Battle.class \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\BuildConfig.class \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\ExpCalculator.class \
+C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Pokemon.class \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\R$array.class \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\R$attr.class \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\R$drawable.class \

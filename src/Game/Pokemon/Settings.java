@@ -420,7 +420,7 @@ public class Settings extends Activity {
             loadDetails(new String[]{"40", "Poison Sting", "POISON", "Physical", "1", "15", "TRACKING", "May poison the opponent."}); //
             loadDetails(new String[]{"41", "Twineedle", "BUG", "Physical", "1", "25", "TRACKING", "Hits twice. May poison opponent."}); //
             loadDetails(new String[]{"42", "Pin Missile", "BUG", "Physical", "1", "25", "TRACKING", "Hits 2-5 times."}); //
-            loadDetails(new String[]{"43", "Leer", "NORMAL", "Status", "3", "null", "ONSCREEN", "Lowers opponent's Defense."}); //
+            loadDetails(new String[]{"43", "Leer", "NORMAL", "Status", "1", "null", "ONSCREEN", "Lowers opponent's Defense."}); //
             loadDetails(new String[]{"44", "Bite", "DARK", "Physical", "1", "60", "TRACKING", "May cancel opponent's action entirely."}); //
             loadDetails(new String[]{"45", "Growl", "NORMAL", "Status", "3", "null", "ONSCREEN", "Lowers opponent's Attack."}); //
             loadDetails(new String[]{"46", "Roar", "NORMAL", "Status", "4", "null", "ONSCREEN", "In trainer battles, the opponent switches. In random battles, the battle ends."}); //

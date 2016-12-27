@@ -4,7 +4,6 @@ import android.app.ActionBar;
 import android.app.ActionBar.OnNavigationListener;
 import android.app.Activity;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.Point;
@@ -14,6 +13,7 @@ import android.os.Handler;
 import android.text.Html;
 import android.view.Display;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -28,13 +28,12 @@ import android.widget.LinearLayout;
 import android.widget.SpinnerAdapter;
 import android.widget.TextView;
 import static java.lang.Thread.sleep;
-import java.util.Iterator;
 import java.util.Random;
-import java.util.Set;
 
 public class Battle extends Activity implements OnClickListener, OnTouchListener {
     protected static int ARENABOX;
     private Animated surface;
+    private static Pokemon pokemon;
     private boolean activeMove = true, error = false,  held = false, initialState = true, 
             killHold = false, newTouch = true, touchClear = true, touched_user, touched_opponent;
     private Button pokeball, buff, cheer, close, moves, forfeit, move1, move2, move3, move4, pkmn1, pkmn2, pkmn3, pkmn4, pkmn5, pkmn6, swap;
@@ -43,7 +42,7 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
     private FrameLayout layout;
     private Handler handler;
     private ImageView viewer;
-    private int frame, dexNumber;
+    private int frame, PKMN1, PKMN2, PKMN3, PKMN4, PKMN5, PKMN6; /*PKMN? holds the dexNos*/
     private static int BACKGROUND_ID, CHEER_ID, SWAP_AND_FORFEIT_ID, BUFF_ID, FORFEIT_ID, MOVES_AND_BUFF_ID, MOVES_ID, SWAP_ID;
     private final int ANGLE = 45, BOUND = 75, MARGIN = 25, MOVES_ROW1_ID = 2131165202, 
             MOVES_ROW2_ID = 2131165203, TEAM_ROW1_ID = 2131165204, TEAM_ROW2_ID = 2131165205, 
@@ -53,17 +52,23 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
             PKMN6_ID = 2131165215, X_ID = 2131165216, TOUCH_LATENCY_TIME = 500, ILLEGAL_HOLD_TIMER = 500;
     private LinearLayout drawer;
     private final LinearLayout.LayoutParams FULL_MATCH_PARAMS = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
+    private static final Pokemon[] team = new Pokemon[6];
+    private Pokemon temp;
     private final Random gen = new Random();
-    private static SharedPreferences moveData, moveSet;
-    private static final String STATE_POKEMON = "pokemon", STATE_FRAME = "frame", STATE_IMAGE_ID = "iv";
-    private String MOVE1[], MOVE2[], MOVE3[], MOVE4[];
+    private static final String STATE_POKEMON = "pokemon", STATE_FRAME = "frame", 
+            STATE_IMAGE_ID = "iv";
     public static TextView text;
+    private static View vMoves, vSwap;
     
     @Override
     protected void onCreate(Bundle savedInstanceState){
         try {
             super.onCreate(savedInstanceState);
-            setContentView(R.layout.battlefield); //Set layout
+            View root = LayoutInflater.from(this).inflate(R.layout.battlefield, null); //Holds reference data of entire layout
+            setContentView(root); //Sets view
+            
+            vMoves = root.findViewById(R.id.bMoves);
+            vSwap = root.findViewById(R.id.bSwap); 
             text = (TextView)findViewById(R.id.tvException); //Prep for debugging use
             
             /* Used in determining postions of sprites, and sprtie frames */
@@ -91,6 +96,15 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
                 frame = savedInstanceState.getInt(STATE_FRAME);
             } else {
                 // Probably initialize members with default values for a new instance
+                team[0] = new Pokemon(this);
+                team[1] = new Pokemon(this);
+                team[2] = new Pokemon(this);
+                team[3] = new Pokemon(this);
+                team[4] = new Pokemon(this);
+                team[5] = new Pokemon(this);
+                pokemon = team[0];
+                Animated.pokemon_HP = pokemon.HP;
+                Animated.pokemon_lvl = pokemon.level;        
             }        
 
             initialize();
@@ -137,10 +151,8 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
             @Override
             public boolean onNavigationItemSelected(int position, long id){                
                 // Do stuff when navigation item is selected
-                dexNumber = position + 1;
-                loadMoves(dexNumber);
-                
-                if(initialState) surface.setPokemon(items[position]);
+                //if(initialState) surface.setPokemon(items[position]);
+                if(initialState) surface.setPokemon(items[pokemon.dexNo - 1]);
                 else initialState = true;
                 //Log.d("NavigationItemSelected", items[position]); // Debug
                 return true;
@@ -240,7 +252,11 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
             else buildTeamLayoutPortait();    
         } else if(v.getId() == R.id.bBuff){
             // NOTHING YET
-            text.setText("Buff applied!");
+            //text.setText("Buff applied!");
+            text.setText("Inst: " + pokemon + " DexNo: " + pokemon.dexNo + " Name: " + pokemon.name + " HP: " + pokemon.HP + " Atk: " + pokemon.Atk + " Def: " + pokemon.Def + " SpA: " + pokemon.SpA + " SpD: " + pokemon.SpD + " Spe: " + pokemon.Spe + " TYPE1: " + pokemon.TYPE1 + " TYPE2: " + pokemon.TYPE2 + " Nature: " + pokemon.nature);
+            /* delete this later. this is a test case of external influence on Animated class */
+            Animated.user_speed_percentage = 0;
+            Animated.opponent_speed_percentage = 0;
         } else if(v.getId() == R.id.bForfeit){
             finish();
         } else if(v.getId() == X_ID){
@@ -249,60 +265,33 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
             
             if(config.orientation == Configuration.ORIENTATION_LANDSCAPE) restoreDrawerLayoutLandscape();
             else restoreDrawerLayoutPortrait();
-        } else if(v.getId() == MOVE1_ID){
+        } else if(v.getId() == MOVE1_ID) action(0);
+        else if(v.getId() == MOVE2_ID) action(1);
+        else if(v.getId() == MOVE3_ID) action(2);
+        else if(v.getId() == MOVE4_ID) action(3);
+        else if(v.getId() == PKMN1_ID){
             // NOTHING YET
-            action(1);
-        } else if(v.getId() == MOVE2_ID){
-            // NOTHING YET
-            action(2);
-        } else if(v.getId() == MOVE3_ID){
-            // NOTHING YET
-            action(3);
-        } else if(v.getId() == MOVE4_ID){
-            // NOTHING YET
-            action(4);
-        } else if(v.getId() == PKMN1_ID){
-            // NOTHING YET
-            text.setText("Pokemon 1");
-            /* Send in corresponding dexNo of chosen pokemon HERE */
-            /**/
-            /* Then you load their moves here */
-            loadMoves(dexNumber);
+//            text.setText("Pokemon 1");
+            swap(0);
         } else if(v.getId() == PKMN2_ID){
             // NOTHING YET
-            text.setText("Pokemon 2");
-            /* Send in corresponding dexNo of chosen pokemon HERE */
-            /**/
-            /* Then you load their moves here */
-            loadMoves(dexNumber);
+//            text.setText("Pokemon 2");
+            swap(1);
         } else if(v.getId() == PKMN3_ID){
             // NOTHING YET
-            text.setText("Pokemon 3");
-            /* Send in corresponding dexNo of chosen pokemon HERE */
-            /**/
-            /* Then you load their moves here */
-            loadMoves(dexNumber);
+            swap(2);
         } else if(v.getId() == PKMN4_ID){
             // NOTHING YET
-            text.setText("Pokemon 4");
-            /* Send in corresponding dexNo of chosen pokemon HERE */
-            /**/
-            /* Then you load their moves here */
-            loadMoves(dexNumber);
+//            text.setText("Pokemon 4");
+            swap(3);
         } else if(v.getId() == PKMN5_ID){
             // NOTHING YET
-            text.setText("Pokemon 5");
-            /* Send in corresponding dexNo of chosen pokemon HERE */
-            /**/
-            /* Then you load their moves here */
-            loadMoves(dexNumber);
+//            text.setText("Pokemon 5");
+            swap(4);
         } else if(v.getId() == PKMN6_ID){
             // NOTHING YET
-            text.setText("Pokemon 6");
-            /* Send in corresponding dexNo of chosen pokemon HERE */
-            /**/
-            /* Then you load their moves here */
-            loadMoves(dexNumber);
+//            text.setText("Pokemon 6");
+            swap(5);
         } else if(v.getId() == CHEER_ID){
             // NOTHING YET
             text.setText("Go!!!");
@@ -439,7 +428,7 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         forfeit.setOnClickListener(this); 
     }
     
-    private void buildMovesLayoutLandscape(){        
+    private void buildMovesLayoutLandscape(){ try{       
         drawer.setWeightSum(10f);
         
         LinearLayout goBack = new LinearLayout(this);
@@ -475,11 +464,11 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         move1.setLayoutParams(FULL_MATCH_WEIGHT_PARAMS);
         move1.setPadding(0, 0, 0, 0);
         
-        if(MOVE1 != null){
-            move1.setBackgroundResource(buttonBackground(MOVE1[2]));
+        if(pokemon.moves[0] != null && pokemon.moves[0]/**/[1] != null && pokemon.moves[0]/**/[2] != null && pokemon.moves[0]/**/[5] != null){
+            move1.setBackgroundResource(buttonBackground(pokemon.moves[0][2]));
             styledText = "<font color='#000000'><b>"
-            + MOVE1[1] + "</b></font>" + "<br/><small><font color='#FFFFFF'>" 
-            + MOVE1[2] + "\t\tPWR:" + ((MOVE1[5].equals("null"))? "---" : MOVE1[5]) + "</font></small>";
+            + pokemon.moves[0][1] + "</b></font>" + "<br/><small><font color='#FFFFFF'>" 
+            + pokemon.moves[0][2] + "\t\tPWR:" + ((pokemon.moves[0][5].equals("null"))? "---" : pokemon.moves[0][5]) + "</font></small>";
             move1.setText(Html.fromHtml(styledText));
         } else {
             move1.setBackgroundResource(R.drawable.normal_bubble);
@@ -494,11 +483,11 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         move2.setLayoutParams(FULL_MATCH_WEIGHT_PARAMS);
         move2.setPadding(0, 0, 0, 0);
             
-        if(MOVE2 != null){
-            move2.setBackgroundResource(buttonBackground(MOVE2[2]));
+        if(pokemon.moves[1] != null && pokemon.moves[1]/**/[1] != null && pokemon.moves[1]/**/[2] != null && pokemon.moves[1]/**/[5] != null){
+            move2.setBackgroundResource(buttonBackground(pokemon.moves[1][2]));
             styledText = "<font color='#000000'><b>"
-            + MOVE2[1] + "</b></font>" + "<br/><small><font color='#FFFFFF'>" 
-            + MOVE2[2] + "\t\tPWR:" + ((MOVE2[5].equals("null"))? "---" : MOVE2[5]) + "</font></small>";
+            + pokemon.moves[1][1] + "</b></font>" + "<br/><small><font color='#FFFFFF'>" 
+            + pokemon.moves[1][2] + "\t\tPWR:" + ((pokemon.moves[1][5].equals("null"))? "---" : pokemon.moves[1][5]) + "</font></small>";
             move2.setText(Html.fromHtml(styledText));
         } else {
             move2.setBackgroundResource(R.drawable.normal_bubble);
@@ -513,11 +502,11 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         move3.setLayoutParams(FULL_MATCH_WEIGHT_PARAMS);
         move3.setPadding(0, 0, 0, 0);
         
-        if(MOVE3 != null){
-            move3.setBackgroundResource(buttonBackground(MOVE3[2]));
+        if(pokemon.moves[2] != null&& pokemon.moves[2]/**/[1] != null && pokemon.moves[2]/**/[2] != null && pokemon.moves[2]/**/[5] != null){
+            move3.setBackgroundResource(buttonBackground(pokemon.moves[2][2]));
             styledText = "<font color='#000000'><b>"
-            + MOVE3[1] + "</b></font>" + "<br/><small><font color='#FFFFFF'>" 
-            + MOVE3[2] + "\t\tPWR:" + ((MOVE3[5].equals("null"))? "---" : MOVE3[5]) + "</font></small>";
+            + pokemon.moves[2][1] + "</b></font>" + "<br/><small><font color='#FFFFFF'>" 
+            + pokemon.moves[2][2] + "\t\tPWR:" + ((pokemon.moves[2][5].equals("null"))? "---" : pokemon.moves[2][5]) + "</font></small>";
             move3.setText(Html.fromHtml(styledText));
         } else {
             move3.setBackgroundResource(R.drawable.normal_bubble);
@@ -532,11 +521,11 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         move4.setLayoutParams(FULL_MATCH_WEIGHT_PARAMS);
         move4.setPadding(0, 0, 0, 0);
         
-        if(MOVE4 != null){
-            move4.setBackgroundResource(buttonBackground(MOVE4[2]));
+        if(pokemon.moves[3] != null&& pokemon.moves[3]/**/[1] != null && pokemon.moves[3]/**/[2] != null && pokemon.moves[3]/**/[5] != null){
+            move4.setBackgroundResource(buttonBackground(pokemon.moves[3][2]));
             styledText = "<font color='#000000'><b>"
-            + MOVE4[1] + "</b></font>" + "<br/><small><font color='#FFFFFF'>" 
-            + MOVE4[2] + "\t\tPWR:" + ((MOVE4[5].equals("null"))? "---" : MOVE4[5]) + "</font></small>";
+            + pokemon.moves[3][1] + "</b></font>" + "<br/><small><font color='#FFFFFF'>" 
+            + pokemon.moves[3][2] + "\t\tPWR:" + ((pokemon.moves[3][5].equals("null"))? "---" : pokemon.moves[3][5]) + "</font></small>";
             move4.setText(Html.fromHtml(styledText));
         } else {
             move4.setBackgroundResource(R.drawable.normal_bubble);
@@ -551,13 +540,13 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         
         // Set up onClick listeners
         close.setOnClickListener(this);
-        if(MOVE1 != null) move1.setOnClickListener(this);
-        if(MOVE2 != null) move2.setOnClickListener(this);
-        if(MOVE3 != null) move3.setOnClickListener(this);
-        if(MOVE4 != null) move4.setOnClickListener(this);
+        if(pokemon.moves[0] != null) move1.setOnClickListener(this);
+        if(pokemon.moves[1] != null) move2.setOnClickListener(this);
+        if(pokemon.moves[2] != null) move3.setOnClickListener(this);
+        if(pokemon.moves[3] != null) move4.setOnClickListener(this); } catch(Exception e) { text.setText(e.toString()); }
     }
 
-    private void buildMovesLayoutPortait(){
+    private void buildMovesLayoutPortait(){ try {
         drawer.setWeightSum(10f);
         
         LinearLayout goBack = new LinearLayout(this);
@@ -593,11 +582,11 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         move1.setLayoutParams(FULL_MATCH_WEIGHT_PARAMS);
         move1.setPadding(0, 0, 0, 0);
         
-        if(MOVE1 != null){
-            move1.setBackgroundResource(buttonBackground(MOVE1[2]));
+        if(pokemon.moves[0] != null && pokemon.moves[0]/**/[1] != null && pokemon.moves[0]/**/[2] != null && pokemon.moves[0]/**/[5] != null){
+            move1.setBackgroundResource(buttonBackground(pokemon.moves[0][2]));
             styledText = "<font color='#000000'><b>"
-            + MOVE1[1] + "</b></font>" + "<br/><small><font color='#FFFFFF'>" 
-            + MOVE1[2] + "\t\tPWR:" + ((MOVE1[5].equals("null"))? "---" : MOVE1[5]) + "</font></small>";
+            + pokemon.moves[0][1] + "</b></font>" + "<br/><small><font color='#FFFFFF'>" 
+            + pokemon.moves[0][2] + "\t\tPWR:" + ((pokemon.moves[0]/**/[5] == null)? "Error @move1/**/" : ((pokemon.moves[0][5].equals("null"))? "---" : pokemon.moves[0][5]) + "</font></small>");
             move1.setText(Html.fromHtml(styledText));
         } else {
             move1.setBackgroundResource(R.drawable.normal_bubble);
@@ -612,11 +601,11 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         move2.setLayoutParams(FULL_MATCH_WEIGHT_PARAMS);
         move2.setPadding(0, 0, 0, 0);
         
-        if(MOVE2 != null){
-            move2.setBackgroundResource(buttonBackground(MOVE2[2]));
+        if(pokemon.moves[1] != null && pokemon.moves[1]/**/[1] != null && pokemon.moves[1]/**/[2] != null && pokemon.moves[1]/**/[5] != null){
+            move2.setBackgroundResource(buttonBackground(pokemon.moves[1][2]));
             styledText = "<font color='#000000'><b>"
-            + MOVE2[1] + "</b></font>" + "<br/><small><font color='#FFFFFF'>" 
-            + MOVE2[2] + "\t\tPWR:" + ((MOVE2[5].equals("null"))? "---" : MOVE2[5]) + "</font></small>";
+            + pokemon.moves[1][1] + "</b></font>" + "<br/><small><font color='#FFFFFF'>" 
+            + pokemon.moves[1][2] + "\t\tPWR:" + ((pokemon.moves[1][5].equals("null"))? "---" : pokemon.moves[1][5] + "</font></small>");
             move2.setText(Html.fromHtml(styledText));
         } else {
             move2.setBackgroundResource(R.drawable.normal_bubble);
@@ -637,11 +626,11 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         move3.setLayoutParams(FULL_MATCH_WEIGHT_PARAMS);
         move3.setPadding(0, 0, 0, 0);
         
-        if(MOVE3 != null){
-            move3.setBackgroundResource(buttonBackground(MOVE3[2]));
+        if(pokemon.moves[2] != null && pokemon.moves[2]/**/[1] != null && pokemon.moves[2]/**/[2] != null && pokemon.moves[2]/**/[5] != null){
+            move3.setBackgroundResource(buttonBackground(pokemon.moves[2][2]));
             styledText = "<font color='#000000'><b>"
-            + MOVE3[1] + "</b></font>" + "<br/><small><font color='#FFFFFF'>" 
-            + MOVE3[2] + "\t\tPWR:" + ((MOVE3[5].equals("null"))? "---" : MOVE3[5]) + "</font></small>";
+            + pokemon.moves[2][1] + "</b></font>" + "<br/><small><font color='#FFFFFF'>" 
+            + pokemon.moves[2][2] + "\t\tPWR:" + ((pokemon.moves[2][5].equals("null"))? "---" : pokemon.moves[2][5] + "</font></small>");
             move3.setText(Html.fromHtml(styledText));
         } else {
             move3.setBackgroundResource(R.drawable.normal_bubble);
@@ -656,11 +645,11 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         move4.setLayoutParams(FULL_MATCH_WEIGHT_PARAMS);
         move4.setPadding(0, 0, 0, 0);
         
-        if(MOVE4 != null){
-            move4.setBackgroundResource(buttonBackground(MOVE4[2]));
+        if(pokemon.moves[3] != null && pokemon.moves[3]/**/[1] != null && pokemon.moves[3]/**/[2] != null && pokemon.moves[3]/**/[5] != null){
+            move4.setBackgroundResource(buttonBackground(pokemon.moves[3][2]));
             styledText = "<font color='#000000'><b>"
-            + MOVE4[1] + "</b></font>" + "<br/><small><font color='#FFFFFF'>" 
-            + MOVE4[2] + "\t\tPWR:" + ((MOVE4[5].equals("null"))? "---" : MOVE4[5]) + "</font></small>";
+            + pokemon.moves[3][1] + "</b></font>" + "<br/><small><font color='#FFFFFF'>" 
+            + pokemon.moves[3][2] + "\t\tPWR:" + ((pokemon.moves[3][5].equals("null"))? "---" : pokemon.moves[3][5] + "</font></small>");
             move4.setText(Html.fromHtml(styledText));
         } else {
             move4.setBackgroundResource(R.drawable.normal_bubble);
@@ -676,10 +665,10 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         
         // Set up onClick listeners
         close.setOnClickListener(this);
-        if(MOVE1 != null) move1.setOnClickListener(this);
-        if(MOVE2 != null) move2.setOnClickListener(this);
-        if(MOVE3 != null) move3.setOnClickListener(this);
-        if(MOVE4 != null) move4.setOnClickListener(this);
+        if(pokemon.moves[0] != null) move1.setOnClickListener(this);
+        if(pokemon.moves[1] != null) move2.setOnClickListener(this);
+        if(pokemon.moves[2] != null) move3.setOnClickListener(this);
+        if(pokemon.moves[3] != null) move4.setOnClickListener(this); } catch(Exception e) { text.setText(e.toString()); }
     }
 
     private void buildTeamLayoutLandscape(){
@@ -711,13 +700,19 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         teamRow.setOrientation(LinearLayout.HORIZONTAL);
         teamRow.setWeightSum(6f);
         
+        String styledText;
         pkmn1 = new Button(this);
         pkmn1.setId(PKMN1_ID);
         pkmn1.setBackgroundResource(R.drawable.normal_bubble);
         LinearLayout.LayoutParams FULL_MATCH_WEIGHT_PARAMS = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT, 1f);
         pkmn1.setLayoutParams(FULL_MATCH_WEIGHT_PARAMS);
         pkmn1.setPadding(0, 0, 0, 0);
-        pkmn1.setText(R.string.pkmn1);
+        
+        if(team[0].nickname != null){
+            styledText = "<font color='#000000'><b>" + team[0].nickname + "</b></font>";
+            pkmn1.setText(Html.fromHtml(styledText));
+        } else pkmn1.setText(R.string.pkmn1);
+        
         pkmn1.setTextColor(Color.argb(255, 0, 0, 0));
         pkmn1.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
         teamRow.addView(pkmn1);
@@ -727,7 +722,12 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         pkmn2.setBackgroundResource(R.drawable.normal_bubble);
         pkmn2.setLayoutParams(FULL_MATCH_WEIGHT_PARAMS);
         pkmn2.setPadding(0, 0, 0, 0);
-        pkmn2.setText(R.string.pkmn2);
+        
+        if(team[1].nickname != null){
+            styledText = "<font color='#000000'><b>" + team[1].nickname + "</b></font>";
+            pkmn2.setText(Html.fromHtml(styledText));
+        } else pkmn2.setText(R.string.pkmn2);
+        
         pkmn2.setTextColor(Color.argb(255, 0, 0, 0));
         pkmn2.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
         teamRow.addView(pkmn2);
@@ -737,7 +737,12 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         pkmn3.setBackgroundResource(R.drawable.normal_bubble);
         pkmn3.setLayoutParams(FULL_MATCH_WEIGHT_PARAMS);
         pkmn3.setPadding(0, 0, 0, 0);
-        pkmn3.setText(R.string.pkmn3);
+        
+        if(team[2].nickname != null){
+            styledText = "<font color='#000000'><b>" + team[2].nickname + "</b></font>";
+            pkmn3.setText(Html.fromHtml(styledText));
+        } else pkmn3.setText(R.string.pkmn3);
+        
         pkmn3.setTextColor(Color.argb(255, 0, 0, 0));
         pkmn3.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
         teamRow.addView(pkmn3);
@@ -747,7 +752,12 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         pkmn4.setBackgroundResource(R.drawable.normal_bubble);
         pkmn4.setLayoutParams(FULL_MATCH_WEIGHT_PARAMS);
         pkmn4.setPadding(0, 0, 0, 0);
-        pkmn4.setText(R.string.pkmn4);
+        
+        if(team[3].nickname != null){
+            styledText = "<font color='#000000'><b>" + team[3].nickname + "</b></font>";
+            pkmn4.setText(Html.fromHtml(styledText));
+        } else pkmn4.setText(R.string.pkmn4);
+        
         pkmn4.setTextColor(Color.argb(255, 0, 0, 0));
         pkmn4.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
         teamRow.addView(pkmn4);
@@ -757,7 +767,12 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         pkmn5.setBackgroundResource(R.drawable.normal_bubble);
         pkmn5.setLayoutParams(FULL_MATCH_WEIGHT_PARAMS);
         pkmn5.setPadding(0, 0, 0, 0);
-        pkmn5.setText(R.string.pkmn5);
+        
+        if(team[4].nickname != null){
+            styledText = "<font color='#000000'><b>" + team[4].nickname + "</b></font>";
+            pkmn5.setText(Html.fromHtml(styledText));
+        } else pkmn5.setText(R.string.pkmn5);
+        
         pkmn5.setTextColor(Color.argb(255, 0, 0, 0));
         pkmn5.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
         teamRow.addView(pkmn5);
@@ -767,7 +782,12 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         pkmn6.setBackgroundResource(R.drawable.normal_bubble);
         pkmn6.setLayoutParams(FULL_MATCH_WEIGHT_PARAMS);
         pkmn6.setPadding(0, 0, 0, 0);
-        pkmn6.setText(R.string.pkmn6);
+        
+        if(team[5].nickname != null){
+            styledText = "<font color='#000000'><b>" + team[5].nickname + "</b></font>";
+            pkmn6.setText(Html.fromHtml(styledText));
+        } else pkmn6.setText(R.string.pkmn6);
+        
         pkmn6.setTextColor(Color.argb(255, 0, 0, 0));
         pkmn6.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
         teamRow.addView(pkmn6);
@@ -815,13 +835,19 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         teamRow1.setOrientation(LinearLayout.HORIZONTAL);
         teamRow1.setWeightSum(3f);
         
+        String styledText;
         pkmn1 = new Button(this);
         pkmn1.setId(PKMN1_ID);
         pkmn1.setBackgroundResource(R.drawable.normal_bubble);
         LinearLayout.LayoutParams FULL_MATCH_WEIGHT_PARAMS = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT, 1f);
         pkmn1.setLayoutParams(FULL_MATCH_WEIGHT_PARAMS);
         pkmn1.setPadding(0, 0, 0, 0);
-        pkmn1.setText(R.string.pkmn1);
+        
+        if(team[0].nickname != null){
+            styledText = "<font color='#000000'><b>" + team[0].nickname + "</b></font>";
+            pkmn1.setText(Html.fromHtml(styledText));
+        } else pkmn1.setText(R.string.pkmn1);
+        
         pkmn1.setTextColor(Color.argb(255, 0, 0, 0));
         pkmn1.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
         teamRow1.addView(pkmn1);
@@ -831,7 +857,12 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         pkmn2.setBackgroundResource(R.drawable.normal_bubble);
         pkmn2.setLayoutParams(FULL_MATCH_WEIGHT_PARAMS);
         pkmn2.setPadding(0, 0, 0, 0);
-        pkmn2.setText(R.string.pkmn2);
+        
+        if(team[1].nickname != null){
+            styledText = "<font color='#000000'><b>" + team[1].nickname + "</b></font>";
+            pkmn2.setText(Html.fromHtml(styledText));
+        } else pkmn2.setText(R.string.pkmn2);
+        
         pkmn2.setTextColor(Color.argb(255, 0, 0, 0));
         pkmn2.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
         teamRow1.addView(pkmn2);
@@ -841,7 +872,12 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         pkmn3.setBackgroundResource(R.drawable.normal_bubble);
         pkmn3.setLayoutParams(FULL_MATCH_WEIGHT_PARAMS);
         pkmn3.setPadding(0, 0, 0, 0);
-        pkmn3.setText(R.string.pkmn3);
+        
+        if(team[2].nickname != null){
+            styledText = "<font color='#000000'><b>" + team[2].nickname + "</b></font>";
+            pkmn3.setText(Html.fromHtml(styledText));
+        } else pkmn3.setText(R.string.pkmn3);
+        
         pkmn3.setTextColor(Color.argb(255, 0, 0, 0));
         pkmn3.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
         teamRow1.addView(pkmn3);
@@ -857,7 +893,12 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         pkmn4.setBackgroundResource(R.drawable.normal_bubble);
         pkmn4.setLayoutParams(FULL_MATCH_WEIGHT_PARAMS);
         pkmn4.setPadding(0, 0, 0, 0);
-        pkmn4.setText(R.string.pkmn4);
+        
+        if(team[3].nickname != null){
+            styledText = "<font color='#000000'><b>" + team[3].nickname + "</b></font>";
+            pkmn4.setText(Html.fromHtml(styledText));
+        } else pkmn4.setText(R.string.pkmn4);
+        
         pkmn4.setTextColor(Color.argb(255, 0, 0, 0));
         pkmn4.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
         teamRow2.addView(pkmn4);
@@ -867,7 +908,12 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         pkmn5.setBackgroundResource(R.drawable.normal_bubble);
         pkmn5.setLayoutParams(FULL_MATCH_WEIGHT_PARAMS);
         pkmn5.setPadding(0, 0, 0, 0);
-        pkmn5.setText(R.string.pkmn5);
+        
+        if(team[4].nickname != null){
+            styledText = "<font color='#000000'><b>" + team[4].nickname + "</b></font>";
+            pkmn5.setText(Html.fromHtml(styledText));
+        } else pkmn5.setText(R.string.pkmn5);
+        
         pkmn5.setTextColor(Color.argb(255, 0, 0, 0));
         pkmn5.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
         teamRow2.addView(pkmn5);
@@ -877,7 +923,12 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         pkmn6.setBackgroundResource(R.drawable.normal_bubble);
         pkmn6.setLayoutParams(FULL_MATCH_WEIGHT_PARAMS);
         pkmn6.setPadding(0, 0, 0, 0);
-        pkmn6.setText(R.string.pkmn6);
+        
+        if(team[5].nickname != null){
+            styledText = "<font color='#000000'><b>" + team[5].nickname + "</b></font>";
+            pkmn6.setText(Html.fromHtml(styledText));
+        } else pkmn6.setText(R.string.pkmn6);
+        
         pkmn6.setTextColor(Color.argb(255, 0, 0, 0));
         pkmn6.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
         teamRow2.addView(pkmn6);
@@ -983,12 +1034,26 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
             
             /* Classify the touchEvent */
             if(touched_opponent){ // Determine what type of attack
-                if(held) text.setText("Special Attack");
-                else text.setText("Physical Attack");
+                if(!held){
+                    if(pokemon.PQI[0] != null) action(pokemon.PQI[0]);
+                    else text.setText("Physical Attack");
+                }
+                else {
+                    if(pokemon.PQI[1] != null) action(pokemon.PQI[1]);
+                    else text.setText("Special Attack");
+                }
             } else if(touched_user){ // Determine what type of defense or Dodge
-                if(held) text.setText("Hard defensive/healing move");
-                else if(killHold) text.setText("Dodge attempt");
-                else if(!error) text.setText("Soft defensive/healing move");
+                if(held) {
+                    if(pokemon.PQI[3] != null) action(pokemon.PQI[3]);
+                    else text.setText("Hard defensive/healing move");
+                }
+                else if(killHold) {
+                    text.setText("Dodge attempt");
+                }
+                else if(!error) {
+                    if(pokemon.PQI[2] != null) action(pokemon.PQI[2]);
+                    else text.setText("Soft defensive/healing move");
+                }
                 else text.setText("Nothing");
             } else text.setText("Nothing");
             
@@ -1022,141 +1087,55 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         layout.addView(background, 0); // Add new ImageView to layout          
     }
     
-    private int buttonBackground(String token){
-        if(token.equals("BUG")) return R.drawable.bug_bubble;
-        else if(token.equals("DARK")) return R.drawable.dark_bubble;
-        else if(token.equals("DRAGON")) return R.drawable.dragon_bubble;
-        else if(token.equals("ELECTRIC")) return R.drawable.electric_bubble;
-        else if(token.equals("FAIRY")) return R.drawable.fairy_bubble;
-        else if(token.equals("FIGHTING")) return R.drawable.fighting_bubble;
-        else if(token.equals("FIRE")) return R.drawable.fire_bubble;
-        else if(token.equals("FLYING")) return R.drawable.flying_bubble;
-        else if(token.equals("GHOST")) return R.drawable.ghost_bubble;
-        else if(token.equals("GRASS")) return R.drawable.grass_bubble;
-        else if(token.equals("GROUND")) return R.drawable.ground_bubble;
-        else if(token.equals("ICE")) return R.drawable.ice_bubble;
-        else if(token.equals("POISON")) return R.drawable.poison_bubble;
-        else if(token.equals("PSYCHIC")) return R.drawable.psychic_bubble;
-        else if(token.equals("ROCK")) return R.drawable.rock_bubble;
-        else if(token.equals("STEEL")) return R.drawable.steel_bubble;
-        else if(token.equals("WATER")) return R.drawable.water_bubble;
-        else return R.drawable.normal_bubble;
-    }
-    
-    private void loadMoves(int dexNo){
-        /* Used to setup SharedPreferences, if it has not been set */
-        moveData = getSharedPreferences("genOneMoveList", MODE_PRIVATE);
-        if(!moveData.getBoolean("setState", false)){
-            Settings load = new Settings(this);
-            load.setMoves();
-            moveData = getSharedPreferences("genOneMoveList", MODE_PRIVATE);
-            text.setText("Moves have not been set");    
-        } //else text.setText("Moves already set");
-        
-        moveSet = getSharedPreferences("learningSet", MODE_PRIVATE);
-        if(!moveSet.getBoolean("setState", false)){
-            Settings load = new Settings(this);
-            load.setLearnedMoves();
-            moveSet = getSharedPreferences("learningSet", MODE_PRIVATE);
-            text.setText("Gathered moves set");    
-        } //else text.setText("Moves already set");
-        
-        Set<String> tempSet = moveSet.getStringSet(String.valueOf(dexNo), null);
-        Iterator position = tempSet.iterator();
-        String[] learningSet = new String[tempSet.size()];
-        
-        String move, index;
-        int i;
-        while(position.hasNext()){
-            index = "";
-            move = position.next().toString();
-                        
-            for(i = 0; i < move.length(); i++){
-                if(move.charAt(i) == '_') break;
-                else index += move.charAt(i);
-            }
-            
-            learningSet[Integer.parseInt(index)] = move.substring(i + 1);
-        }
-        
-        for(int j = 1; (MOVE1 == null || MOVE2 == null || MOVE3 == null || MOVE4 == null) && j < learningSet.length; j += 2){
-            if(MOVE1 == null){
-                try {
-                    Set<String> tempSet2 = moveData.getStringSet(learningSet[j + 1], null); // Retrieve HashSet & store in Set var
-                    position = tempSet2.iterator(); // Create an interator
-                    MOVE1 = new String[tempSet2.size()]; // Instantiate MOVE1 array
-                    
-                    String values; // temp var
-                    while(position.hasNext()){ // Populate details into MOVE1 array
-                        values = position.next().toString(); // Capture obj & convert to String-- iterator then moves to next
-                        
-                        if(values.length() > 2) MOVE1[Integer.parseInt(values.substring(0, 1))] = values.substring(2);
-                        else MOVE1[Integer.parseInt(values.substring(0, 1))] = "";
-                    }
-                } catch(Exception cet){
-                    text.setText(cet.toString());
-                }
-            } else if(MOVE2 == null){
-                try {
-                    Set<String> tempSet2 = moveData.getStringSet(learningSet[j + 1], null); // Retrieve HashSet & store in Set var
-                    position = tempSet2.iterator(); // Create an interator
-                    MOVE2 = new String[tempSet2.size()]; // Instantiate MOVE2 array
-                    
-                    String values; // temp var
-                    while(position.hasNext()){ // Populate details into MOVE2 array
-                        values = position.next().toString(); // Capture obj & convert to String-- iterator then moves to next
-                        
-                        if(values.length() > 2) MOVE2[Integer.parseInt(values.substring(0, 1))] = values.substring(2);
-                        else MOVE2[Integer.parseInt(values.substring(0, 1))] = "";
-                    }
-                } catch(Exception cet){
-                    text.setText(cet.toString());
-                }
-            } else if(MOVE3 == null){
-                try {
-                    Set<String> tempSet2 = moveData.getStringSet(learningSet[j + 1], null); // Retrieve HashSet & store in Set var
-                    position = tempSet2.iterator(); // Create an interator
-                    MOVE3 = new String[tempSet2.size()]; // Instantiate MOVE3 array
-                    
-                    String values; // temp var
-                    while(position.hasNext()){ // Populate details into MOVE3 array
-                        values = position.next().toString(); // Capture obj & convert to String-- iterator then moves to next
-                        
-                        if(values.length() > 2) MOVE3[Integer.parseInt(values.substring(0, 1))] = values.substring(2);
-                        else MOVE3[Integer.parseInt(values.substring(0, 1))] = "";
-                    }
-                } catch(Exception cet){
-                    text.setText(cet.toString());
-                }
-            } else if(MOVE4 == null){
-                try {
-                    Set<String> tempSet2 = moveData.getStringSet(learningSet[j + 1], null); // Retrieve HashSet & store in Set var
-                    position = tempSet2.iterator(); // Create an interator
-                    MOVE4 = new String[tempSet2.size()]; // Instantiate MOVE4 array
-                    
-                    String values; // temp var
-                    while(position.hasNext()){ // Populate details into MOVE4 array
-                        values = position.next().toString(); // Capture obj & convert to String-- iterator then moves to next
-                        
-                        if(values.length() > 2) MOVE4[Integer.parseInt(values.substring(0, 1))] = values.substring(2);
-                        else MOVE4[Integer.parseInt(values.substring(0, 1))] = "";
-                    }
-                } catch(Exception cet){
-                    text.setText(cet.toString());
-                }
-            }
+    private int buttonBackground(String token){ 
+        try {
+            if(token.equals("BUG")) return R.drawable.bug_bubble;
+            else if(token.equals("DARK")) return R.drawable.dark_bubble;
+            else if(token.equals("DRAGON")) return R.drawable.dragon_bubble;
+            else if(token.equals("ELECTRIC")) return R.drawable.electric_bubble;
+            else if(token.equals("FAIRY")) return R.drawable.fairy_bubble;
+            else if(token.equals("FIGHTING")) return R.drawable.fighting_bubble;
+            else if(token.equals("FIRE")) return R.drawable.fire_bubble;
+            else if(token.equals("FLYING")) return R.drawable.flying_bubble;
+            else if(token.equals("GHOST")) return R.drawable.ghost_bubble;
+            else if(token.equals("GRASS")) return R.drawable.grass_bubble;
+            else if(token.equals("GROUND")) return R.drawable.ground_bubble;
+            else if(token.equals("ICE")) return R.drawable.ice_bubble;
+            else if(token.equals("POISON")) return R.drawable.poison_bubble;
+            else if(token.equals("PSYCHIC")) return R.drawable.psychic_bubble;
+            else if(token.equals("ROCK")) return R.drawable.rock_bubble;
+            else if(token.equals("STEEL")) return R.drawable.steel_bubble;
+            else if(token.equals("WATER")) return R.drawable.water_bubble;
+            else return R.drawable.normal_bubble; 
+        } catch(Exception e) { //Thrown if there is a null token due to empty move slot 
+            return R.drawable.normal_bubble;
         }
     }
     
     private void action(int move){
-        if(move == 1){
-           text.setText(MOVE1[0] + ", " + MOVE1[1] + ", " + MOVE1[2] + ", " + MOVE1[3] + ", " + MOVE1[4] + ", " + MOVE1[5] + ", " + MOVE1[6] + ", " + MOVE1[7]);
-        } else if(move == 2) {
-            text.setText(MOVE2[0] + ", " + MOVE2[1] + ", " + MOVE2[2] + ", " + MOVE2[3] + ", " + MOVE2[4] + ", " + MOVE2[5] + ", " + MOVE2[6] + ", " + MOVE2[7]);
-        } else if(move == 3) {
-            text.setText(MOVE3[0] + ", " + MOVE3[1] + ", " + MOVE3[2] + ", " + MOVE3[3] + ", " + MOVE3[4] + ", " + MOVE3[5] + ", " + MOVE3[6] + ", " + MOVE3[7]);
-        } else if(move == 4) {
-            text.setText(MOVE4[0] + ", " + MOVE4[1] + ", " + MOVE4[2] + ", " + MOVE4[3] + ", " + MOVE4[4] + ", " + MOVE4[5] + ", " + MOVE4[6] + ", " + MOVE4[7]);
+        if(move == 0){
+           text.setText("Button1:" + pokemon.moves[0][0] + ", " + pokemon.moves[0][1] + ", " + pokemon.moves[0][2] + ", " + pokemon.moves[0][3] + ", " + pokemon.moves[0][4] + ", " + pokemon.moves[0][5] + ", " + pokemon.moves[0][6] + ", " + pokemon.moves[0][7]);
+        } else if(move == 1){
+            text.setText("Button2:" + pokemon.moves[1][0] + ", " + pokemon.moves[1][1] + ", " + pokemon.moves[1][2] + ", " + pokemon.moves[1][3] + ", " + pokemon.moves[1][4] + ", " + pokemon.moves[1][5] + ", " + pokemon.moves[1][6] + ", " + pokemon.moves[1][7]);
+        } else if(move == 2){
+            text.setText("Button3:" + pokemon.moves[2][0] + ", " + pokemon.moves[2][1] + ", " + pokemon.moves[2][2] + ", " + pokemon.moves[2][3] + ", " + pokemon.moves[2][4] + ", " + pokemon.moves[2][5] + ", " + pokemon.moves[2][6] + ", " + pokemon.moves[2][7]);
+        } else if(move == 3){
+            text.setText("Button4:" + pokemon.moves[3][0] + ", " + pokemon.moves[3][1] + ", " + pokemon.moves[3][2] + ", " + pokemon.moves[3][3] + ", " + pokemon.moves[3][4] + ", " + pokemon.moves[3][5] + ", " + pokemon.moves[3][6] + ", " + pokemon.moves[3][7]);
         }
+    }
+    
+    private void swap(int button){
+        if(pokemon != team[button]){
+            temp = pokemon;
+            pokemon = team[button];
+            team[button] = temp;
+            team[0] = pokemon;
+            Animated.pokemon_HP = pokemon.HP;
+            Animated.pokemon_lvl = pokemon.level;
+            surface.setPokemon((pokemon.name).toLowerCase());
+            /* Then you load their moves here */
+            onClick(vMoves);
+            onClick(vSwap);
+        } //else text.setText("Same Pokemon");
     }
 }
