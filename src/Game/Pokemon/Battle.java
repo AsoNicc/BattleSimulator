@@ -540,10 +540,10 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         
         // Set up onClick listeners
         close.setOnClickListener(this);
-        if(pokemon.moves[0] != null) move1.setOnClickListener(this);
-        if(pokemon.moves[1] != null) move2.setOnClickListener(this);
-        if(pokemon.moves[2] != null) move3.setOnClickListener(this);
-        if(pokemon.moves[3] != null) move4.setOnClickListener(this); } catch(Exception e) { text.setText(e.toString()); }
+        if(pokemon.moves[0][1] != null) move1.setOnClickListener(this);
+        if(pokemon.moves[1][1] != null) move2.setOnClickListener(this);
+        if(pokemon.moves[2][1] != null) move3.setOnClickListener(this);
+        if(pokemon.moves[3][1] != null) move4.setOnClickListener(this); } catch(Exception e) { text.setText(e.toString()); }
     }
 
     private void buildMovesLayoutPortait(){ try {
@@ -665,10 +665,10 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         
         // Set up onClick listeners
         close.setOnClickListener(this);
-        if(pokemon.moves[0] != null) move1.setOnClickListener(this);
-        if(pokemon.moves[1] != null) move2.setOnClickListener(this);
-        if(pokemon.moves[2] != null) move3.setOnClickListener(this);
-        if(pokemon.moves[3] != null) move4.setOnClickListener(this); } catch(Exception e) { text.setText(e.toString()); }
+        if(pokemon.moves[0][1] != null) move1.setOnClickListener(this);
+        if(pokemon.moves[1][1] != null) move2.setOnClickListener(this);
+        if(pokemon.moves[2][1] != null) move3.setOnClickListener(this);
+        if(pokemon.moves[3][1] != null) move4.setOnClickListener(this); } catch(Exception e) { text.setText(e.toString()); }
     }
 
     private void buildTeamLayoutLandscape(){
@@ -1036,11 +1036,11 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
             if(touched_opponent){ // Determine what type of attack
                 if(!held){
                     if(pokemon.PQI[0] != null) action(pokemon.PQI[0]);
-                    else text.setText("Physical Attack");
+                    else text.setText("Low-Mid Power (Physical | Special) Attack");
                 }
                 else {
                     if(pokemon.PQI[1] != null) action(pokemon.PQI[1]);
-                    else text.setText("Special Attack");
+                    else text.setText("Mid-High Power (Physical | Special) Attack");
                 }
             } else if(touched_user){ // Determine what type of defense or Dodge
                 if(held) {
@@ -1052,7 +1052,7 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
                 }
                 else if(!error) {
                     if(pokemon.PQI[2] != null) action(pokemon.PQI[2]);
-                    else text.setText("Soft defensive/healing move");
+                    else text.setText("Soft defensive/tactical move");
                 }
                 else text.setText("Nothing");
             } else text.setText("Nothing");
@@ -1114,13 +1114,13 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
     
     private void action(int move){
         if(move == 0){
-           text.setText("Button1:" + pokemon.moves[0][0] + ", " + pokemon.moves[0][1] + ", " + pokemon.moves[0][2] + ", " + pokemon.moves[0][3] + ", " + pokemon.moves[0][4] + ", " + pokemon.moves[0][5] + ", " + pokemon.moves[0][6] + ", " + pokemon.moves[0][7]);
+           text.setText("Button1: " + pokemon.moves[0][0] + ", " + pokemon.moves[0][1] + ", " + pokemon.moves[0][2] + ", " + pokemon.moves[0][3] + ", " + pokemon.moves[0][4] + ", " + pokemon.moves[0][5] + ", " + pokemon.moves[0][6] + ", " + pokemon.moves[0][7]);
         } else if(move == 1){
-            text.setText("Button2:" + pokemon.moves[1][0] + ", " + pokemon.moves[1][1] + ", " + pokemon.moves[1][2] + ", " + pokemon.moves[1][3] + ", " + pokemon.moves[1][4] + ", " + pokemon.moves[1][5] + ", " + pokemon.moves[1][6] + ", " + pokemon.moves[1][7]);
+            text.setText("Button2: " + pokemon.moves[1][0] + ", " + pokemon.moves[1][1] + ", " + pokemon.moves[1][2] + ", " + pokemon.moves[1][3] + ", " + pokemon.moves[1][4] + ", " + pokemon.moves[1][5] + ", " + pokemon.moves[1][6] + ", " + pokemon.moves[1][7]);
         } else if(move == 2){
-            text.setText("Button3:" + pokemon.moves[2][0] + ", " + pokemon.moves[2][1] + ", " + pokemon.moves[2][2] + ", " + pokemon.moves[2][3] + ", " + pokemon.moves[2][4] + ", " + pokemon.moves[2][5] + ", " + pokemon.moves[2][6] + ", " + pokemon.moves[2][7]);
+            text.setText("Button3: " + pokemon.moves[2][0] + ", " + pokemon.moves[2][1] + ", " + pokemon.moves[2][2] + ", " + pokemon.moves[2][3] + ", " + pokemon.moves[2][4] + ", " + pokemon.moves[2][5] + ", " + pokemon.moves[2][6] + ", " + pokemon.moves[2][7]);
         } else if(move == 3){
-            text.setText("Button4:" + pokemon.moves[3][0] + ", " + pokemon.moves[3][1] + ", " + pokemon.moves[3][2] + ", " + pokemon.moves[3][3] + ", " + pokemon.moves[3][4] + ", " + pokemon.moves[3][5] + ", " + pokemon.moves[3][6] + ", " + pokemon.moves[3][7]);
+            text.setText("Button4: " + pokemon.moves[3][0] + ", " + pokemon.moves[3][1] + ", " + pokemon.moves[3][2] + ", " + pokemon.moves[3][3] + ", " + pokemon.moves[3][4] + ", " + pokemon.moves[3][5] + ", " + pokemon.moves[3][6] + ", " + pokemon.moves[3][7]);
         }
     }
     

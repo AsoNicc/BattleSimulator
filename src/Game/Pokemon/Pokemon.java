@@ -146,7 +146,7 @@ public final class Pokemon {
             String[] learningSet = new String[tempSet.size()];
 
             String move, index;
-            int i;
+            byte i;
             while(position.hasNext()){
                 index = "";
                 move = position.next().toString();
@@ -159,7 +159,8 @@ public final class Pokemon {
                 learningSet[Integer.parseInt(index)] = move.substring(i + 1);
             }        
 
-            for(int j = 1, k = 0; j < learningSet.length && Byte.parseByte(learningSet[j]) <= level; j += 2, k++){
+            String[] temp = new String[8];
+            for(byte j = 1, k = 0; j < learningSet.length && Byte.parseByte(learningSet[j]) <= level; j += 2, k++){
                 if(k%4 == 0){
                     try {
                         Set<String> tempSet1 = moveData.getStringSet(learningSet[j + 1], null); // Retrieve HashSet & store in Set var
@@ -170,35 +171,31 @@ public final class Pokemon {
                             while(position1.hasNext()){ // Populate details into MOVE1 array
                                 values = position1.next().toString(); // Capture obj & convert to String-- iterator then moves to next
 
-                                if(values.length() > 2) moves[0][Integer.parseInt(values.substring(0, 1))] = values.substring(2);
-                                else moves[0][Integer.parseInt(values.substring(0, 1))] = "";
+                                if(values.length() > 2) temp[Integer.parseInt(values.substring(0, 1))] = values.substring(2);
+                                else temp[Integer.parseInt(values.substring(0, 1))] = "";
                             }
                         } catch(Exception e) {
                             Battle.text.setText("From Pokemon.loadMoves:Move1: " + e.toString());
                         } finally {
-                            if((moves[0][1]).equals(moves[1][1]) || (moves[0][1]).equals(moves[2][1]) || (moves[0][1]).equals(moves[3][1])){ //Then record of move already exist
-                                PQI[Integer.parseInt(moves[0][4]) - 1] = null; //Nullify corresponding PQ
-                                moves[0][0] = null; //Nullify all details entry entirely
-                                moves[0][1] = null; //Nullify all details entry entirely
-                                moves[0][2] = null; //Nullify all details entry entirely
-                                moves[0][3] = null; //Nullify all details entry entirely
-                                moves[0][4] = null; //Nullify all details entry entirely
-                                moves[0][5] = null; //Nullify all details entry entirely
-                                moves[0][6] = null; //Nullify all details entry entirely
-                                moves[0][7] = null; //Nullify all details entry entirely
-                                moves[0] = null;
-                            }                            
+                            if(!((temp[1]).equals(moves[1][1]) || (temp[1]).equals(moves[2][1]) || (temp[1]).equals(moves[3][1]))){ //Then record of move already exist
+                                PQI[Integer.parseInt(temp[4]) - 1] = 0; //Nullify corresponding PQ
+                                moves[0][0] = temp[0]; //Nullify all details entry entirely
+                                moves[0][1] = temp[1]; //Nullify all details entry entirely
+                                moves[0][2] = temp[2]; //Nullify all details entry entirely
+                                moves[0][3] = temp[3]; //Nullify all details entry entirely
+                                moves[0][4] = temp[4]; //Nullify all details entry entirely
+                                moves[0][5] = temp[5]; //Nullify all details entry entirely
+                                moves[0][6] = temp[6]; //Nullify all details entry entirely
+                                moves[0][7] = temp[7]; //Nullify all details entry entirely
+                            }
                         }
 
-                        if(moves[0] != null){ 
-                            PQI[Integer.parseInt(moves[0][4]) - 1] = 0;
-                            if(PQI[((Integer.parseInt(moves[0][4]) - 1) + 1)%4] != null)
-                                if(PQI[((Integer.parseInt(moves[0][4]) - 1) + 1)%4] == 0) PQI[((Integer.parseInt(moves[0][4]) - 1) + 1)%4] = null;
-                            if(PQI[((Integer.parseInt(moves[0][4]) - 1) + 2)%4] != null)
-                                if(PQI[((Integer.parseInt(moves[0][4]) - 1) + 2)%4] == 0) PQI[((Integer.parseInt(moves[0][4]) - 1) + 2)%4] = null;
-                            if(PQI[((Integer.parseInt(moves[0][4]) - 1) + 3)%4] != null)
-                                if(PQI[((Integer.parseInt(moves[0][4]) - 1) + 3)%4] == 0) PQI[((Integer.parseInt(moves[0][4]) - 1) + 3)%4] = null;
-                        }                        
+                        if(PQI[((Integer.parseInt(moves[0][4]) - 1) + 1)%4] != null)
+                            if(PQI[((Integer.parseInt(moves[0][4]) - 1) + 1)%4] == 0) PQI[((Integer.parseInt(moves[0][4]) - 1) + 1)%4] = null;
+                        if(PQI[((Integer.parseInt(moves[0][4]) - 1) + 2)%4] != null)
+                            if(PQI[((Integer.parseInt(moves[0][4]) - 1) + 2)%4] == 0) PQI[((Integer.parseInt(moves[0][4]) - 1) + 2)%4] = null;
+                        if(PQI[((Integer.parseInt(moves[0][4]) - 1) + 3)%4] != null)
+                            if(PQI[((Integer.parseInt(moves[0][4]) - 1) + 3)%4] == 0) PQI[((Integer.parseInt(moves[0][4]) - 1) + 3)%4] = null;                        
                     } catch(Exception err){
                         Battle.text.setText("From Pokemon.loadMoves:Move1: " + err.toString());
                     }
@@ -212,35 +209,31 @@ public final class Pokemon {
                             while(position2.hasNext()){ // Populate details into MOVE2 array
                                 values = position2.next().toString(); // Capture obj & convert to String-- iterator then moves to next
 
-                                if(values.length() > 2) moves[1][Integer.parseInt(values.substring(0, 1))] = values.substring(2);
-                                else moves[1][Integer.parseInt(values.substring(0, 1))] = "";
+                                if(values.length() > 2) temp[Integer.parseInt(values.substring(0, 1))] = values.substring(2);
+                                else temp[Integer.parseInt(values.substring(0, 1))] = "";
                             }
                         } catch(Exception e) {
                             Battle.text.setText("From Pokemon.loadMoves:Move2: " + e.toString());
                         } finally {
-                            if((moves[1][1]).equals(moves[0][1])){
-                                PQI[Integer.parseInt(moves[1][4]) - 1] = null;
-                                moves[1][0] = null; //Nullify all details entry entirely
-                                moves[1][1] = null; //Nullify all details entry entirely
-                                moves[1][2] = null; //Nullify all details entry entirely
-                                moves[1][3] = null; //Nullify all details entry entirely
-                                moves[1][4] = null; //Nullify all details entry entirely
-                                moves[1][5] = null; //Nullify all details entry entirely
-                                moves[1][6] = null; //Nullify all details entry entirely
-                                moves[1][7] = null; //Nullify all details entry entirely
-                                moves[1] = null;
+                            if(!((temp[1]).equals(moves[0][1]))){
+                                PQI[Integer.parseInt(temp[4]) - 1] = 1;
+                                moves[1][0] = temp[0]; //Nullify all details entry entirely
+                                moves[1][1] = temp[1]; //Nullify all details entry entirely
+                                moves[1][2] = temp[2]; //Nullify all details entry entirely
+                                moves[1][3] = temp[3]; //Nullify all details entry entirely
+                                moves[1][4] = temp[4]; //Nullify all details entry entirely
+                                moves[1][5] = temp[5]; //Nullify all details entry entirely
+                                moves[1][6] = temp[6]; //Nullify all details entry entirely
+                                moves[1][7] = temp[7]; //Nullify all details entry entirely
                             }
                         }
 
-                        if(moves[1] != null){ 
-                            PQI[Integer.parseInt(moves[1][4]) - 1] = 1;
-                            if(PQI[((Integer.parseInt(moves[1][4]) - 1) + 1)%4] != null)
-                                if(PQI[((Integer.parseInt(moves[1][4]) - 1) + 1)%4] == 1) PQI[((Integer.parseInt(moves[1][4]) - 1) + 1)%4] = null;
-                            if(PQI[((Integer.parseInt(moves[1][4]) - 1) + 2)%4] != null)
-                                if(PQI[((Integer.parseInt(moves[1][4]) - 1) + 2)%4] == 1) PQI[((Integer.parseInt(moves[1][4]) - 1) + 2)%4] = null;
-                            if(PQI[((Integer.parseInt(moves[1][4]) - 1) + 3)%4] != null)
-                                if(PQI[((Integer.parseInt(moves[1][4]) - 1) + 3)%4] == 1) PQI[((Integer.parseInt(moves[1][4]) - 1) + 3)%4] = null;
-                        }                        
+                        if(PQI[((Integer.parseInt(moves[1][4]) - 1) + 1)%4] != null)
+                            if(PQI[((Integer.parseInt(moves[1][4]) - 1) + 1)%4] == 1) PQI[((Integer.parseInt(moves[1][4]) - 1) + 1)%4] = null;
+                        if(PQI[((Integer.parseInt(moves[1][4]) - 1) + 2)%4] != null)
+                            if(PQI[((Integer.parseInt(moves[1][4]) - 1) + 2)%4] == 1) PQI[((Integer.parseInt(moves[1][4]) - 1) + 2)%4] = null;
+                        if(PQI[((Integer.parseInt(moves[1][4]) - 1) + 3)%4] != null)
+                            if(PQI[((Integer.parseInt(moves[1][4]) - 1) + 3)%4] == 1) PQI[((Integer.parseInt(moves[1][4]) - 1) + 3)%4] = null;                        
                     } catch(Exception err){
                         Battle.text.setText("From Pokemon.loadMoves:Move2: " + err.toString());
                     }
@@ -254,35 +247,33 @@ public final class Pokemon {
                             while(position3.hasNext()){ // Populate details into MOVE3 array
                                 values = position3.next().toString(); // Capture obj & convert to String-- iterator then moves to next
 
-                                if(values.length() > 2) moves[2][Integer.parseInt(values.substring(0, 1))] = values.substring(2);
-                                else moves[2][Integer.parseInt(values.substring(0, 1))] = "";
+//                                if(values.length() > 2) moves[2][Integer.parseInt(values.substring(0, 1))] = values.substring(2);
+//                                else moves[2][Integer.parseInt(values.substring(0, 1))] = "";
+                                if(values.length() > 2) temp[Integer.parseInt(values.substring(0, 1))] = values.substring(2);
+                                else temp[Integer.parseInt(values.substring(0, 1))] = "";
                             }
                         } catch(Exception e) {
                             Battle.text.setText("From Pokemon.loadMoves:Move3: " + e.toString());
                         } finally {                        
-                            if((moves[2][1]).equals(moves[0][1]) || (moves[2][1]).equals(moves[1][1])){
-                                PQI[Integer.parseInt(moves[2][4]) - 1] = null;
-                                moves[2][0] = null; //Nullify all details entry entirely
-                                moves[2][1] = null; //Nullify all details entry entirely
-                                moves[2][2] = null; //Nullify all details entry entirely
-                                moves[2][3] = null; //Nullify all details entry entirely
-                                moves[2][4] = null; //Nullify all details entry entirely
-                                moves[2][5] = null; //Nullify all details entry entirely
-                                moves[2][6] = null; //Nullify all details entry entirely
-                                moves[2][7] = null; //Nullify all details entry entirely
-                                moves[2] = null;
-                            }                        
+                            if(!((temp[1]).equals(moves[0][1]) || (temp[1]).equals(moves[1][1]))){
+                                PQI[Integer.parseInt(temp[4]) - 1] = 2;
+                                moves[2][0] = temp[0]; //Nullify all details entry entirely
+                                moves[2][1] = temp[1]; //Nullify all details entry entirely
+                                moves[2][2] = temp[2]; //Nullify all details entry entirely
+                                moves[2][3] = temp[3]; //Nullify all details entry entirely
+                                moves[2][4] = temp[4]; //Nullify all details entry entirely
+                                moves[2][5] = temp[5]; //Nullify all details entry entirely
+                                moves[2][6] = temp[6]; //Nullify all details entry entirely
+                                moves[2][7] = temp[7]; //Nullify all details entry entirely
+                            }
                         }
 
-                        if(moves[2] != null){ 
-                            PQI[Integer.parseInt(moves[2][4]) - 1] = 2;
-                            if(PQI[((Integer.parseInt(moves[2][4]) - 1) + 1)%4] != null)
-                                if(PQI[((Integer.parseInt(moves[2][4]) - 1) + 1)%4] == 2) PQI[((Integer.parseInt(moves[2][4]) - 1) + 1)%4] = null;
-                            if(PQI[((Integer.parseInt(moves[2][4]) - 1) + 2)%4] != null) 
-                                if(PQI[((Integer.parseInt(moves[2][4]) - 1) + 2)%4] == 2) PQI[((Integer.parseInt(moves[2][4]) - 1) + 2)%4] = null;
-                            if(PQI[((Integer.parseInt(moves[2][4]) - 1) + 3)%4] != null)
-                                if(PQI[((Integer.parseInt(moves[2][4]) - 1) + 3)%4] == 2) PQI[((Integer.parseInt(moves[2][4]) - 1) + 3)%4] = null;
-                        }                        
+                        if(PQI[((Integer.parseInt(moves[2][4]) - 1) + 1)%4] != null)
+                            if(PQI[((Integer.parseInt(moves[2][4]) - 1) + 1)%4] == 2) PQI[((Integer.parseInt(moves[2][4]) - 1) + 1)%4] = null;
+                        if(PQI[((Integer.parseInt(moves[2][4]) - 1) + 2)%4] != null) 
+                            if(PQI[((Integer.parseInt(moves[2][4]) - 1) + 2)%4] == 2) PQI[((Integer.parseInt(moves[2][4]) - 1) + 2)%4] = null;
+                        if(PQI[((Integer.parseInt(moves[2][4]) - 1) + 3)%4] != null)
+                            if(PQI[((Integer.parseInt(moves[2][4]) - 1) + 3)%4] == 2) PQI[((Integer.parseInt(moves[2][4]) - 1) + 3)%4] = null;                        
                     } catch(Exception err){
                         Battle.text.setText("From Pokemon.loadMoves:Move3: " + err.toString());
                     }
@@ -296,42 +287,38 @@ public final class Pokemon {
                             while(position4.hasNext()){ // Populate details into MOVE4 array
                                 values = position4.next().toString(); // Capture obj & convert to String-- iterator then moves to next
 
-                                if(values.length() > 2) moves[3][Integer.parseInt(values.substring(0, 1))] = values.substring(2);
-                                else moves[3][Integer.parseInt(values.substring(0, 1))] = "";
+                                if(values.length() > 2) temp[Integer.parseInt(values.substring(0, 1))] = values.substring(2);
+                                else temp[Integer.parseInt(values.substring(0, 1))] = "";
                             }
                         } catch(Exception e) {
                             Battle.text.setText("From Pokemon.loadMoves:Move4: " + e.toString());
                         } finally {                        
-                            if((moves[3][1]).equals(moves[0][1]) || (moves[3][1]).equals(moves[1][1]) || (moves[3][1]).equals(moves[2][1])){
-                                PQI[Integer.parseInt(moves[3][4]) - 1] = null;
-                                moves[3][0] = null; //Nullify all details entry entirely
-                                moves[3][1] = null; //Nullify all details entry entirely
-                                moves[3][2] = null; //Nullify all details entry entirely
-                                moves[3][3] = null; //Nullify all details entry entirely
-                                moves[3][4] = null; //Nullify all details entry entirely
-                                moves[3][5] = null; //Nullify all details entry entirely
-                                moves[3][6] = null; //Nullify all details entry entirely
-                                moves[3][7] = null; //Nullify all details entry entirely
-                                moves[3] = null;
-                            }                        
+                            if(!((temp[1]).equals(moves[0][1]) || (temp[1]).equals(moves[1][1]) || (temp[1]).equals(moves[2][1]))){
+                                PQI[Integer.parseInt(temp[4]) - 1] = 3;
+                                moves[3][0] = temp[0]; //Nullify all details entry entirely
+                                moves[3][1] = temp[1]; //Nullify all details entry entirely
+                                moves[3][2] = temp[2]; //Nullify all details entry entirely
+                                moves[3][3] = temp[3]; //Nullify all details entry entirely
+                                moves[3][4] = temp[4]; //Nullify all details entry entirely
+                                moves[3][5] = temp[5]; //Nullify all details entry entirely
+                                moves[3][6] = temp[6]; //Nullify all details entry entirely
+                                moves[3][7] = temp[7]; //Nullify all details entry entirely
+                            }
                         }
 
-                        if(moves[3] != null){ 
-                            PQI[Integer.parseInt(moves[3][4]) - 1] = 3;
-                            if(PQI[((Integer.parseInt(moves[3][4]) - 1) + 1)%4] != null)
-                                if(PQI[((Integer.parseInt(moves[3][4]) - 1) + 1)%4] == 3) PQI[((Integer.parseInt(moves[3][4]) - 1) + 1)%4] = null;
-                            if(PQI[((Integer.parseInt(moves[3][4]) - 1) + 2)%4] != null)
-                                if(PQI[((Integer.parseInt(moves[3][4]) - 1) + 2)%4] == 3) PQI[((Integer.parseInt(moves[3][4]) - 1) + 2)%4] = null;
-                            if(PQI[((Integer.parseInt(moves[3][4]) - 1) + 3)%4] != null)
-                                if(PQI[((Integer.parseInt(moves[3][4]) - 1) + 3)%4] == 3) PQI[((Integer.parseInt(moves[3][4]) - 1) + 3)%4] = null;
-                        }                        
+                        if(PQI[((Integer.parseInt(moves[3][4]) - 1) + 1)%4] != null)
+                            if(PQI[((Integer.parseInt(moves[3][4]) - 1) + 1)%4] == 3) PQI[((Integer.parseInt(moves[3][4]) - 1) + 1)%4] = null;
+                        if(PQI[((Integer.parseInt(moves[3][4]) - 1) + 2)%4] != null)
+                            if(PQI[((Integer.parseInt(moves[3][4]) - 1) + 2)%4] == 3) PQI[((Integer.parseInt(moves[3][4]) - 1) + 2)%4] = null;
+                        if(PQI[((Integer.parseInt(moves[3][4]) - 1) + 3)%4] != null)
+                            if(PQI[((Integer.parseInt(moves[3][4]) - 1) + 3)%4] == 3) PQI[((Integer.parseInt(moves[3][4]) - 1) + 3)%4] = null;                        
                     } catch(Exception err){
                         Battle.text.setText("From Pokemon.loadMoves:Move4: " + err.toString());
                     }
                 }
             }
         } catch(Exception e){
-            Battle.text.setText("Unknown key value for moveSet");
+            Battle.text.setText("Unknown key value for moveSet: " + e.toString());
         } finally {
             
         }

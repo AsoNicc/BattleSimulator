@@ -15,7 +15,6 @@ import android.util.AttributeSet;
 import java.util.HashSet;
 
 /**
- *
  * @author Nick
  */
 public class Settings extends Activity {
@@ -25,9 +24,7 @@ public class Settings extends Activity {
     private float speedSum = 0f;
     private int latestIndex;
     
-    public Settings(Context inst){
-        context = inst;
-    }    
+    public Settings(Context inst){ context = inst; }    
     
     void setAll(){
         setBaseInfo();
@@ -46,21 +43,13 @@ public class Settings extends Activity {
         editor.commit();
     }
     
-    protected void setBaseInfo(){
-        BaseInfo load = new BaseInfo(context);
-    }
+    protected void setBaseInfo(){ BaseInfo load = new BaseInfo(context); }
     
-    protected void setOrient(){
-        Orient load = new Orient(context);
-    }
+    protected void setOrient(){ Orient load = new Orient(context); }
     
-    protected void setMoves(){
-        Moves load = new Moves(context);
-    }
+    protected void setMoves(){ Moves load = new Moves(context); }
     
-    protected void setLearnedMoves(){
-        LearnedMoves load = new LearnedMoves(context);
-    }
+    protected void setLearnedMoves(){ LearnedMoves load = new LearnedMoves(context); }
     
     private final class Orient extends Activity {
         private static final String ELEMENTS = "objects";
@@ -150,17 +139,11 @@ public class Settings extends Activity {
     private final class BaseInfo extends Activity {
         private static final String STAT_LIST = "genOneBaseStatList";
 
-        BaseInfo(Context context){
-            initialize(context);
-        }
+        BaseInfo(Context context){ initialize(context); }
 
-        BaseInfo(Context context, AttributeSet attribs){
-            initialize(context);
-        }
+        BaseInfo(Context context, AttributeSet attribs){ initialize(context); }
 
-        BaseInfo(Context context, AttributeSet attribs, int defStyle){
-            initialize(context);
-        }
+        BaseInfo(Context context, AttributeSet attribs, int defStyle){ initialize(context); }
 
         void initialize(Context context){
             editor = context.getSharedPreferences(STAT_LIST, Context.MODE_PRIVATE).edit();
@@ -350,17 +333,11 @@ public class Settings extends Activity {
     private final class Moves extends Activity {
         private static final String MOVE_LIST = "genOneMoveList";
 
-        Moves(Context context){
-            initialize(context);
-        }
+        Moves(Context context){ initialize(context); }
 
-        Moves(Context context, AttributeSet attribs){
-            initialize(context);
-        }
+        Moves(Context context, AttributeSet attribs){ initialize(context); }
 
-        Moves(Context context, AttributeSet attribs, int defStyle){
-            initialize(context);
-        }
+        Moves(Context context, AttributeSet attribs, int defStyle){ initialize(context); }
 
         void initialize(Context context){
             editor = context.getSharedPreferences(MOVE_LIST, Context.MODE_PRIVATE).edit();
@@ -405,7 +382,7 @@ public class Settings extends Activity {
             loadDetails(new String[]{"25", "Mega Kick", "NORMAL", "Physical", "2", "120", "TARGET", "null"}); //
             loadDetails(new String[]{"26", "Jump Kick", "FIGHTING", "Physical", "2", "100", "TARGET", "If it misses, the user loses half their HP"}); //Increase travel speed
             loadDetails(new String[]{"27", "Rolling Kick", "FIGHTING", "Physical", "1", "60", "TARGET", "May cancel opponent's action entirely."}); //
-            loadDetails(new String[]{"28", "Sand Attack", "GROUND", "Status", "3", "null", "ONSCREEN", "Lowers opponent's Accuracy."}); //
+            loadDetails(new String[]{"28", "Sand Attack", "GROUND", "Status", "1", "null", "ONSCREEN", "Lowers opponent's Accuracy."}); //
             loadDetails(new String[]{"29", "Headbutt", "NORMAL", "Physical", "2", "70", "TRACKING", "May cancel opponent's action entirely."}); //
             loadDetails(new String[]{"30", "Horn Attack", "NORMAL", "Physical", "1", "65", "TRACKING", "null"}); //
             loadDetails(new String[]{"31", "Fury Attack", "NORMAL", "Physical", "1", "15", "TARGET", "Hits 2-5 times."}); //
@@ -474,7 +451,7 @@ public class Settings extends Activity {
             loadDetails(new String[]{"94", "Psychic", "PSYCHIC", "Special", "2", "90", "ONSCREEN", "May lower opponent's Special Defense."}); //
             loadDetails(new String[]{"95", "Hypnosis", "PSYCHIC", "Status", "2", "null", "DEBUFF", "Puts opponent to sleep."}); //Decreased action speed, opponent MUST be in initial spot
             loadDetails(new String[]{"96", "Meditate", "PSYCHIC", "Status", "3", "null", "null", "Raises user's Attack."}); //
-            loadDetails(new String[]{"97", "Agility", "PSYCHIC", "Status", "4", "null", "null", "Sharply raises user's Speed."}); //
+            loadDetails(new String[]{"97", "Agility", "NORMAL", "Status", "4", "null", "null", "Sharply raises user's Speed."}); //
             loadDetails(new String[]{"98", "Quick Attack", "NORMAL", "Physical", "1", "40", "TRACKING", "User attacks fast."}); //
             loadDetails(new String[]{"99", "Rage", "NORMAL", "Physical", "1", "20", "TRACKING", "Raises user's Attack when hit."}); //
             loadDetails(new String[]{"100", "Teleport", "PSYCHIC", "Status", "3", "null", "null", "Ends random battles; also dodges attacks during trainer battles. Cannot use consecutively. Lowers evasiveness"}); //Slows users dodge time, permanently
@@ -551,17 +528,11 @@ public class Settings extends Activity {
     private final class LearnedMoves extends Activity {
         private static final String LEARNED_LIST = "learningSet";
 
-        LearnedMoves(Context context){
-            initialize(context);
-        }
+        LearnedMoves(Context context){ initialize(context); }
 
-        LearnedMoves(Context context, AttributeSet attribs){
-            initialize(context);
-        }
+        LearnedMoves(Context context, AttributeSet attribs){ initialize(context); }
 
-        LearnedMoves(Context context, AttributeSet attribs, int defStyle){
-            initialize(context);
-        }
+        LearnedMoves(Context context, AttributeSet attribs, int defStyle){ initialize(context); }
 
         void initialize(Context context){
             editor = context.getSharedPreferences(LEARNED_LIST, Context.MODE_PRIVATE).edit();
