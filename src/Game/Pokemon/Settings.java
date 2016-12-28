@@ -155,7 +155,7 @@ public class Settings extends Activity {
             
             //Set flag to collect speed stat for avg
             collect = true;
-            //{"#", "Name", "HP", "Attack", "Defense", "Sp Attack", "Sp Defense", "Speed", "ExpYield", "EvolveLVL"} // NOTE2SELF
+            //{"#", "Name", "HP", "Attack", "Defense", "Sp Attack", "Sp Defense", "Speed", "ExpYield", "EvolveLVL", "TYPE1", "TYPE2"} // NOTE2SELF
             loadDetails(new String[]{"1", "Bulbasaur", "45", "49", "49", "65", "65", "45", "64", "16", "GRASS", "POISON"}); //
             loadDetails(new String[]{"2", "Ivysaur", "60", "62", "63", "80", "80", "60", "142", "32", "GRASS", "POISON"}); //
             loadDetails(new String[]{"3", "Venusaur", "80", "82", "83", "100", "100", "80", "236", "", "GRASS", "POISON"}); //
@@ -227,7 +227,7 @@ public class Settings extends Activity {
             loadDetails(new String[]{"63", "Abra", "25", "20", "15", "105", "55", "90", "62", "16", "PSYCHIC", ""}); //
             loadDetails(new String[]{"64", "Kadabra", "40", "35", "30", "120", "70", "105", "140", "TRADE", "PSYCHIC", ""}); //
             loadDetails(new String[]{"65", "Alakazam", "55", "50", "45", "135", "95", "120", "221", "", "PSYCHIC", ""}); //
-        //        loadDetails(new String[]{"65M", "Alakazam (Mega Alakazam)", "55", "50", "65", "175", "95", "150", "221", "", "PSYCHIC", ""}); //
+        //        loadDetails(new String[]{"65M", "Alakazam (Mega Alakazam)", "55", "50", "65", "175", "105", "150", "221", "", "PSYCHIC", ""}); //
             loadDetails(new String[]{"66", "Machop", "70", "80", "50", "35", "35", "35", "61", "28", "FIGHTING", "AA"}); //
             loadDetails(new String[]{"67", "Machoke", "80", "100", "70", "50", "60", "45", "142", "TRADE", "FIGHTING", ""}); //
             loadDetails(new String[]{"68", "Machamp", "90", "130", "80", "65", "85", "55", "227", "", "FIGHTING", ""}); //
@@ -351,7 +351,7 @@ public class Settings extends Activity {
 
             /* Accuracy from most accurate to least accurate is as follows: 
              * ONSCREEN -> TRACKING -> TARGET -> DEBUFF -> CONDITIONAL 
-//             * Increase or decrease in accuracy translates & converts up or down, 
+             * Increase or decrease in accuracy translates & converts up or down, 
              * respectively, according to the scale */
 
             /* Evasiveness affects the dodge timer. Dodge timer length is 5 secs */
@@ -387,7 +387,7 @@ public class Settings extends Activity {
             loadDetails(new String[]{"30", "Horn Attack", "NORMAL", "Physical", "1", "65", "TRACKING", "null"}); //
             loadDetails(new String[]{"31", "Fury Attack", "NORMAL", "Physical", "1", "15", "TARGET", "Hits 2-5 times."}); //
             loadDetails(new String[]{"32", "Horn Drill", "NORMAL", "Physical", "2", "null", "CONDITIONAL", "One-Hit-KO, if it hits."}); //Does not affect opponents faster than the user AND fails against a target Pokémon at least 30 levels above the user.
-            loadDetails(new String[]{"33", "Tackle", "NORMAL", "Physical", "1", "50", "TRACKING", "null"}); //
+            loadDetails(new String[]{"33", "Tackle", "NORMAL", "Physical", "1", "40", "TRACKING", "null"}); //
             loadDetails(new String[]{"34", "Body Slam", "NORMAL", "Physical", "2", "85", "TRACKING", "May paralyze opponent."}); //
             loadDetails(new String[]{"35", "Wrap", "NORMAL", "Physical", "1", "15", "TRACKING", "Traps opponent, damaging them for some time."}); //Damages 4-5 avg turns
             loadDetails(new String[]{"36", "Take Down", "NORMAL", "Physical", "2", "90", "TARGET", "User receives recoil damage."}); //
@@ -495,7 +495,7 @@ public class Settings extends Activity {
             loadDetails(new String[]{"138", "Dream Eater", "PSYCHIC", "Special", "2", "100", "ONSCREEN", "User recovers half the HP inflicted on a sleeping opponent."}); //
             loadDetails(new String[]{"139", "Poison Gas", "POISON", "2", "40", "null", "ONSCREEN", "Poisons opponent."}); //
             loadDetails(new String[]{"140", "Barrage", "NORMAL", "Physical", "1", "15", "TARGET", "Hits 2-5 times."}); //Increase travel speed
-            loadDetails(new String[]{"141", "Leech Life", "BUG", "Physical", "1", "20", "TRACKING", "User recovers half the HP inflicted on opponent."}); //
+            loadDetails(new String[]{"141", "Leech Life", "BUG", "Physical", "1", "80", "TRACKING", "User recovers half the HP inflicted on opponent."}); //
             loadDetails(new String[]{"142", "Lovely Kiss", "NORMAL", "Status", "1", "null", "TARGET", "Puts opponent to sleep."}); //
             loadDetails(new String[]{"143", "Sky Attack", "FLYING", "Physical", "2", "140", "TRACKING", "Charges first, then attacks. May cancel opponent's action entirely."}); //Slowed action time
             loadDetails(new String[]{"144", "Transform", "NORMAL", "Status", "3", "null", "null", "User takes on the form and attacks of the opponent."}); //
