@@ -31,6 +31,7 @@ public class Settings extends Activity {
         setOrient();
         setMoves();
         setLearnedMoves();
+        setMoveSequence();
     }
     
     void clearAll(){
@@ -50,6 +51,8 @@ public class Settings extends Activity {
     protected void setMoves(){ Moves load = new Moves(context); }
     
     protected void setLearnedMoves(){ LearnedMoves load = new LearnedMoves(context); }
+    
+    protected void setMoveSequence(){ MoveSequence load = new MoveSequence(context); }
     
     private final class Orient extends Activity {
         private static final String ELEMENTS = "objects";
@@ -80,7 +83,6 @@ public class Settings extends Activity {
         private void setLargest(){
             AssetManager asset = context.getAssets();
             BitmapFactory.Options options;
-            Bitmap bitmap;
             int fs_cnt, o_cnt, pkmn_cnt = 0, sum_width, sum_height;
             float AVGSUM_O_WIDTH, AVGSUM_O_HEIGHT, AVGSUM_PKMN_WIDTH = 0, AVGSUM_PKMN_HEIGHT = 0;
             String[] frames, files, folders;
@@ -105,7 +107,7 @@ public class Settings extends Activity {
 
                         for(String file : frames){
                             options = new BitmapFactory.Options();
-                            bitmap = BitmapFactory.decodeStream(asset.open("sprites/" + folder + "/" + fileFolder + "/" + file), null, options);
+                            Bitmap bitmap = BitmapFactory.decodeStream(asset.open("sprites/" + folder + "/" + fileFolder + "/" + file), null, options);
                             fs_cnt++;
 
                             sum_width += options.outWidth;
@@ -228,7 +230,7 @@ public class Settings extends Activity {
             loadDetails(new String[]{"64", "Kadabra", "40", "35", "30", "120", "70", "105", "140", "TRADE", "PSYCHIC", ""}); //
             loadDetails(new String[]{"65", "Alakazam", "55", "50", "45", "135", "95", "120", "221", "", "PSYCHIC", ""}); //
         //        loadDetails(new String[]{"65M", "Alakazam (Mega Alakazam)", "55", "50", "65", "175", "105", "150", "221", "", "PSYCHIC", ""}); //
-            loadDetails(new String[]{"66", "Machop", "70", "80", "50", "35", "35", "35", "61", "28", "FIGHTING", "AA"}); //
+            loadDetails(new String[]{"66", "Machop", "70", "80", "50", "35", "35", "35", "61", "28", "FIGHTING", ""}); //
             loadDetails(new String[]{"67", "Machoke", "80", "100", "70", "50", "60", "45", "142", "TRADE", "FIGHTING", ""}); //
             loadDetails(new String[]{"68", "Machamp", "90", "130", "80", "65", "85", "55", "227", "", "FIGHTING", ""}); //
             loadDetails(new String[]{"69", "Bellsprout", "50", "75", "35", "70", "30", "40", "60", "21", "GRASS", "POISON"}); //
@@ -287,7 +289,7 @@ public class Settings extends Activity {
             loadDetails(new String[]{"119", "Seaking", "80", "92", "65", "65", "80", "68", "158", "", "WATER", ""}); //
             loadDetails(new String[]{"120", "Staryu", "30", "45", "55", "70", "55", "85", "68", "WATERSTONE", "WATER", ""}); //
             loadDetails(new String[]{"121", "Starmie", "60", "75", "85", "100", "85", "115", "182", "", "WATER", "PSYCHIC"}); //
-            loadDetails(new String[]{"122", "Mr. Mime", "40", "45", "65", "100", "120", "90", "161", "", "PSYCHIC", "FAIRY"}); //
+            loadDetails(new String[]{"122", "Mr_Mime", "40", "45", "65", "100", "120", "90", "161", "", "PSYCHIC", "FAIRY"}); //
             loadDetails(new String[]{"123", "Scyther", "70", "110", "80", "55", "80", "105", "100", "", "BUG", "FLYING"}); //
             loadDetails(new String[]{"124", "Jynx", "65", "50", "35", "115", "95", "95", "159", "", "ICE", "PSYCHIC"}); //
             loadDetails(new String[]{"125", "Electabuzz", "65", "83", "57", "95", "85", "105", "172", "", "ELECTRIC", ""}); //
@@ -324,7 +326,7 @@ public class Settings extends Activity {
             loadDetails(new String[]{"151", "Mew", "100", "100", "100", "100", "100", "100", "270", "", "PSYCHIC", ""}); //
             //Stop counting speed sum
             collect = false;
-            editor.putInt("avg_speed", Round(speedSum/latestIndex));
+            editor.putFloat("avg_speed", (float)Round(speedSum/latestIndex, 2));
             editor.putBoolean("setState", true);
             editor.commit();
         }
@@ -511,7 +513,7 @@ public class Settings extends Activity {
             loadDetails(new String[]{"154", "Fury Swipes", "NORMAL", "Physical", "1", "18", "TARGET", "Hits 2-5 times."}); //
             loadDetails(new String[]{"155", "Bonemerang", "GROUND", "Physical", "1", "50", "TRACKING", "Hits twice."}); //
             loadDetails(new String[]{"156", "Rest", "PSYCHIC", "Status", "4", "null", "null", "User sleeps for some time, but user is fully healed."}); //Sleeps for 2 avg turns
-            loadDetails(new String[]{"157", "ROCK Slide", "ROCK", "Physical", "2", "75", "TRACKING", "May cancel opponent's action entirely."}); //
+            loadDetails(new String[]{"157", "Rock Slide", "ROCK", "Physical", "2", "75", "TRACKING", "May cancel opponent's action entirely."}); //
             loadDetails(new String[]{"158", "Hyper Fang", "NORMAL", "Physical", "2", "80", "TRACKING", "May cancel opponent's action entirely."}); //
             loadDetails(new String[]{"159", "Sharpen", "NORMAL", "Status", "3", "null", "null", "Raises user's Attack."}); //
             loadDetails(new String[]{"160", "Conversion", "NORMAL", "Status", "3", "null", "null", "Changes user's type to that of its first move."}); //
@@ -537,6 +539,10 @@ public class Settings extends Activity {
         void initialize(Context context){
             editor = context.getSharedPreferences(LEARNED_LIST, Context.MODE_PRIVATE).edit();
 
+            if(delete){ //ClearAll() was called
+                clear();
+                return;
+            }
             //{"Dex#", {"Learned_Move_Lvl", "Move#"}*}
             loadDetails(new String[]{"1", "1", "33", "3", "45", "7", "73", "9", "22", "13", "77", "13", "79", "15", "36", "19", "75", "25", "74", "27", "38"});
             loadDetails(new String[]{"2", "1", "45", "1", "73", "1", "33", "3", "45", "7", "73", "9", "22", "13", "77", "13", "79", "15", "36", "20", "75", "28", "74", "31", "38", "44", "76"});
@@ -693,6 +699,193 @@ public class Settings extends Activity {
         }
     }
     
+    private final class MoveSequence extends Activity {
+        private static final String SEQUENCE = "order";
+        
+        MoveSequence(Context context){ initialize(context); }
+
+        MoveSequence(Context context, AttributeSet attribs){ initialize(context); }
+
+        MoveSequence(Context context, AttributeSet attribs, int defStyle){ initialize(context); }
+
+        void initialize(Context context){
+            editor = context.getSharedPreferences(SEQUENCE, Context.MODE_PRIVATE).edit();
+            
+            if(delete){ //ClearAll() was called
+                clear();
+                return;
+            }
+            
+            loadDetails(new String[]{"1", "0", "1", "2", "3", "4", "5", "2", "6", "3", "7", "8", "9"});
+            loadDetails(new String[]{"2", ""});
+            loadDetails(new String[]{"3", ""});
+            loadDetails(new String[]{"4", ""});
+            loadDetails(new String[]{"5", ""});
+            loadDetails(new String[]{"6", ""});
+            loadDetails(new String[]{"7", ""});
+            loadDetails(new String[]{"8", ""});
+            loadDetails(new String[]{"9", ""});
+            loadDetails(new String[]{"10", ""});
+            loadDetails(new String[]{"11", ""});
+            loadDetails(new String[]{"12", ""});
+            loadDetails(new String[]{"13", ""});
+            loadDetails(new String[]{"14", ""});
+            loadDetails(new String[]{"15", ""});
+            loadDetails(new String[]{"16", ""});
+            loadDetails(new String[]{"17", ""});
+            loadDetails(new String[]{"18", ""});
+            loadDetails(new String[]{"19", ""});
+            loadDetails(new String[]{"20", ""});
+            loadDetails(new String[]{"21", ""});
+            loadDetails(new String[]{"22", ""});
+            loadDetails(new String[]{"23", ""});
+            loadDetails(new String[]{"24", ""});
+            loadDetails(new String[]{"25", ""});
+            loadDetails(new String[]{"26", ""});
+            loadDetails(new String[]{"27", ""});
+            loadDetails(new String[]{"28", ""});
+            loadDetails(new String[]{"29", ""});
+            loadDetails(new String[]{"30", ""});
+            loadDetails(new String[]{"31", ""});
+            loadDetails(new String[]{"32", ""});
+            loadDetails(new String[]{"33", ""});
+            loadDetails(new String[]{"34", ""});
+            loadDetails(new String[]{"35", ""});
+            loadDetails(new String[]{"36", ""});
+            loadDetails(new String[]{"37", ""});
+            loadDetails(new String[]{"38", ""});
+            loadDetails(new String[]{"39", ""});
+            loadDetails(new String[]{"40", ""});
+            loadDetails(new String[]{"41", ""});
+            loadDetails(new String[]{"42", ""});
+            loadDetails(new String[]{"43", ""});
+            loadDetails(new String[]{"44", ""});
+            loadDetails(new String[]{"45", ""});
+            loadDetails(new String[]{"46", ""});
+            loadDetails(new String[]{"47", ""});
+            loadDetails(new String[]{"48", ""});
+            loadDetails(new String[]{"49", ""});
+            loadDetails(new String[]{"50", ""});
+            loadDetails(new String[]{"51", ""});
+            loadDetails(new String[]{"52", ""});
+            loadDetails(new String[]{"53", ""});
+            loadDetails(new String[]{"54", ""});
+            loadDetails(new String[]{"55", ""});
+            loadDetails(new String[]{"56", ""});
+            loadDetails(new String[]{"57", ""});
+            loadDetails(new String[]{"58", ""});
+            loadDetails(new String[]{"59", ""});
+            loadDetails(new String[]{"60", ""});
+            loadDetails(new String[]{"61", ""});
+            loadDetails(new String[]{"62", ""});
+            loadDetails(new String[]{"63", ""});
+            loadDetails(new String[]{"64", ""});
+            loadDetails(new String[]{"65", ""});
+            loadDetails(new String[]{"66", ""});
+            loadDetails(new String[]{"67", ""});
+            loadDetails(new String[]{"68", ""});
+            loadDetails(new String[]{"69", ""});
+            loadDetails(new String[]{"70", ""});
+            loadDetails(new String[]{"71", ""});
+            loadDetails(new String[]{"72", ""});
+            loadDetails(new String[]{"73", ""});
+            loadDetails(new String[]{"74", ""});
+            loadDetails(new String[]{"75", ""});
+            loadDetails(new String[]{"76", ""});
+            loadDetails(new String[]{"77", ""});
+            loadDetails(new String[]{"78", ""});
+            loadDetails(new String[]{"79", ""});
+            loadDetails(new String[]{"80", ""});
+            loadDetails(new String[]{"81", ""});
+            loadDetails(new String[]{"82", ""});
+            loadDetails(new String[]{"83", ""});
+            loadDetails(new String[]{"84", ""});
+            loadDetails(new String[]{"85", ""});
+            loadDetails(new String[]{"86", ""});
+            loadDetails(new String[]{"87", ""});
+            loadDetails(new String[]{"88", ""});
+            loadDetails(new String[]{"89", ""});
+            loadDetails(new String[]{"90", ""});
+            loadDetails(new String[]{"91", ""});
+            loadDetails(new String[]{"92", ""});
+            loadDetails(new String[]{"93", ""});
+            loadDetails(new String[]{"94", ""});
+            loadDetails(new String[]{"95", ""});
+            loadDetails(new String[]{"96", ""});
+            loadDetails(new String[]{"97", ""});
+            loadDetails(new String[]{"98", ""});
+            loadDetails(new String[]{"99", ""});
+            loadDetails(new String[]{"100", ""});
+            loadDetails(new String[]{"101", ""});
+            loadDetails(new String[]{"102", ""});
+            loadDetails(new String[]{"103", ""});
+            loadDetails(new String[]{"104", ""});
+            loadDetails(new String[]{"105", ""});
+            loadDetails(new String[]{"106", ""});
+            loadDetails(new String[]{"107", ""});
+            loadDetails(new String[]{"108", ""});
+            loadDetails(new String[]{"109", ""});
+            loadDetails(new String[]{"110", ""});
+            loadDetails(new String[]{"111", ""});
+            loadDetails(new String[]{"112", ""});
+            loadDetails(new String[]{"113", ""});
+            loadDetails(new String[]{"114", ""});
+            loadDetails(new String[]{"115", ""});
+            loadDetails(new String[]{"116", ""});
+            loadDetails(new String[]{"117", ""});
+            loadDetails(new String[]{"118", ""});
+            loadDetails(new String[]{"119", ""});
+            loadDetails(new String[]{"120", ""});
+            loadDetails(new String[]{"121", ""});
+            loadDetails(new String[]{"122", ""});
+            loadDetails(new String[]{"123", ""});
+            loadDetails(new String[]{"124", ""});
+            loadDetails(new String[]{"125", ""});
+            loadDetails(new String[]{"126", ""});
+            loadDetails(new String[]{"127", ""});
+            loadDetails(new String[]{"128", ""});
+            loadDetails(new String[]{"129", ""});
+            loadDetails(new String[]{"130", ""});
+            loadDetails(new String[]{"131", ""});
+            loadDetails(new String[]{"132", ""});
+            loadDetails(new String[]{"133", ""});
+            loadDetails(new String[]{"134", ""});
+            loadDetails(new String[]{"135", ""});
+            loadDetails(new String[]{"136", ""});
+            loadDetails(new String[]{"137", ""});
+            loadDetails(new String[]{"138", ""});
+            loadDetails(new String[]{"139", ""});
+            loadDetails(new String[]{"140", ""});
+            loadDetails(new String[]{"141", ""});
+            loadDetails(new String[]{"142", ""});
+            loadDetails(new String[]{"143", ""});
+            loadDetails(new String[]{"144", ""});
+            loadDetails(new String[]{"145", ""});
+            loadDetails(new String[]{"146", ""});
+            loadDetails(new String[]{"147", ""});
+            loadDetails(new String[]{"148", ""});
+            loadDetails(new String[]{"149", ""});
+            loadDetails(new String[]{"150", ""});
+            loadDetails(new String[]{"151", ""});
+            loadDetails(new String[]{"152", ""});
+            loadDetails(new String[]{"153", ""});
+            loadDetails(new String[]{"154", ""});
+            loadDetails(new String[]{"155", ""});
+            loadDetails(new String[]{"156", ""});
+            loadDetails(new String[]{"157", ""});
+            loadDetails(new String[]{"158", ""});
+            loadDetails(new String[]{"159", ""});
+            loadDetails(new String[]{"160", ""});
+            loadDetails(new String[]{"161", ""});
+            loadDetails(new String[]{"162", ""});
+            loadDetails(new String[]{"163", ""});
+            loadDetails(new String[]{"164", ""});
+            loadDetails(new String[]{"165", ""});
+            editor.putBoolean("setState", true);
+            editor.commit();
+        }
+    }
+    
     private void loadDetails(String[] set){
         HashSet values = new HashSet();
 
@@ -706,8 +899,13 @@ public class Settings extends Activity {
         editor.putStringSet(set[0], values);
     }
     
-    private int Round(double num){
-        if(num/((int)num) >= .5 ) return (int)Math.ceil(num);
-        else return (int)Math.floor(num);
+    protected static double Round(double number, int placeAfterDecimal){        
+        double doa = Math.pow(10, placeAfterDecimal); //degree of accuracy
+        
+        if(((number*doa) - (int)(number*doa)) >= .5) return ((int)(number*doa) + 1)/doa;
+        else {
+            if(number < 0) return ((int)(number*doa) - 1)/doa;
+            else return ((int)(number*doa))/doa;
+        }
     }
 }

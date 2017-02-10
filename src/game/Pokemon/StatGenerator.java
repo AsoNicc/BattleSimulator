@@ -11,10 +11,10 @@ import java.util.Random;
  * @author Nick
  */
 public class StatGenerator {
-    private static final Random gen = new Random();
-    private static final byte[] order = new byte[3];
-    protected final String nature = Nature();
     private final float INCREASE = 1.1F, DECREASE = 0.9F, NEUTRAL = 1F;
+    private final static Random gen = new Random();
+    private final static byte[] order = new byte[3];
+    protected final String nature = Nature();
     protected short HP, Atk, Def, SpA, SpD, Spe;
     
     /* Method used for generating stats of a random pokemon */
@@ -28,7 +28,7 @@ public class StatGenerator {
                 ivSpD = gen.nextInt(32), ivSpe = gen.nextInt(32);
         
         /* Initialize EVs */
-        short evHP = 0, evAtk = 0, evDef = 0, evSpA = 0, evSpD = 0, evSpe = 0;
+        byte evHP = 0, evAtk = 0, evDef = 0, evSpA = 0, evSpD = 0, evSpe = 0;
         
         for(byte LVL = 1; LVL <= limit; LVL++){
             /* Choose top three performing attr. randomly */
@@ -45,12 +45,12 @@ public class StatGenerator {
 
             /* REMINDER If total EVs > 510, handle situation @tp before assigning */
              
-            HP = (short)Round(((2*bHP + ivHP + (((choice == 0)? evHP += order[0] : ((choice2 == 0)? evHP += order[1] : ((choice3 == 0)? evHP += order[2] : evHP))))/4f + 100)*LVL)/100f + 10);            
-            Atk = (short)Round((((2*bAtk + ivAtk + ((choice == 1)? evAtk += order[0] : ((choice2 == 1)? evAtk += order[1] : ((choice3 == 1)? evAtk += order[2] : evAtk)))/4f)*LVL)/100f + 5)*Nature("Atk"));            
-            Def = (short)Round((((2*bDef + ivDef + ((choice == 2)? evDef += order[0] : ((choice2 == 2)? evDef += order[1] : ((choice3 == 2)? evDef += order[2] : evDef)))/4f)*LVL)/100f + 5)*Nature("Def"));            
-            SpA = (short)Round((((2*bSpA + ivSpA + ((choice == 3)? evSpA += order[0] : ((choice2 == 3)? evSpA += order[1] : ((choice3 == 3)? evSpA += order[2] : evSpA)))/4f)*LVL)/100f + 5)*Nature("SpA"));            
-            SpD = (short)Round((((2*bSpD + ivSpD + ((choice == 4)? evSpD += order[0] : ((choice2 == 4)? evSpD += order[1] : ((choice3 == 4)? evSpD += order[2] : evSpD)))/4f)*LVL)/100f + 5)*Nature("SpD"));            
-            Spe = (short)Round((((2*bSpe + ivSpe + ((choice == 5)? evSpe += order[0] : ((choice2 == 5)? evSpe += order[1] : ((choice3 == 5)? evSpe += order[2] : evSpe)))/4f)*LVL)/100f + 5)*Nature("Spe"));
+            HP = (short)Round(((2*bHP + ivHP + (((choice == 0)? evHP += order[0] : ((choice2 == 0)? evHP += order[1] : ((choice3 == 0)? evHP += order[2] : evHP))))/4f + 100)*LVL)/100f + 10, 0);            
+            Atk = (short)Round((((2*bAtk + ivAtk + ((choice == 1)? evAtk += order[0] : ((choice2 == 1)? evAtk += order[1] : ((choice3 == 1)? evAtk += order[2] : evAtk)))/4f)*LVL)/100f + 5)*Nature("Atk"), 0);            
+            Def = (short)Round((((2*bDef + ivDef + ((choice == 2)? evDef += order[0] : ((choice2 == 2)? evDef += order[1] : ((choice3 == 2)? evDef += order[2] : evDef)))/4f)*LVL)/100f + 5)*Nature("Def"), 0);            
+            SpA = (short)Round((((2*bSpA + ivSpA + ((choice == 3)? evSpA += order[0] : ((choice2 == 3)? evSpA += order[1] : ((choice3 == 3)? evSpA += order[2] : evSpA)))/4f)*LVL)/100f + 5)*Nature("SpA"), 0);            
+            SpD = (short)Round((((2*bSpD + ivSpD + ((choice == 4)? evSpD += order[0] : ((choice2 == 4)? evSpD += order[1] : ((choice3 == 4)? evSpD += order[2] : evSpD)))/4f)*LVL)/100f + 5)*Nature("SpD"), 0);            
+            Spe = (short)Round((((2*bSpe + ivSpe + ((choice == 5)? evSpe += order[0] : ((choice2 == 5)? evSpe += order[1] : ((choice3 == 5)? evSpe += order[2] : evSpe)))/4f)*LVL)/100f + 5)*Nature("Spe"), 0);
         }
     }
     
@@ -143,9 +143,14 @@ public class StatGenerator {
         return NEUTRAL;
     }
     
-    private int Round(double num){
-        if( num/((int)num) >= .5 ) return (int)Math.ceil(num);
-        else return (int)Math.floor(num);
+    protected static double Round(double number, int placeAfterDecimal){        
+        double doa = Math.pow(10, placeAfterDecimal); //degree of accuracy
+        
+        if(((number*doa) - (int)(number*doa)) >= .5) return ((int)(number*doa) + 1)/doa;
+        else {
+            if(number < 0) return ((int)(number*doa) - 1)/doa;
+            else return ((int)(number*doa))/doa;
+        }
     }
     
     private String stat(int num){

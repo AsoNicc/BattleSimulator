@@ -16,32 +16,52 @@ import java.util.Set;
  * @author Nick
  */
 public final class Pokemon {
-    protected byte level;
-    protected char gender;
-    protected Context context;
-    protected short approxLevel = 100, dexNo, HP, Atk, Def, SpA, SpD, Spe;
-    protected Byte[] PQI = new Byte[4];
-    protected float height, weight;
-    protected String name, nickname, nature, TYPE1, TYPE2;
-    protected String[][] moves = new String[4][8];
     private final Random gen = new Random();
-    
+    protected Byte[] PQI = new Byte[4];
+    protected Context context;
+    protected Short dexNo;
+    protected String buff, name, nickname, nature, TYPE1, TYPE2;
+    protected String[][] moves = new String[4][8];
+    protected byte approxLevel = 100, level;
+    protected char gender;
+    protected float height, weight;
+    protected int exp;
+    protected short HP, Atk, Def, SpA, SpD, Spe;
+    /* Generate a random Pokemon w/ possible level 0-100 */
     Pokemon(Context tContext){
         context = tContext;
-        approxLevel = (short)gen.nextInt(101);
+        approxLevel = (byte)gen.nextInt(101);
         initialize();
     }
     
-    Pokemon(Context tContext, Short levelRange){
+    /* Generate a random Pokemon w/ specified level range */
+    Pokemon(Context tContext, byte levelRange){
         context = tContext;
-        approxLevel = levelRange;
+        if(levelRange >= 0 && levelRange < 101) approxLevel = levelRange;
         initialize();
     }
     
-    Pokemon(char tGender, byte tLevel, short tDexNo, short tHP, short tAtk, short tDef, short tSpA, short tSpD, short tSpe, Byte[] tPQI, float tHeight, float tWeight, String tName, String tNickname, String tNature, String tTYPE1, String tTYPE2, String[][] tMoveSet){
-        gender = tGender;
-        level = tLevel;
+    /* Generate a specified Pokemon w/ specified level range */
+    Pokemon(Context tContext, byte levelRange, Short tDexNo){
+        context = tContext;
+        if(levelRange >= 0 && levelRange < 101) approxLevel = levelRange;
+        if(tDexNo > 0 && tDexNo < 152) dexNo = tDexNo;
+        initialize();
+    }
+    
+    /* Generate a specific Pokemon & its stats */
+    Pokemon(char tGender, byte tLevel, short tDexNo, short tHP, short tAtk, short tDef, 
+            short tSpA, short tSpD, short tSpe, Byte[] tPQI, float tHeight, float tWeight, 
+            String tName, String tNickname, String tNature, String tTYPE1, String tTYPE2, 
+            String[][] tMoveSet, int tExp, String tBuff){
+        
         dexNo = tDexNo;
+        name = tName;
+        nickname = tNickname;
+        gender = tGender;
+        TYPE1 = tTYPE1;
+        TYPE2 = tTYPE2;
+        level = tLevel;
         HP = tHP;
         Atk = tAtk;
         Def = tDef;
@@ -51,15 +71,13 @@ public final class Pokemon {
         PQI = tPQI;
         height = tHeight;
         weight = tWeight;
-        name = tName;
-        nickname = tNickname;
-        TYPE1 = tTYPE1;
-        TYPE2 = tTYPE2;
         moves = tMoveSet;
+        exp = tExp;
+        buff = tBuff;
     }
     
     private void initialize(){
-        /* Obtain Settings for base stats of any pokemon */
+        /* Obtain Settings for base stats of any u_pokemon */
         SharedPreferences details = context.getSharedPreferences("genOneBaseStatList", MODE_PRIVATE);
         if(!details.getBoolean("setState", false)){
             Settings load = new Settings(context);
@@ -69,7 +87,7 @@ public final class Pokemon {
         
         /* Initialize variables */
         try {
-            Set<String>tempSet = details.getStringSet(String.valueOf(gen.nextInt(150) + 1), null);
+            Set<String>tempSet = details.getStringSet((dexNo == null)? String.valueOf(gen.nextInt(150) + 1) : String.valueOf(dexNo), null);
             Iterator position = tempSet.iterator();
             String[] info = new String[tempSet.size()];
 
@@ -90,7 +108,9 @@ public final class Pokemon {
             /* Establish gender */
             if(info[1].equals("Nidoran♀") || info[1].equals("Nidoran♂")) gender = info[1].charAt(info[1].length() - 1);
             else {
-                if(gen.nextInt()%2 == 0 || info[1].equals("Nidorino")) gender = '♂';
+                if(info[1].equals("Nidorino") || info[1].equals("Nidoking")) gender = '♂';
+                else if(info[1].equals("Nidorina") || info[1].equals("Nidoqueen")) gender = '♀';
+                else if(gen.nextInt()%2 == 0) gender = '♂';
                 else gender = '♀';
             }
             /* Randomize a level within an approximate range (+/- 5) */
@@ -117,14 +137,15 @@ public final class Pokemon {
             nature = stat.nature;
             TYPE1 = info[10];
             TYPE2 = info[11];
+            buff = null;
 
-            loadMoves(dexNo);
+            loadMoves();
         } catch(Exception e){
             Battle.text.setText("From Pokemon.initialize: Unknown key value. " + e.toString());
         }
     }
     
-    private void loadMoves(int pokedexNo){
+    private void loadMoves(){
         /* Used to setup SharedPreferences, if it has not been set */
         SharedPreferences moveData = context.getSharedPreferences("genOneMoveList", MODE_PRIVATE);
         if(!moveData.getBoolean("setState", false)){
@@ -141,7 +162,7 @@ public final class Pokemon {
         }
         
         try {
-            Set<String> tempSet = moveSet.getStringSet(String.valueOf(pokedexNo), null);
+            Set<String> tempSet = moveSet.getStringSet(String.valueOf(dexNo), null);
             Iterator position = tempSet.iterator();
             String[] learningSet = new String[tempSet.size()];
 
@@ -247,8 +268,6 @@ public final class Pokemon {
                             while(position3.hasNext()){ // Populate details into MOVE3 array
                                 values = position3.next().toString(); // Capture obj & convert to String-- iterator then moves to next
 
-//                                if(values.length() > 2) moves[2][Integer.parseInt(values.substring(0, 1))] = values.substring(2);
-//                                else moves[2][Integer.parseInt(values.substring(0, 1))] = "";
                                 if(values.length() > 2) temp[Integer.parseInt(values.substring(0, 1))] = values.substring(2);
                                 else temp[Integer.parseInt(values.substring(0, 1))] = "";
                             }

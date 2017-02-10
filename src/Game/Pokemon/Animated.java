@@ -19,7 +19,30 @@ import android.view.View;
 import java.io.InputStream;
 
 public class Animated extends View {
-    protected static int HEALTH_BAR_LENGTH, OPPONENT_FRAME_BOTTOMLEFT_X, 
+    private AssetManager asset;
+    private static Configuration config; 
+    private InputStream stream;
+    private Integer i, j;
+    private Path draw;
+    private Point leftPoint, rightPoint, tip;
+    private String orientation, temp;
+    private boolean nextFrame;
+    private final double oneRadian = 0.0174533;
+    private final Paint brush = new Paint();
+    private float AVG_SPRITE_WIDTH, AVG_SPRITE_HEIGHT;
+    private int contender, time;
+    private static float speedbar_start_y, speedbar_end_y, action_start_x;
+    private final int FIXED_FRAME = (int)Round(Battle.ARENABOX/3f, 0), GAP = 5,
+            POINTER_SIDE = 10, SPEED_TEXT_SIZE = 25;
+    private static Options Opponent_Options, User_Options; 
+    protected final static float USER_PLACEMENT_X = 1.0f, OPPONENT_PLACEMENT_X = 0.9f, 
+            USER_PLACEMENT_Y = 0.9f, OPPONENT_PLACEMENT_Y = 1f;
+    protected int LARGEST_HEIGHT, LARGEST_WIDTH;
+    protected static Bitmap opponent, opponent_icon, user, user_icon, opponent_backSpace,
+            opponent_frontSpace, user_frontSpace, user_backSpace;
+    protected static boolean opponent_actReady = false, user_actReady = false, 
+            USER_SPEED_LOCK = false, OPPONENT_SPEED_LOCK = false;
+    protected static double HEALTH_BAR_LENGTH, OPPONENT_FRAME_BOTTOMLEFT_X, 
             OPPONENT_FRAME_BOTTOMLEFT_Y, OPPONENT_FRAME_BOTTOMRIGHT_X, 
             OPPONENT_FRAME_BOTTOMRIGHT_Y, OPPONENT_FRAME_TOPLEFT_X, 
             OPPONENT_FRAME_TOPLEFT_Y, OPPONENT_FRAME_TOPRIGHT_X, 
@@ -27,33 +50,14 @@ public class Animated extends View {
             USER_FRAME_BOTTOMLEFT_Y, USER_FRAME_BOTTOMRIGHT_X, 
             USER_FRAME_BOTTOMRIGHT_Y, USER_FRAME_TOPLEFT_X, USER_FRAME_TOPLEFT_Y,
             USER_FRAME_TOPRIGHT_X, USER_FRAME_TOPRIGHT_Y,
-            user_shift_x = 0, opponent_shift_x = 0, 
-            user_shift_y = 0, opponent_shift_y = 0;
-    protected static String pokemon;
-    protected static float user_speed_inc = 6f/*:= 1sec :. make 6f a final float later*/, opponent_speed_inc = 1f,
-            user_speed_percentage = 0f, opponent_speed_percentage = 0f;
-    protected int LARGEST_HEIGHT, LARGEST_WIDTH;
-    protected static short pokemon_HP, pokemon_lvl;
-    private final float USER_PLACEMENT_X = 1.0f, OPPONENT_PLACEMENT_X = 0.9f, 
-            USER_PLACEMENT_Y = 0.9f, OPPONENT_PLACEMENT_Y = 1f;
-    private AssetManager asset;
-    private static Configuration config; 
-    private Point leftPoint, rightPoint, tip;
-    private final Paint brush = new Paint();
-    private Path draw;
-    private float AVG_SPRITE_WIDTH, AVG_SPRITE_HEIGHT;
-    private static float scaleFactor, commandEnd_startAct_x, speedbar_start_y,
-            speedbar_end_x, speedbar_end_y, speedbar_start_x, action_start_x,
-            opponent_speed, user_speed;
-    private int contender, time;
-    private final int FIXED_FRAME = Round(Battle.ARENABOX/3f), GAP = 5,
-            POINTER_SIDE = 10, SPEED_TEXT_SIZE = 25;
-    private boolean nextFrame;
-    private static Bitmap opponent, opponent_icon, user, user_icon;
-    private Integer i, j;
-    private static Options Opponent_Options, User_Options;
-    private String orientation, temp;
-    private InputStream stream;
+            user_shift_x = 0, opponent_shift_x = 0,
+            user_shift_y = 0, opponent_shift_y = 0,
+            user_speed_inc = 0, opponent_speed_inc = 0,
+            user_speedbar_percentage = 0, opponent_speedbar_percentage = 0;
+    protected static String opponent_pokemon, user_pokemon;
+    protected static short opponent_pokemon_HP = 1, user_pokemon_HP, opponent_pokemon_lvl = 0, user_pokemon_lvl;
+    protected static float scaleFactor, opponent_damage_percentage = 0, user_damage_percentage = 0, 
+            opponent_speedbar, user_speedbar, commandEnd_startAct_x, speedbar_start_x, speedbar_end_x, AVG_SPEED;
     
     public Animated(Context context){
         super(context);
@@ -76,7 +80,7 @@ public class Animated extends View {
     private void initialize(Context context){
         asset = context.getAssets(); //Link assets
         config = getResources().getConfiguration();
-            
+          
         /* Used to setup SharedPreferences, if it has not been set */
         SharedPreferences objects = context.getSharedPreferences("objects", MODE_PRIVATE);
         if(!objects.getBoolean("setState", false)){
@@ -92,25 +96,26 @@ public class Animated extends View {
         AVG_SPRITE_HEIGHT = objects.getFloat("avg_height", 0); //Defaults to 0 if not found
         
         float tempVar = (FIXED_FRAME/((AVG_SPRITE_WIDTH + AVG_SPRITE_HEIGHT)/2));
-        scaleFactor = (tempVar > 1)? Round(Math.sqrt(tempVar)) : tempVar;
+        scaleFactor = (tempVar > 1)? (float)Round(Math.sqrt(tempVar), 2) : tempVar;
         
-        setPokemon("bulbasaur");
+        setPokemon(1, "bulbasaur");
+        setPokemon(2, "bulbasaur");
         i = 0;
         j = 0;
         time = 0;
         nextFrame = true;
-        HEALTH_BAR_LENGTH = Round(LARGEST_WIDTH*1.4);
+        HEALTH_BAR_LENGTH = (int)Round(LARGEST_WIDTH*1.4, 0);
         
         try {
             orientation = "front";
             contender = 1;
-            stream = asset.open("sprites/" + pokemon + "/" + orientation + "/frame_" + i + ".png");
+            stream = asset.open("sprites/" + opponent_pokemon + "/" + orientation + "/frame_" + i + ".png");
             Opponent_Options = new Options();
             decodeResizedBitmapFromAssets();
             
             orientation = "back";
             contender = 2;
-            stream = asset.open("sprites/" + pokemon + "/" + orientation + "/frame_" + j + ".png");
+            stream = asset.open("sprites/" + user_pokemon + "/" + orientation + "/frame_" + j + ".png");
             User_Options = new Options();
             decodeResizedBitmapFromAssets();
         } catch (Exception e) {      
@@ -122,145 +127,167 @@ public class Animated extends View {
         super.onDraw(canvas);
         
         //Evaluate opponent hitbox
-        OPPONENT_FRAME_BOTTOMLEFT_X = Round( ((canvas.getWidth()*5/6f) - (opponent.getWidth()/2f))*OPPONENT_PLACEMENT_X ) + opponent_shift_x;
-        OPPONENT_FRAME_BOTTOMLEFT_Y = Round( ((canvas.getHeight()/3f) + (opponent.getHeight()/2f))*OPPONENT_PLACEMENT_Y ) + opponent_shift_y;
+        OPPONENT_FRAME_BOTTOMLEFT_X = (Battle.SCREEN_WIDTH*5/6.0 - opponent.getWidth()/2.0)*OPPONENT_PLACEMENT_X + opponent_shift_x;
+        OPPONENT_FRAME_BOTTOMLEFT_Y = (Battle.SCREEN_HEIGHT/3.0 + opponent.getHeight()/2.0)*OPPONENT_PLACEMENT_Y + opponent_shift_y;
         OPPONENT_FRAME_TOPLEFT_X = OPPONENT_FRAME_BOTTOMLEFT_X;
         OPPONENT_FRAME_TOPLEFT_Y = OPPONENT_FRAME_BOTTOMLEFT_Y - opponent.getHeight();
         OPPONENT_FRAME_TOPRIGHT_X = OPPONENT_FRAME_TOPLEFT_X + opponent.getWidth();
         OPPONENT_FRAME_TOPRIGHT_Y = OPPONENT_FRAME_TOPLEFT_Y;
         OPPONENT_FRAME_BOTTOMRIGHT_X = OPPONENT_FRAME_TOPRIGHT_X;
-        OPPONENT_FRAME_BOTTOMRIGHT_Y = OPPONENT_FRAME_BOTTOMLEFT_Y;
+        OPPONENT_FRAME_BOTTOMRIGHT_Y = OPPONENT_FRAME_BOTTOMLEFT_Y; 
         
         //Draw bitmap from TopLeft, downward
-        canvas.drawBitmap(opponent, OPPONENT_FRAME_TOPLEFT_X, OPPONENT_FRAME_TOPLEFT_Y, null);
+        if(opponent_backSpace != null) canvas.drawBitmap(opponent_backSpace, (float)(OPPONENT_FRAME_TOPLEFT_X + opponent.getWidth()/2.0 - opponent_backSpace.getWidth()/2.0), (float)(OPPONENT_FRAME_TOPLEFT_Y + opponent.getHeight() - opponent_backSpace.getHeight()), null);
+        
+        //Draw bitmap from TopLeft, downward
+        canvas.drawBitmap(opponent, (float)OPPONENT_FRAME_TOPLEFT_X, (float)OPPONENT_FRAME_TOPLEFT_Y, null);
+        
+        //Draw bitmap from TopLeft, downward
+        if(opponent_frontSpace != null) canvas.drawBitmap(opponent_frontSpace, (float)(OPPONENT_FRAME_TOPLEFT_X + opponent.getWidth()/2.0 - opponent_frontSpace.getWidth()/2.0), (float)(OPPONENT_FRAME_TOPLEFT_Y + opponent.getHeight() - opponent_frontSpace.getHeight()), null);
         
         brush.setStyle(Paint.Style.FILL);
         brush.setColor(Color.argb(128, 255, 255, 255));
         brush.setStrokeWidth(10f);
         //canvas.drawRect(left (x-val), top (y-val), right (x-val), bottom (y-val), Paint)
-        canvas.drawRect(Round( OPPONENT_FRAME_TOPLEFT_X + opponent.getWidth()/2f - HEALTH_BAR_LENGTH/2f ), 
-                Round( (OPPONENT_FRAME_TOPLEFT_Y - 40)*adjust(pokemon) ), 
-                Round( OPPONENT_FRAME_TOPLEFT_X + opponent.getWidth()/2f + HEALTH_BAR_LENGTH/2f ), 
-                Round( (OPPONENT_FRAME_TOPRIGHT_Y - 30)*adjust(pokemon) ), 
+        canvas.drawRect((float)(OPPONENT_FRAME_TOPLEFT_X + opponent.getWidth()/2.0 - HEALTH_BAR_LENGTH/2.0), 
+                (float)((OPPONENT_FRAME_TOPLEFT_Y - 40)*adjust(opponent_pokemon)), 
+                (float)(OPPONENT_FRAME_TOPLEFT_X + opponent.getWidth()/2.0 + HEALTH_BAR_LENGTH/2.0), 
+                (float)((OPPONENT_FRAME_TOPRIGHT_Y - 30)*adjust(opponent_pokemon)), 
                 brush);
         brush.setStyle(Paint.Style.FILL);
-        brush.setColor(getHealthBarColor(50));
+        brush.setColor(getHealthBarColor((int)Round((1 - opponent_damage_percentage)*100, 0)));
         brush.setStrokeWidth(10f);
         //canvas.drawRect(left (x-val), top (y-val), right (x-val), bottom (y-val), Paint)
-        canvas.drawRect(Round( OPPONENT_FRAME_TOPLEFT_X + opponent.getWidth()/2f - HEALTH_BAR_LENGTH/2f ), 
-                Round( (OPPONENT_FRAME_TOPLEFT_Y - 40)*adjust(pokemon) ), 
-                Round( OPPONENT_FRAME_TOPLEFT_X + opponent.getWidth()/2f + HEALTH_BAR_LENGTH/2f - (0.5f*HEALTH_BAR_LENGTH) ), 
-                Round( (OPPONENT_FRAME_TOPRIGHT_Y - 30)*adjust(pokemon) ), 
+        canvas.drawRect((float)(OPPONENT_FRAME_TOPLEFT_X + opponent.getWidth()/2.0 - HEALTH_BAR_LENGTH/2.0), 
+                (float)((OPPONENT_FRAME_TOPLEFT_Y - 40)*adjust(opponent_pokemon)), 
+                (float)(OPPONENT_FRAME_TOPLEFT_X + opponent.getWidth()/2.0 + HEALTH_BAR_LENGTH/2.0 - (opponent_damage_percentage*HEALTH_BAR_LENGTH)), 
+                (float)((OPPONENT_FRAME_TOPRIGHT_Y - 30)*adjust(opponent_pokemon)), 
                 brush);
         brush.setColor(Color.argb(255, 255, 255, 255));
         brush.setStyle(Paint.Style.FILL);
         brush.setTextSize(25f);
         canvas.drawText("HP", 
-                Round( OPPONENT_FRAME_TOPLEFT_X + opponent.getWidth()/2f - HEALTH_BAR_LENGTH/2f - 50/*px*/ ), 
-                Round( (OPPONENT_FRAME_TOPLEFT_Y - 25/*px*/)*adjust(pokemon) ), 
+                (float)(OPPONENT_FRAME_TOPLEFT_X + opponent.getWidth()/2.0 - HEALTH_BAR_LENGTH/2.0 - 50/*px*/), 
+                (float)((OPPONENT_FRAME_TOPLEFT_Y - 25/*px*/)*adjust(opponent_pokemon)), 
                 brush);
         brush.setTextSize(35);
         
         /* Get opponent Pokemon name text */
-        if(pokemon.equals("nidorang")) temp = "Nidoran♀";
-        else if(pokemon.equals("nidoranb")) temp = "Nidoran♂";
-        else temp = pokemon.substring(0, 1).toUpperCase() + pokemon.substring(1); // + ' ' + genderString
+        if(opponent_pokemon.equals("nidorang")) temp = "Nidoran♀";
+        else if(opponent_pokemon.equals("nidoranb")) temp = "Nidoran♂";
+        else if(opponent_pokemon.equals("mr_mime")) temp = "Mr. Mime";
+        else temp = opponent_pokemon.substring(0, 1).toUpperCase() + opponent_pokemon.substring(1);
         
-        temp += " | LVL" + pokemon_lvl;
+        try {
+            if(!(temp.equals("Nidoran♀") || temp.equals("Nidoran♂"))) temp += " | " + Battle.o_pokemon.gender;
+        } catch(NullPointerException n){}
+        
+        temp += " | LVL" + opponent_pokemon_lvl;
 
         //Draw opponent name text
         canvas.drawText(temp, 
-                Round( OPPONENT_FRAME_TOPLEFT_X + opponent.getWidth()/2f - HEALTH_BAR_LENGTH/2f ), 
-                Round( (OPPONENT_FRAME_TOPLEFT_Y - 50/*px*/)*adjust(pokemon) ), 
+                (float)(OPPONENT_FRAME_TOPLEFT_X + opponent.getWidth()/2.0 - HEALTH_BAR_LENGTH/2.0), 
+                (float)((OPPONENT_FRAME_TOPLEFT_Y - 50/*px*/)*adjust(opponent_pokemon)), 
                 brush);
         
         //Draw opponent HP number
-        canvas.drawText(String.valueOf(Round( ((pokemon_HP/2f)/pokemon_HP)*100 /*damage percentage*/ )) + '%', 
-                Round( OPPONENT_FRAME_TOPLEFT_X + opponent.getWidth()/2f - HEALTH_BAR_LENGTH/2f ), 
-                Round( (OPPONENT_FRAME_TOPLEFT_Y - 5/*px*/)*adjust(pokemon) ), 
+        canvas.drawText(String.valueOf(Round(((opponent_pokemon_HP*(1 - opponent_damage_percentage))/opponent_pokemon_HP)*100/*percentage*/, 1)) + '%', 
+                (float)(OPPONENT_FRAME_TOPLEFT_X + opponent.getWidth()/2.0 - HEALTH_BAR_LENGTH/2.0), 
+                (float)((OPPONENT_FRAME_TOPLEFT_Y - 5/*px*/)*adjust(opponent_pokemon)), 
                 brush);
         
         //Evaluate user hitbox
-        USER_FRAME_BOTTOMLEFT_X = Round( ((canvas.getWidth()/6f) - (user.getWidth()/2f))*USER_PLACEMENT_X ) - user_shift_x;
-        USER_FRAME_BOTTOMLEFT_Y = Round( ((canvas.getHeight()*2/3f) + (user.getHeight()/2f))*USER_PLACEMENT_Y) + user_shift_y;
+        USER_FRAME_BOTTOMLEFT_X = (Battle.SCREEN_WIDTH/6.0 - user.getWidth()/2.0)*USER_PLACEMENT_X + user_shift_x;
+        USER_FRAME_BOTTOMLEFT_Y = (Battle.SCREEN_HEIGHT*2/3.0 + user.getHeight()/2.0)*USER_PLACEMENT_Y + user_shift_y;
         USER_FRAME_TOPLEFT_X = USER_FRAME_BOTTOMLEFT_X;
         USER_FRAME_TOPLEFT_Y = USER_FRAME_BOTTOMLEFT_Y - user.getHeight();
         USER_FRAME_TOPRIGHT_X = USER_FRAME_TOPLEFT_X + user.getWidth();
         USER_FRAME_TOPRIGHT_Y = USER_FRAME_TOPLEFT_Y;
         USER_FRAME_BOTTOMRIGHT_X = USER_FRAME_TOPRIGHT_X;
         USER_FRAME_BOTTOMRIGHT_Y = USER_FRAME_BOTTOMLEFT_Y;
-                
+        
+        //Draw bitmap from TopLeft, downward
+        if(user_frontSpace != null) canvas.drawBitmap(user_frontSpace, (float)(USER_FRAME_TOPLEFT_X + user.getWidth()/2.0 - user_frontSpace.getWidth()/2.0), (float)(USER_FRAME_TOPLEFT_Y + user.getHeight() - user_frontSpace.getHeight()), null);
+        
         //Draw bitmap from TopLeft, downward        
-        canvas.drawBitmap(user, USER_FRAME_TOPLEFT_X, USER_FRAME_TOPLEFT_Y, null);
+        canvas.drawBitmap(user, (float)USER_FRAME_TOPLEFT_X, (float)USER_FRAME_TOPLEFT_Y, null);
+        
+        //Draw bitmap from TopLeft, downward
+        if(user_backSpace != null) canvas.drawBitmap(user_backSpace, (float)(USER_FRAME_TOPLEFT_X + user.getWidth()/2.0 - user_backSpace.getWidth()/2.0), (float)(USER_FRAME_TOPLEFT_Y + user.getHeight() - user_backSpace.getHeight()), null);
         
         brush.setStyle(Paint.Style.FILL);
         brush.setColor(Color.argb(128, 255, 255, 255));
         brush.setStrokeWidth(10);
         //canvas.drawRect(left (x-val), top (y-val), right (x-val), bottom (y-val), Paint)
         canvas.drawRect(((config.orientation == Configuration.ORIENTATION_PORTRAIT)?
-                Round( USER_FRAME_TOPLEFT_X + user.getWidth()/2f - HEALTH_BAR_LENGTH/4f )
-                : Round( USER_FRAME_TOPLEFT_X + user.getWidth()/2f - HEALTH_BAR_LENGTH/2f) ), 
-                Round( (USER_FRAME_TOPLEFT_Y - 40)*adjust(pokemon) ), 
+                (float)(USER_FRAME_TOPLEFT_X + user.getWidth()/2.0 - HEALTH_BAR_LENGTH/4.0)
+                : (float)(USER_FRAME_TOPLEFT_X + user.getWidth()/2.0 - HEALTH_BAR_LENGTH/2.0)), 
+                (float)((USER_FRAME_TOPLEFT_Y - 40)*adjust(user_pokemon)), 
                 ((config.orientation == Configuration.ORIENTATION_PORTRAIT)? 
-                        Round( USER_FRAME_TOPLEFT_X + user.getWidth()/2f + HEALTH_BAR_LENGTH*3/4f )
-                        : Round( USER_FRAME_TOPLEFT_X + user.getWidth()/2f + HEALTH_BAR_LENGTH/2f) ), 
-                Round( (USER_FRAME_TOPRIGHT_Y - 30)*adjust(pokemon) ), 
+                        (float)(USER_FRAME_TOPLEFT_X + user.getWidth()/2.0 + HEALTH_BAR_LENGTH*3/4.0)
+                        : (float)(USER_FRAME_TOPLEFT_X + user.getWidth()/2.0 + HEALTH_BAR_LENGTH/2.0)), 
+                (float)((USER_FRAME_TOPRIGHT_Y - 30)*adjust(user_pokemon)), 
                 brush);
         brush.setStyle(Paint.Style.FILL);
-        brush.setColor(getHealthBarColor(75));
+        brush.setColor(getHealthBarColor((int)Round((1 - user_damage_percentage)*100, 0)));
         brush.setStrokeWidth(10);
         //canvas.drawRect(left (x-val), top (y-val), right (x-val), bottom (y-val), Paint)
         canvas.drawRect(((config.orientation == Configuration.ORIENTATION_PORTRAIT)?
-                Round( USER_FRAME_TOPLEFT_X + user.getWidth()/2f - HEALTH_BAR_LENGTH/4f )
-                : Round( USER_FRAME_TOPLEFT_X + user.getWidth()/2f - HEALTH_BAR_LENGTH/2f) ), 
-                Round( (USER_FRAME_TOPLEFT_Y - 40)*adjust(pokemon) ), 
+                (float)(USER_FRAME_TOPLEFT_X + user.getWidth()/2.0 - HEALTH_BAR_LENGTH/4.0)
+                : (float)(USER_FRAME_TOPLEFT_X + user.getWidth()/2.0 - HEALTH_BAR_LENGTH/2.0)), 
+                (float)((USER_FRAME_TOPLEFT_Y - 40)*adjust(user_pokemon)), 
                 ((config.orientation == Configuration.ORIENTATION_PORTRAIT)?
-                        Round( USER_FRAME_TOPLEFT_X + user.getWidth()/2f + HEALTH_BAR_LENGTH*3/4f - (0.25f*HEALTH_BAR_LENGTH) )
-                        : Round( USER_FRAME_TOPLEFT_X + user.getWidth()/2f + HEALTH_BAR_LENGTH/2f - (0.25f*HEALTH_BAR_LENGTH)) ), 
-                Round( (USER_FRAME_TOPRIGHT_Y - 30)*adjust(pokemon) ), 
+                        (float)(USER_FRAME_TOPLEFT_X + user.getWidth()/2.0 + HEALTH_BAR_LENGTH*3/4.0 - (user_damage_percentage*HEALTH_BAR_LENGTH))
+                        : (float)(USER_FRAME_TOPLEFT_X + user.getWidth()/2.0 + HEALTH_BAR_LENGTH/2.0 - (user_damage_percentage*HEALTH_BAR_LENGTH))), 
+                (float)((USER_FRAME_TOPRIGHT_Y - 30)*adjust(user_pokemon)), 
                 brush);
         brush.setColor(Color.argb(255, 255, 255, 255));
         brush.setStyle(Paint.Style.FILL);
         brush.setTextSize(25);
         canvas.drawText("HP", ((config.orientation == Configuration.ORIENTATION_PORTRAIT)? 
-                Round( USER_FRAME_TOPLEFT_X + user.getWidth()/2f - HEALTH_BAR_LENGTH/4f - 50/*px*/ )
-                : Round( USER_FRAME_TOPLEFT_X + user.getWidth()/2f - HEALTH_BAR_LENGTH/2f - 50/*px*/) ), 
-                Round( (USER_FRAME_TOPLEFT_Y - 25/*px*/)*adjust(pokemon) ), 
+                (float)(USER_FRAME_TOPLEFT_X + user.getWidth()/2.0 - HEALTH_BAR_LENGTH/4.0 - 50/*px*/)
+                : (float)(USER_FRAME_TOPLEFT_X + user.getWidth()/2.0 - HEALTH_BAR_LENGTH/2.0 - 50/*px*/)), 
+                (float)((USER_FRAME_TOPLEFT_Y - 25/*px*/)*adjust(user_pokemon)), 
                 brush);
         brush.setTextSize(35);
         
         /* Get user Pokemon name text */
-        if(pokemon.equals("nidorang")) temp = "Nidoran♀";
-        else if(pokemon.equals("nidoranb")) temp = "Nidoran♂";
-        else temp = pokemon.substring(0, 1).toUpperCase() + pokemon.substring(1);
+        if(user_pokemon.equals("nidorang")) temp = "Nidoran♀";
+        else if(user_pokemon.equals("nidoranb")) temp = "Nidoran♂";
+        else if(user_pokemon.equals("mr_mime")) temp = "Mr. Mime";
+        else temp = user_pokemon.substring(0, 1).toUpperCase() + user_pokemon.substring(1);
         
-        temp += " | LVL???";
+        try {
+            if(!(temp.equals("Nidoran♀") || temp.equals("Nidoran♂"))) temp += " | " + Battle.u_pokemon.gender;
+        } catch(NullPointerException n){}
+        
+        temp += " | LVL" + user_pokemon_lvl;
         
         //Draw user name text
         canvas.drawText(temp, ((config.orientation == Configuration.ORIENTATION_PORTRAIT)? 
-                Round( USER_FRAME_TOPLEFT_X + user.getWidth()/2f - HEALTH_BAR_LENGTH/4f )
-                : Round( USER_FRAME_TOPLEFT_X + user.getWidth()/2f - HEALTH_BAR_LENGTH/2f) ), 
-                Round( (USER_FRAME_TOPLEFT_Y - 50/*px*/)*adjust(pokemon) ), 
+                (float)(USER_FRAME_TOPLEFT_X + user.getWidth()/2.0 - HEALTH_BAR_LENGTH/4.0)
+                : (float)(USER_FRAME_TOPLEFT_X + user.getWidth()/2.0 - HEALTH_BAR_LENGTH/2.0)), 
+                (float)((USER_FRAME_TOPLEFT_Y - 50/*px*/)*adjust(user_pokemon)), 
                 brush);
         
         //Draw user HP numbers
-        canvas.drawText("???/???", ((config.orientation == Configuration.ORIENTATION_PORTRAIT)? 
-                Round( USER_FRAME_TOPLEFT_X + user.getWidth()/2f - HEALTH_BAR_LENGTH/4f )
-                : Round( USER_FRAME_TOPLEFT_X + user.getWidth()/2f - HEALTH_BAR_LENGTH/2f) ), 
-                Round( (USER_FRAME_TOPLEFT_Y - 5/*px*/)*adjust(pokemon) ), 
+        canvas.drawText(String.valueOf(Round(Battle.u_pokemon.HP*(1 - user_damage_percentage), 1)) + '/' + String.valueOf((float)Battle.u_pokemon.HP), ((config.orientation == Configuration.ORIENTATION_PORTRAIT)? 
+                (float)(USER_FRAME_TOPLEFT_X + user.getWidth()/2.0 - HEALTH_BAR_LENGTH/4.0)
+                : (float)(USER_FRAME_TOPLEFT_X + user.getWidth()/2.0 - HEALTH_BAR_LENGTH/2.0)), 
+                (float)((USER_FRAME_TOPLEFT_Y - 5/*px*/)*adjust(user_pokemon)), 
                 brush);
         
         /** This block draws the speed meter **/
         /* Begin speed meter for opponent */
-        speedbar_start_x = Round( canvas.getWidth()*11/20f );
+        speedbar_start_x = Battle.SCREEN_WIDTH*11/20f;
         speedbar_end_x = (config.orientation == Configuration.ORIENTATION_PORTRAIT)? 
-                Round( (canvas.getWidth()*11/20f + LARGEST_WIDTH*2) )
-                : Round( (canvas.getWidth()*11/20f + LARGEST_WIDTH*3.5f) );
-        speedbar_start_y = Round( canvas.getHeight()*11/20f );
-        speedbar_end_y = Round( canvas.getHeight()*11/20f + 10 );
+                Battle.SCREEN_WIDTH*11/20f + LARGEST_WIDTH*2
+                : Battle.SCREEN_WIDTH*11/20f + LARGEST_WIDTH*3.5f;
+        speedbar_start_y = Battle.SCREEN_HEIGHT*11/20f;
+        speedbar_end_y = Battle.SCREEN_HEIGHT*11/20f + 10;
         commandEnd_startAct_x = (config.orientation == Configuration.ORIENTATION_PORTRAIT)? 
-                        Round( (canvas.getWidth()*11/20f + LARGEST_WIDTH*2) - (LARGEST_WIDTH*2)*0.2 ) 
-                        : Round( (canvas.getWidth()*11/20f + LARGEST_WIDTH*3.5f) - (LARGEST_WIDTH*3.5f)*0.2 );
+                        (Battle.SCREEN_WIDTH*11/20f + LARGEST_WIDTH*2) - (LARGEST_WIDTH*2)*0.2f 
+                        : (Battle.SCREEN_WIDTH*11/20f + LARGEST_WIDTH*3.5f) - (LARGEST_WIDTH*3.5f)*0.2f;
         action_start_x = commandEnd_startAct_x;
         //COMMAND portion of speed meter
         brush.setStyle(Paint.Style.FILL);
@@ -290,30 +317,30 @@ public class Animated extends View {
         action_start_x = commandEnd_startAct_x;
         
         //COMMAND SPEED BAR (opponent)
-        opponent_speed = (config.orientation == Configuration.ORIENTATION_PORTRAIT)? 
-                        Round( canvas.getWidth()*11/20f + LARGEST_WIDTH*2 )*(opponent_speed_percentage/100)
-                        : Round( canvas.getWidth()*11/20f + LARGEST_WIDTH*3.5f )*(opponent_speed_percentage/100);
+        if(!OPPONENT_SPEED_LOCK) opponent_speedbar = (config.orientation == Configuration.ORIENTATION_PORTRAIT)? 
+                        (float)((Battle.SCREEN_WIDTH*11/20.0 + LARGEST_WIDTH*2.0)*opponent_speedbar_percentage)
+                        : (float)((Battle.SCREEN_WIDTH*11/20.0 + LARGEST_WIDTH*3.5)*opponent_speedbar_percentage);
         brush.setStyle(Paint.Style.FILL);
         brush.setColor(Color.argb(128, 0, 0, 139));
         brush.setStrokeWidth(10f);
         //canvas.drawRect(left (x-val), top (y-val), right (x-val), bottom (y-val), Paint)
         canvas.drawRect(speedbar_start_x, 
                 speedbar_start_y, 
-                Math.min( speedbar_start_x + opponent_speed, commandEnd_startAct_x ),                        
+                Math.min(speedbar_start_x + opponent_speedbar, commandEnd_startAct_x),                        
                 speedbar_end_y, 
                 brush);
         
-        if(speedbar_start_x + opponent_speed > commandEnd_startAct_x){
+        if(speedbar_start_x + opponent_speedbar > commandEnd_startAct_x){
             brush.setStyle(Paint.Style.FILL);
             brush.setColor(Color.argb(255, 139, 0, 0));
             brush.setStrokeWidth(10f);
             //canvas.drawRect(left (x-val), top (y-val), right (x-val), bottom (y-val), Paint)
         
-            while(action_start_x < speedbar_start_x + opponent_speed && action_start_x < speedbar_end_x){ //Draws [][][][][][]...
+            while(action_start_x < speedbar_start_x + opponent_speedbar && action_start_x < speedbar_end_x){ //Draws [][][][][][]...
                 //canvas.drawRect(left (x-val), top (y-val), right (x-val), bottom (y-val), Paint)
                 canvas.drawRect(action_start_x += GAP, 
                         speedbar_start_y, 
-                        Math.min( (action_start_x + GAP), (speedbar_start_x + opponent_speed) ), 
+                        Math.min((action_start_x + GAP), (speedbar_start_x + opponent_speedbar)), 
                         speedbar_end_y, 
                         brush);
                 
@@ -321,7 +348,35 @@ public class Animated extends View {
             }
         }
         
-        if(opponent_speed_percentage < 100) opponent_speed_percentage = Math.min(opponent_speed_percentage + opponent_speed_inc, 100);
+        try {
+            if(speedbar_start_x + opponent_speedbar < commandEnd_startAct_x && !opponent_actReady){
+                opponent_speed_inc += ((double)(Battle.o_pokemon.Spe*Battle.OPPONENT_SPE_STAGE)/(Battle.u_pokemon.Spe*Battle.USER_SPE_STAGE))*(AVG_SPEED/100f);
+                
+                if(((config.orientation == Configuration.ORIENTATION_PORTRAIT)? 
+                        (float)((Battle.SCREEN_WIDTH*11/20.0 + LARGEST_WIDTH*2.0)*(opponent_speed_inc/AVG_SPEED))
+                        : (float)((Battle.SCREEN_WIDTH*11/20.0 + LARGEST_WIDTH*3.5)*(opponent_speed_inc/AVG_SPEED)))                        
+                        + speedbar_start_x < commandEnd_startAct_x)
+                    opponent_speedbar_percentage = opponent_speed_inc/AVG_SPEED;
+                else {
+                    opponent_speedbar_percentage = (commandEnd_startAct_x - speedbar_start_x)/
+                            ((config.orientation == Configuration.ORIENTATION_PORTRAIT)? 
+                            (float)(Battle.SCREEN_WIDTH*11/20.0 + LARGEST_WIDTH*2.0)
+                            : (float)(Battle.SCREEN_WIDTH*11/20.0 + LARGEST_WIDTH*3.5));
+                    opponent_actReady = true;
+                }
+            } else {
+                if(opponent_actReady && Battle.actChosen /*make distinct to opponent later*/){
+                    opponent_speed_inc += ((double)(Battle.o_pokemon.Spe*Battle.OPPONENT_SPE_STAGE)/(Battle.u_pokemon.Spe*Battle.USER_SPE_STAGE))*(AVG_SPEED/100f);
+                    opponent_speedbar_percentage = opponent_speed_inc/AVG_SPEED;
+                } else {
+                    opponent_speedbar_percentage = (commandEnd_startAct_x - speedbar_start_x)/
+                            ((config.orientation == Configuration.ORIENTATION_PORTRAIT)? 
+                            (float)(Battle.SCREEN_WIDTH*11/20.0 + LARGEST_WIDTH*2.0)
+                            : (float)(Battle.SCREEN_WIDTH*11/20.0 + LARGEST_WIDTH*3.5));
+                    opponent_actReady = true;
+                }
+            }
+        } catch(NullPointerException n){}
         /* End speed meter for opponent */
         
         /* Opponent pointer & icon */
@@ -330,9 +385,9 @@ public class Animated extends View {
         brush.setStyle(Paint.Style.FILL_AND_STROKE);
         brush.setAntiAlias(true);
 
-        tip = new Point(Round( Math.min(speedbar_start_x + opponent_speed, action_start_x) ), Round( speedbar_start_y - 10));
-        leftPoint = new Point(Round( tip.x - POINTER_SIDE*Math.sin((30/*degrees*/*Math.PI)/180/*radians*/) ), Round(tip.y - POINTER_SIDE*Math.cos((30/*degrees*/*Math.PI)/180/*radians*/)));
-        rightPoint = new Point(Round( tip.x + POINTER_SIDE*Math.sin((30/*degrees*/*Math.PI)/180/*radians*/) ), leftPoint.y);
+        tip = new Point((int)Round(Math.min(speedbar_start_x + opponent_speedbar, action_start_x), 0), (int)Round(speedbar_start_y - 10, 0));
+        leftPoint = new Point((int)Round(tip.x - POINTER_SIDE*Math.sin(30*oneRadian), 0), (int)Round(tip.y - POINTER_SIDE*Math.cos(30*oneRadian), 0));
+        rightPoint = new Point((int)Round(tip.x + POINTER_SIDE*Math.sin(30*oneRadian), 0), leftPoint.y);
         
         draw = new Path();
         draw.setFillType(FillType.EVEN_ODD);
@@ -345,7 +400,7 @@ public class Animated extends View {
         
         //Draw icon bitmap from TopLeft, downward
         canvas.drawBitmap(opponent_icon, 
-                Round( tip.x - opponent_icon.getWidth()/2f ), 
+                tip.x - opponent_icon.getWidth()/2f, 
                 leftPoint.y - opponent_icon.getHeight() - 5, 
                 null);
         /* End of pointer & icon */
@@ -358,9 +413,8 @@ public class Animated extends View {
                 speedbar_start_x, 
                 speedbar_start_y + SPEED_TEXT_SIZE + 10, 
                 brush);
-        canvas.drawText("ACTION", (config.orientation == Configuration.ORIENTATION_PORTRAIT)?
-                        commandEnd_startAct_x
-                        : commandEnd_startAct_x, 
+        canvas.drawText("ACTION", 
+                commandEnd_startAct_x, 
                 speedbar_start_y + SPEED_TEXT_SIZE + 10, 
                 brush);
         /* End of speed meter textual info */
@@ -397,30 +451,30 @@ public class Animated extends View {
         action_start_x = commandEnd_startAct_x;
         
         //COMMAND SPEED BAR (opponent)
-        user_speed = (config.orientation == Configuration.ORIENTATION_PORTRAIT)? 
-                        ( canvas.getWidth()*11/20f + LARGEST_WIDTH*2 )*(user_speed_percentage/100)
-                        : ( canvas.getWidth()*11/20f + LARGEST_WIDTH*3.5f )*(user_speed_percentage/100);
+        if(!USER_SPEED_LOCK) user_speedbar = (config.orientation == Configuration.ORIENTATION_PORTRAIT)? 
+                (float)((Battle.SCREEN_WIDTH*11/20.0 + LARGEST_WIDTH*2.0)*user_speedbar_percentage)
+                : (float)((Battle.SCREEN_WIDTH*11/20.0 + LARGEST_WIDTH*3.5)*user_speedbar_percentage);
         brush.setStyle(Paint.Style.FILL);
         brush.setColor(Color.argb(128, 0, 0, 139));
         brush.setStrokeWidth(10f);
         //canvas.drawRect(left (x-val), top (y-val), right (x-val), bottom (y-val), Paint)
         canvas.drawRect(speedbar_start_x, 
                 speedbar_start_y, 
-                Math.min( speedbar_start_x + user_speed, commandEnd_startAct_x ),                        
+                Math.min(speedbar_start_x + user_speedbar, commandEnd_startAct_x),                        
                 speedbar_end_y, 
                 brush);
         
-        if(speedbar_start_x + user_speed > commandEnd_startAct_x){
+        if(speedbar_start_x + user_speedbar > commandEnd_startAct_x){
             brush.setStyle(Paint.Style.FILL);
             brush.setColor(Color.argb(255, 139, 0, 0));
             brush.setStrokeWidth(10f);
             //canvas.drawRect(left (x-val), top (y-val), right (x-val), bottom (y-val), Paint)
         
-            while(action_start_x < speedbar_start_x + user_speed && action_start_x < speedbar_end_x){ //Draws [][][][][][]...
+            while(action_start_x < speedbar_start_x + user_speedbar && action_start_x < speedbar_end_x){ //Draws [][][][][][]...
                 //canvas.drawRect(left (x-val), top (y-val), right (x-val), bottom (y-val), Paint)
                 canvas.drawRect(action_start_x += GAP, 
                         speedbar_start_y, 
-                        Math.min( (action_start_x + GAP), (speedbar_start_x + user_speed) ), 
+                        Math.min((action_start_x + GAP), (speedbar_start_x + user_speedbar)), 
                         speedbar_end_y, 
                         brush);
                 
@@ -428,7 +482,40 @@ public class Animated extends View {
             }
         }
         
-        if(user_speed_percentage < 100) user_speed_percentage = Math.min(user_speed_percentage + user_speed_inc, 100);
+        try {
+            if(speedbar_start_x + user_speedbar < commandEnd_startAct_x && !user_actReady){
+                user_speed_inc += ((double)(Battle.u_pokemon.Spe*Battle.USER_SPE_STAGE)/(Battle.o_pokemon.Spe*Battle.OPPONENT_SPE_STAGE))*(AVG_SPEED/100f);
+                
+                if( ((config.orientation == Configuration.ORIENTATION_PORTRAIT)? 
+                        (float)((Battle.SCREEN_WIDTH*11/20.0 + LARGEST_WIDTH*2.0)*(user_speed_inc/AVG_SPEED))
+                        : (float)((Battle.SCREEN_WIDTH*11/20.0 + LARGEST_WIDTH*3.5)*(user_speed_inc/AVG_SPEED)))                        
+                        + speedbar_start_x < commandEnd_startAct_x)
+                    user_speedbar_percentage = user_speed_inc/AVG_SPEED;
+                else {
+                    user_speedbar_percentage = (commandEnd_startAct_x - speedbar_start_x)/
+                            ((config.orientation == Configuration.ORIENTATION_PORTRAIT)? 
+                            (Battle.SCREEN_WIDTH*11/20.0 + LARGEST_WIDTH*2.0)
+                            : (Battle.SCREEN_WIDTH*11/20.0 + LARGEST_WIDTH*3.5));
+                    
+                    user_actReady = true;
+                }
+            } else {
+                if(user_actReady && Battle.actChosen){
+                    user_speed_inc += ((double)(Battle.u_pokemon.Spe*Battle.USER_SPE_STAGE)/(Battle.o_pokemon.Spe*Battle.OPPONENT_SPE_STAGE))*(AVG_SPEED/100f);
+                    user_speedbar_percentage = user_speed_inc/AVG_SPEED;
+                } else {
+                    user_speedbar_percentage = (commandEnd_startAct_x - speedbar_start_x)/
+                            ((config.orientation == Configuration.ORIENTATION_PORTRAIT)? 
+                            (Battle.SCREEN_WIDTH*11/20.0 + LARGEST_WIDTH*2.0)
+                            : (Battle.SCREEN_WIDTH*11/20.0 + LARGEST_WIDTH*3.5));
+                    user_actReady = true;
+                }
+            }
+//            Battle.text.setText(Battle.u_pokemon.name + "'s SPEED: " + Battle.u_pokemon.Spe + " | " + Battle.o_pokemon.name + "'s SPEED: " + Battle.o_pokemon.Spe +
+//                    " | speedbar beginning: " + speedbar_start_x + " | speedbar end: " + speedbar_end_x +
+//                    " | User_speedbar: " + user_speedbar + " | Opponent_speedbar: " + opponent_speedbar /*+
+//                    " | User_speedbar_percentage: " + user_speedbar_percentage + " | Opponent_speedbar_percentage: " + opponent_speedbar_percentage*/);
+        } catch(NullPointerException n){}
         /* End speed meter for user */
         
         /* User pointer & icon */
@@ -437,9 +524,9 @@ public class Animated extends View {
         brush.setStyle(Paint.Style.FILL_AND_STROKE);
         brush.setAntiAlias(true);
 
-        tip = new Point(Round( Math.min(speedbar_start_x + user_speed, action_start_x) ), Round( speedbar_start_y + 20));
-        leftPoint = new Point(Round( tip.x - POINTER_SIDE*Math.sin((30/*degrees*/*Math.PI)/180/*radians*/) ), Round(tip.y + POINTER_SIDE*Math.cos((30/*degrees*/*Math.PI)/180/*radians*/)));
-        rightPoint = new Point(Round( tip.x + POINTER_SIDE*Math.sin((30/*degrees*/*Math.PI)/180/*radians*/) ), leftPoint.y);
+        tip = new Point((int)Round(Math.min(speedbar_start_x + user_speedbar, action_start_x), 0), (int)Round(speedbar_start_y + 20, 0));
+        leftPoint = new Point((int)Round(tip.x - POINTER_SIDE*Math.sin(30*oneRadian), 0), (int)Round(tip.y + POINTER_SIDE*Math.cos(30*oneRadian), 0));
+        rightPoint = new Point((int)Round(tip.x + POINTER_SIDE*Math.sin(30*oneRadian), 0), leftPoint.y);
         
         draw = new Path();
         draw.setFillType(FillType.EVEN_ODD);
@@ -452,7 +539,7 @@ public class Animated extends View {
         
         //Draw icon bitmap from TopLeft, downward
         canvas.drawBitmap(user_icon, 
-                Round( tip.x - user_icon.getWidth()/2f ), 
+                tip.x - user_icon.getWidth()/2f, 
                 leftPoint.y + 5, 
                 null);
         /* End of pointer & icon */
@@ -464,22 +551,21 @@ public class Animated extends View {
             contender = 1;
 
             try {
-                temp = "sprites/" + pokemon + "/" + orientation + "/frame_";
+                temp = "sprites/" + opponent_pokemon + "/" + orientation + "/frame_";
                 i += 1;
                 stream = asset.open(temp + i + ".png");
                 decodeResizedBitmapFromAssets();
             } catch (Exception var30) {
                 try {
                     i = 0;
-                    stream = asset.open("sprites/" + pokemon + "/" + orientation + "/frame_" + i + ".png");
+                    stream = asset.open("sprites/" + opponent_pokemon + "/" + orientation + "/frame_" + i + ".png");
                     decodeResizedBitmapFromAssets();
                 } catch (Exception var29) {
                     try {
                        i = 1;
-                       stream = asset.open("sprites/" + pokemon + "/" + orientation + "/frame_" + i + ".png");
+                       stream = asset.open("sprites/" + opponent_pokemon + "/" + orientation + "/frame_" + i + ".png");
                        decodeResizedBitmapFromAssets();
                     } catch (Exception var28) {
-                        //Battle.text.setText("Cannot find opponent sprite!");
                     }
                 }
             }
@@ -488,19 +574,19 @@ public class Animated extends View {
             contender = 2;
 
             try {
-                temp = "sprites/" + pokemon + "/" + orientation + "/frame_";
+                temp = "sprites/" + user_pokemon + "/" + orientation + "/frame_";
                 j += 1;
                 stream = asset.open(temp + j + ".png");
                 decodeResizedBitmapFromAssets();
             } catch (Exception var26) {
                 try {
                     j = 0;
-                    stream = asset.open("sprites/" + pokemon + "/" + orientation + "/frame_" + j + ".png");
+                    stream = asset.open("sprites/" + user_pokemon + "/" + orientation + "/frame_" + j + ".png");
                     decodeResizedBitmapFromAssets();
                 } catch (Exception var25) {
                     try {
                         j = 1;
-                        stream = asset.open("sprites/" + pokemon + "/" + orientation + "/frame_" + j + ".png");
+                        stream = asset.open("sprites/" + user_pokemon + "/" + orientation + "/frame_" + j + ".png");
                         decodeResizedBitmapFromAssets();
                     } catch (Exception var24) {
                         //Battle.text.setText("Cannot find user sprite!");
@@ -533,35 +619,37 @@ public class Animated extends View {
         Bitmap unscaledBitmap;
         
         if(contender == 1){
+            int depth = ((OPPONENT_FRAME_BOTTOMLEFT_Y - OPPONENT_FRAME_TOPLEFT_Y)/2 + OPPONENT_FRAME_TOPLEFT_Y < Battle.SCREEN_HEIGHT/2.0)? 0 : 1;
             unscaledBitmap = BitmapFactory.decodeStream(stream, null, Opponent_Options);
-            opponent = Bitmap.createScaledBitmap(unscaledBitmap, Round(Opponent_Options.outWidth*scaleFactor), Round(Opponent_Options.outHeight*scaleFactor), true);
+            opponent = Bitmap.createScaledBitmap(unscaledBitmap, (int)Round(Opponent_Options.outWidth*(scaleFactor + depth), 0), (int)Round(Opponent_Options.outHeight*(scaleFactor + depth), 0), true);
             
-            try {
-                stream = asset.open("sprites/" + /*opponent*/pokemon + "/front/frame_0.png");
+            try { // Set opponent icon for speed bar
+                stream = asset.open("sprites/" + opponent_pokemon + "/front/frame_0.png");
                 unscaledBitmap = BitmapFactory.decodeStream(stream, null, Opponent_Options);
-                opponent_icon = Bitmap.createScaledBitmap(unscaledBitmap, Round(Opponent_Options.outWidth/2f), Round(Opponent_Options.outHeight/2f), true);
+                opponent_icon = Bitmap.createScaledBitmap(unscaledBitmap, (int)Round(Opponent_Options.outWidth/2f, 0), (int)Round(Opponent_Options.outHeight/2f, 0), true);
             } catch(Exception e1){
                 try {
-                    stream = asset.open("sprites/" + /*opponent*/pokemon + "/front/frame_1.png");
+                    stream = asset.open("sprites/" + opponent_pokemon + "/front/frame_1.png");
                     unscaledBitmap = BitmapFactory.decodeStream(stream, null, Opponent_Options);
-                    opponent_icon = Bitmap.createScaledBitmap(unscaledBitmap, Round(Opponent_Options.outWidth/2f), Round(Opponent_Options.outHeight/2f), true);
+                    opponent_icon = Bitmap.createScaledBitmap(unscaledBitmap, (int)Round(Opponent_Options.outWidth/2f, 0), (int)Round(Opponent_Options.outHeight/2f, 0), true);
                 } catch(Exception e2) {
                     
                 }   
             }            
-        } else {        
+        } else {
+            int depth = ((USER_FRAME_BOTTOMLEFT_Y - USER_FRAME_TOPLEFT_Y)/2 + USER_FRAME_TOPLEFT_Y < Battle.SCREEN_HEIGHT/2.0)? 0 : 1;
             unscaledBitmap = BitmapFactory.decodeStream(stream, null, User_Options);
-            user = Bitmap.createScaledBitmap(unscaledBitmap, Round(User_Options.outWidth*(scaleFactor + 1)), Round(User_Options.outHeight*(scaleFactor + 1)), true);
+            user = Bitmap.createScaledBitmap(unscaledBitmap, (int)Round(User_Options.outWidth*(scaleFactor + depth), 0), (int)Round(User_Options.outHeight*(scaleFactor + depth), 0), true);
             
-            try {
-                stream = asset.open("sprites/" + /*user*/pokemon + "/front/frame_0.png");
+            try { // Set user icon for speed bar
+                stream = asset.open("sprites/" + user_pokemon + "/front/frame_0.png");
                 unscaledBitmap = BitmapFactory.decodeStream(stream, null, Opponent_Options);
-                user_icon = Bitmap.createScaledBitmap(unscaledBitmap, Round(User_Options.outWidth/2f), Round(User_Options.outHeight/2f), true);
+                user_icon = Bitmap.createScaledBitmap(unscaledBitmap, (int)Round(User_Options.outWidth/2f, 0), (int)Round(User_Options.outHeight/2f, 0), true);
             } catch(Exception e){
                 try {
-                    stream = asset.open("sprites/" + /*user*/pokemon + "/front/frame_1.png");
+                    stream = asset.open("sprites/" + user_pokemon + "/front/frame_1.png");
                     unscaledBitmap = BitmapFactory.decodeStream(stream, null, Opponent_Options);
-                    user_icon = Bitmap.createScaledBitmap(unscaledBitmap, Round(User_Options.outWidth/2f), Round(User_Options.outHeight/2f), true);
+                    user_icon = Bitmap.createScaledBitmap(unscaledBitmap, (int)Round(User_Options.outWidth/2f, 0), (int)Round(User_Options.outHeight/2f, 0), true);
                 } catch(Exception e2) {
                     
                 }    
@@ -569,10 +657,16 @@ public class Animated extends View {
         }
     }
 
-    protected final void setPokemon(String name){
-        if(name.charAt(name.length() - 1) == '♀') pokemon = "nidorang";
-        else if(name.charAt(name.length() - 1) == '♂') pokemon = "nidoranb";
-        else pokemon = name;
+    protected final void setPokemon(int contender, String name){
+        if(contender == 1){
+            if(name.charAt(name.length() - 1) == '♀') opponent_pokemon = "nidorang";
+            else if(name.charAt(name.length() - 1) == '♂') opponent_pokemon = "nidoranb";
+            else opponent_pokemon = name;
+        } else if(contender == 2){
+            if(name.charAt(name.length() - 1) == '♀') user_pokemon = "nidorang";
+            else if(name.charAt(name.length() - 1) == '♂') user_pokemon = "nidoranb";
+            else user_pokemon = name;
+        }
     }
 
     private int getHealthBarColor(int percentage){
@@ -587,11 +681,16 @@ public class Animated extends View {
         return Color.argb(255, 139, 0, 0);
     }
     
-    private int Round(double num){
-        if(num/((int)num) >= .5 ) return (int)Math.ceil(num);
-        else return (int)Math.floor(num);
+    protected static double Round(double number, int placeAfterDecimal){        
+        double doa = Math.pow(10, placeAfterDecimal); //degree of accuracy
+        
+        if(((number*doa) - (int)(number*doa)) >= .5) return ((int)(number*doa) + 1)/doa;
+        else {
+            if(number < 0) return ((int)(number*doa) - 1)/doa;
+            else return ((int)(number*doa))/doa;
+        }
     }
-
+    
     private float adjust(String pkmn) {
         if(pkmn.equals("charizard") ||
             pkmn.equals("golbat") ||
