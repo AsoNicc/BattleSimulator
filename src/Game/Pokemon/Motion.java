@@ -14,6 +14,8 @@ import android.graphics.BitmapFactory;
 import android.graphics.BitmapFactory.Options;
 import android.media.MediaPlayer;
 import android.os.Handler;
+import android.view.Gravity;
+import android.widget.Toast;
 import java.io.InputStream;
 import java.util.Iterator;
 import java.util.Set;
@@ -36,7 +38,7 @@ public class Motion {
             TOPLEFT_X, TOPLEFT_Y, TOPRIGHT_X, TOPRIGHT_Y;
     private float damage = 0f;
     private final AssetManager asset;
-    private final Context context;
+    private static Context context;
     private final int INC_RATE = 3, ARC_RATE = 30, TIME = 3000/*ms*/;
     private int i = -1, INDEX = 0, soundByteCnt = 0;
     private static Options Opponent_Space_Options;
@@ -45,6 +47,7 @@ public class Motion {
     
     Motion(Context tContext){
         context = tContext;
+        Battle.context = context;
         asset = context.getAssets(); //Link assets        
     }
     
@@ -404,8 +407,35 @@ public class Motion {
             else if(Damage.effect > 1) soundbyte = R.raw.superdamage;
             else if(Damage.effect < 1) soundbyte = R.raw.notverydamage;
         }
+        
         MediaPlayer sfx = MediaPlayer.create(context, soundbyte);
         sfx.start(); //Play sound
+    }
+    
+    private void displayMessage(){
+        if(!Damage.IsaCrit && Damage.effect == 1) return;
+        
+        String message = "";
+        int x = 0, y = 0;
+        
+        if(Damage.IsaCrit) message += "Critical hit! ";
+                    
+        if(Damage.effect == 0) message += "Immune";
+        else if(Damage.effect > 1) message += "It's super effective!";
+        else if(Damage.effect < 1) message += "It's not very effective!";        
+        
+        if(attacker == 1){
+            x = (int)Round((Animated.USER_FRAME_TOPLEFT_X + Animated.USER_FRAME_TOPRIGHT_X)/2 - Battle.SCREEN_WIDTH/2f, 0);
+            y = (int)Round((Animated.USER_FRAME_TOPLEFT_Y + Animated.USER_FRAME_BOTTOMLEFT_Y)/2 - Battle.SCREEN_HEIGHT/2f + Animated.user.getHeight()/2f, 0);
+        } else if(attacker == 2){
+            x = (int)Round((Animated.OPPONENT_FRAME_TOPLEFT_X + Animated.OPPONENT_FRAME_TOPRIGHT_X)/2 - Battle.SCREEN_WIDTH/2f, 0);
+            y = (int)Round((Animated.OPPONENT_FRAME_TOPLEFT_Y + Animated.OPPONENT_FRAME_BOTTOMLEFT_Y)/2 - Battle.SCREEN_HEIGHT/2f + Animated.opponent.getHeight()/2f, 0);
+        }            
+        
+        Toast toast = Toast.makeText(context, message, -50/*ms*/);
+        toast.setGravity(Gravity.CENTER, x, y);
+        toast.setMargin(0, 0);
+        toast.show();
     }
     
     private Bitmap decodeSubsetBitmapFromSprite(Bitmap bmp, int width, int height){
@@ -438,8 +468,9 @@ public class Motion {
         else if(token.equals("5")) ellipseRtoL(Integer.parseInt(formula(token, move[0], 0)), Integer.parseInt(formula(token, move[0], 1)), Boolean.parseBoolean(formula(token, move[0], 2)));
         else if(token.equals("6")) damage();
         else if(token.equals("7")) hit();//blink
-        else if(token.equals("8")) blink();//damageCacl
-        else if(token.equals("9")) shift_TRtoBL();
+        else if(token.equals("8")) blink();//damageCalc
+        else if(token.equals("9")) displayMessage();
+        else if(token.equals("10")) shift_TRtoBL();
     }
     
     private String formula(String seqNo, String moveNo, Integer paramNo){

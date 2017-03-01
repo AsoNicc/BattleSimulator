@@ -581,6 +581,7 @@ public class Settings extends Activity {
             loadDetails(new String[]{"35", "1", "45", "1", "1", "7", "47", "10", "3", "13", "111", "25", "107", "31", "118", "40", "34"});
             loadDetails(new String[]{"36", "1", "3", "1", "118", "1", "107", "1", "47"});
             loadDetails(new String[]{"37", "1", "52", "4", "39", "7", "46", "10", "98", "12", "109", "15", "83", "36", "53", "42", "126"});
+            loadDetails(new String[]{"38", "1", "109", "1", "53", "1", "98"});
             loadDetails(new String[]{"39", "1", "47", "3", "111", "5", "1", "15", "50", "18", "3", "32", "156", "35", "34", "37", "102", "49", "38"});
             loadDetails(new String[]{"40", "1", "111", "1", "50", "1", "38", "1", "3", "1", "47"});
             loadDetails(new String[]{"41", "1", "141", "5", "48", "11", "44", "13", "17", "17", "109", "23", "129", "35", "114"});
@@ -716,7 +717,7 @@ public class Settings extends Activity {
                 return;
             }
             
-            loadDetails(new String[]{"1", "0", "1", "2", "3", "4", "5", "2", "6", "3", "7", "8", "9"});
+            loadDetails(new String[]{"1", "0", "1", "2", "3", "4", "5", "2", "6", "3", "7", "8", "9", "10"});
             loadDetails(new String[]{"2", ""});
             loadDetails(new String[]{"3", ""});
             loadDetails(new String[]{"4", ""});

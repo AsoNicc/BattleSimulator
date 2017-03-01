@@ -87,7 +87,7 @@ public final class Pokemon {
         
         /* Initialize variables */
         try {
-            Set<String>tempSet = details.getStringSet((dexNo == null)? String.valueOf(gen.nextInt(150) + 1) : String.valueOf(dexNo), null);
+            Set<String>tempSet = details.getStringSet((dexNo == null)? String.valueOf(gen.nextInt(151) + 1) : String.valueOf(dexNo), null);
             Iterator position = tempSet.iterator();
             String[] info = new String[tempSet.size()];
 

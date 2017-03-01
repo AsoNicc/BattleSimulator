@@ -45,7 +45,8 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
     private boolean activeMove = true, error = false,  held = false, initialState = true, 
             killHold = false, newTouch = true, touchClear = true, touched_user, touched_opponent;
     private Button pokeball, buff, cheer, close, moves, forfeit, move1, move2, move3, move4, pkmn1, pkmn2, pkmn3, pkmn4, pkmn5, pkmn6, swap;
-    private Configuration config; 
+    private Configuration config;
+    protected static Context context;
     private Float delta_x, delta_y, event_x, event_y, x, y;
     private FrameLayout layout;
     private Handler globalHolder;
@@ -61,7 +62,7 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
             PKMN6_ID = 2131165215, X_ID = 2131165216, TOUCH_LATENCY_TIME = 500, ILLEGAL_HOLD_TIMER = 500;
     private LinearLayout drawer;
     private final LinearLayout.LayoutParams FULL_MATCH_PARAMS = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
-    private MediaPlayer sfx;
+    private static MediaPlayer sfx;
     private static Motion act;
     private static final Pokemon[] team = new Pokemon[6];
     private Pokemon temp;
@@ -434,7 +435,7 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
                 swap(5); 
             }
         } else if(v.getId() == CHEER_ID){
-            playSoundEffect(getSoundByte());
+            playSoundEffect(getVoice());
             // NOTHING YET
             text.setText("Go!!!");
             Animated.opponent_damage_percentage += 0.04f;
@@ -854,7 +855,7 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         pkmn1.setPadding(0, 0, 0, 0);
         
         if(team[0].nickname != null){
-            styledText = "<font color='#000000'><b>" + team[0].nickname + "</b></font>";
+            styledText = "<font color='#000000'><b>" + ((team[0].nickname.equals("Mr_Mime"))? "Mr. Mime" : team[0].nickname) + "</b></font>";
             pkmn1.setText(Html.fromHtml(styledText));
         } else pkmn1.setText(R.string.pkmn1);
         
@@ -869,7 +870,7 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         pkmn2.setPadding(0, 0, 0, 0);
         
         if(team[1].nickname != null){
-            styledText = "<font color='#000000'><b>" + team[1].nickname + "</b></font>";
+            styledText = "<font color='#000000'><b>" + ((team[1].nickname.equals("Mr_Mime"))? "Mr. Mime" : team[1].nickname) + "</b></font>";
             pkmn2.setText(Html.fromHtml(styledText));
         } else pkmn2.setText(R.string.pkmn2);
         
@@ -884,7 +885,7 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         pkmn3.setPadding(0, 0, 0, 0);
         
         if(team[2].nickname != null){
-            styledText = "<font color='#000000'><b>" + team[2].nickname + "</b></font>";
+            styledText = "<font color='#000000'><b>" + ((team[2].nickname.equals("Mr_Mime"))? "Mr. Mime" : team[2].nickname) + "</b></font>";
             pkmn3.setText(Html.fromHtml(styledText));
         } else pkmn3.setText(R.string.pkmn3);
         
@@ -899,7 +900,7 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         pkmn4.setPadding(0, 0, 0, 0);
         
         if(team[3].nickname != null){
-            styledText = "<font color='#000000'><b>" + team[3].nickname + "</b></font>";
+            styledText = "<font color='#000000'><b>" + ((team[3].nickname.equals("Mr_Mime"))? "Mr. Mime" : team[3].nickname) + "</b></font>";
             pkmn4.setText(Html.fromHtml(styledText));
         } else pkmn4.setText(R.string.pkmn4);
         
@@ -914,7 +915,7 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         pkmn5.setPadding(0, 0, 0, 0);
         
         if(team[4].nickname != null){
-            styledText = "<font color='#000000'><b>" + team[4].nickname + "</b></font>";
+            styledText = "<font color='#000000'><b>" + ((team[4].nickname.equals("Mr_Mime"))? "Mr. Mime" : team[4].nickname) + "</b></font>";
             pkmn5.setText(Html.fromHtml(styledText));
         } else pkmn5.setText(R.string.pkmn5);
         
@@ -929,7 +930,7 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         pkmn6.setPadding(0, 0, 0, 0);
         
         if(team[5].nickname != null){
-            styledText = "<font color='#000000'><b>" + team[5].nickname + "</b></font>";
+            styledText = "<font color='#000000'><b>" + ((team[5].nickname.equals("Mr_Mime"))? "Mr. Mime" : team[5].nickname) + "</b></font>";
             pkmn6.setText(Html.fromHtml(styledText));
         } else pkmn6.setText(R.string.pkmn6);
         
@@ -989,7 +990,7 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         pkmn1.setPadding(0, 0, 0, 0);
         
         if(team[0].nickname != null){
-            styledText = "<font color='#000000'><b>" + team[0].nickname + "</b></font>";
+            styledText = "<font color='#000000'><b>" + ((team[0].nickname.equals("Mr_Mime"))? "Mr. Mime" : team[0].nickname) + "</b></font>";
             pkmn1.setText(Html.fromHtml(styledText));
         } else pkmn1.setText(R.string.pkmn1);
         
@@ -1004,7 +1005,7 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         pkmn2.setPadding(0, 0, 0, 0);
         
         if(team[1].nickname != null){
-            styledText = "<font color='#000000'><b>" + team[1].nickname + "</b></font>";
+            styledText = "<font color='#000000'><b>" + ((team[1].nickname.equals("Mr_Mime"))? "Mr. Mime" : team[1].nickname) + "</b></font>";
             pkmn2.setText(Html.fromHtml(styledText));
         } else pkmn2.setText(R.string.pkmn2);
         
@@ -1019,7 +1020,7 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         pkmn3.setPadding(0, 0, 0, 0);
         
         if(team[2].nickname != null){
-            styledText = "<font color='#000000'><b>" + team[2].nickname + "</b></font>";
+            styledText = "<font color='#000000'><b>" + ((team[2].nickname.equals("Mr_Mime"))? "Mr. Mime" : team[2].nickname) + "</b></font>";
             pkmn3.setText(Html.fromHtml(styledText));
         } else pkmn3.setText(R.string.pkmn3);
         
@@ -1040,7 +1041,7 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         pkmn4.setPadding(0, 0, 0, 0);
         
         if(team[3].nickname != null){
-            styledText = "<font color='#000000'><b>" + team[3].nickname + "</b></font>";
+            styledText = "<font color='#000000'><b>" + ((team[3].nickname.equals("Mr_Mime"))? "Mr. Mime" : team[3].nickname) + "</b></font>";
             pkmn4.setText(Html.fromHtml(styledText));
         } else pkmn4.setText(R.string.pkmn4);
         
@@ -1055,7 +1056,7 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         pkmn5.setPadding(0, 0, 0, 0);
         
         if(team[4].nickname != null){
-            styledText = "<font color='#000000'><b>" + team[4].nickname + "</b></font>";
+            styledText = "<font color='#000000'><b>" + ((team[4].nickname.equals("Mr_Mime"))? "Mr. Mime" : team[4].nickname) + "</b></font>";
             pkmn5.setText(Html.fromHtml(styledText));
         } else pkmn5.setText(R.string.pkmn5);
         
@@ -1070,7 +1071,7 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         pkmn6.setPadding(0, 0, 0, 0);
         
         if(team[5].nickname != null){
-            styledText = "<font color='#000000'><b>" + team[5].nickname + "</b></font>";
+            styledText = "<font color='#000000'><b>" + ((team[5].nickname.equals("Mr_Mime"))? "Mr. Mime" : team[5].nickname) + "</b></font>";
             pkmn6.setText(Html.fromHtml(styledText));
         } else pkmn6.setText(R.string.pkmn6);
         
@@ -1258,7 +1259,161 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         }
     }
     
-    private int getSoundByte(){
+    protected static int getVoice(){
+        if(u_pokemon.dexNo == 1) return R.raw._1;
+        else if(u_pokemon.dexNo == 2) return R.raw._2;
+        else if(u_pokemon.dexNo == 3) return R.raw._3;
+        else if(u_pokemon.dexNo == 4) return R.raw._4;
+        else if(u_pokemon.dexNo == 5) return R.raw._5;
+        else if(u_pokemon.dexNo == 6) return R.raw._6;
+        else if(u_pokemon.dexNo == 7) return R.raw._7;
+        else if(u_pokemon.dexNo == 8) return R.raw._8;
+        else if(u_pokemon.dexNo == 9) return R.raw._9;
+        else if(u_pokemon.dexNo == 10) return R.raw._10;
+        else if(u_pokemon.dexNo == 11) return R.raw._11;
+        else if(u_pokemon.dexNo == 12) return R.raw._12;
+        else if(u_pokemon.dexNo == 13) return R.raw._13;
+        else if(u_pokemon.dexNo == 14) return R.raw._14;
+        else if(u_pokemon.dexNo == 15) return R.raw._15;
+        else if(u_pokemon.dexNo == 16) return R.raw._16;
+        else if(u_pokemon.dexNo == 17) return R.raw._17;
+        else if(u_pokemon.dexNo == 18) return R.raw._18;
+        else if(u_pokemon.dexNo == 19) return R.raw._19;
+        else if(u_pokemon.dexNo == 20) return R.raw._20;
+        else if(u_pokemon.dexNo == 21) return R.raw._21;
+        else if(u_pokemon.dexNo == 22) return R.raw._22;
+        else if(u_pokemon.dexNo == 23) return R.raw._23;
+        else if(u_pokemon.dexNo == 24) return R.raw._24;
+        else if(u_pokemon.dexNo == 25) return R.raw._25;
+        else if(u_pokemon.dexNo == 26) return R.raw._26;
+        else if(u_pokemon.dexNo == 27) return R.raw._27;
+        else if(u_pokemon.dexNo == 28) return R.raw._28;
+        else if(u_pokemon.dexNo == 29) return R.raw._29;
+        else if(u_pokemon.dexNo == 30) return R.raw._30;
+        else if(u_pokemon.dexNo == 31) return R.raw._31;
+        else if(u_pokemon.dexNo == 32) return R.raw._32;
+        else if(u_pokemon.dexNo == 33) return R.raw._33;
+        else if(u_pokemon.dexNo == 34) return R.raw._34;
+        else if(u_pokemon.dexNo == 35) return R.raw._35;
+        else if(u_pokemon.dexNo == 36) return R.raw._36;
+        else if(u_pokemon.dexNo == 37) return R.raw._37;
+        else if(u_pokemon.dexNo == 38) return R.raw._38;
+        else if(u_pokemon.dexNo == 39) return R.raw._39;
+        else if(u_pokemon.dexNo == 40) return R.raw._40;
+        else if(u_pokemon.dexNo == 41) return R.raw._41;
+        else if(u_pokemon.dexNo == 42) return R.raw._42;
+        else if(u_pokemon.dexNo == 43) return R.raw._43;
+        else if(u_pokemon.dexNo == 44) return R.raw._44;
+        else if(u_pokemon.dexNo == 45) return R.raw._45;
+        else if(u_pokemon.dexNo == 46) return R.raw._46;
+        else if(u_pokemon.dexNo == 47) return R.raw._47;
+        else if(u_pokemon.dexNo == 48) return R.raw._48;
+        else if(u_pokemon.dexNo == 49) return R.raw._49;
+        else if(u_pokemon.dexNo == 50) return R.raw._50;
+        else if(u_pokemon.dexNo == 51) return R.raw._51;
+        else if(u_pokemon.dexNo == 52) return R.raw._52;
+        else if(u_pokemon.dexNo == 53) return R.raw._53;
+        else if(u_pokemon.dexNo == 54) return R.raw._54;
+        else if(u_pokemon.dexNo == 55) return R.raw._55;
+        else if(u_pokemon.dexNo == 56) return R.raw._56;
+        else if(u_pokemon.dexNo == 57) return R.raw._57;
+        else if(u_pokemon.dexNo == 58) return R.raw._58;
+        else if(u_pokemon.dexNo == 59) return R.raw._59;
+        else if(u_pokemon.dexNo == 60) return R.raw._60;
+        else if(u_pokemon.dexNo == 61) return R.raw._61;
+        else if(u_pokemon.dexNo == 62) return R.raw._62;
+        else if(u_pokemon.dexNo == 63) return R.raw._63;
+        else if(u_pokemon.dexNo == 64) return R.raw._64;
+        else if(u_pokemon.dexNo == 65) return R.raw._65;
+        else if(u_pokemon.dexNo == 66) return R.raw._66;
+        else if(u_pokemon.dexNo == 67) return R.raw._67;
+        else if(u_pokemon.dexNo == 68) return R.raw._68;
+        else if(u_pokemon.dexNo == 69) return R.raw._69;
+        else if(u_pokemon.dexNo == 70) return R.raw._70;
+        else if(u_pokemon.dexNo == 71) return R.raw._71;
+        else if(u_pokemon.dexNo == 72) return R.raw._72;
+        else if(u_pokemon.dexNo == 73) return R.raw._73;
+        else if(u_pokemon.dexNo == 74) return R.raw._74;
+        else if(u_pokemon.dexNo == 75) return R.raw._75;
+        else if(u_pokemon.dexNo == 76) return R.raw._76;
+        else if(u_pokemon.dexNo == 77) return R.raw._77;
+        else if(u_pokemon.dexNo == 78) return R.raw._78;
+        else if(u_pokemon.dexNo == 79) return R.raw._79;
+        else if(u_pokemon.dexNo == 80) return R.raw._80;
+        else if(u_pokemon.dexNo == 81) return R.raw._81;
+        else if(u_pokemon.dexNo == 82) return R.raw._82;
+        else if(u_pokemon.dexNo == 83) return R.raw._83;
+        else if(u_pokemon.dexNo == 84) return R.raw._84;
+        else if(u_pokemon.dexNo == 85) return R.raw._85;
+        else if(u_pokemon.dexNo == 86) return R.raw._86;
+        else if(u_pokemon.dexNo == 87) return R.raw._87;
+        else if(u_pokemon.dexNo == 88) return R.raw._88;
+        else if(u_pokemon.dexNo == 89) return R.raw._89;
+        else if(u_pokemon.dexNo == 90) return R.raw._90;
+        else if(u_pokemon.dexNo == 91) return R.raw._91;
+        else if(u_pokemon.dexNo == 92) return R.raw._92;
+        else if(u_pokemon.dexNo == 93) return R.raw._93;
+        else if(u_pokemon.dexNo == 94) return R.raw._94;
+        else if(u_pokemon.dexNo == 95) return R.raw._95;
+        else if(u_pokemon.dexNo == 96) return R.raw._96;
+        else if(u_pokemon.dexNo == 97) return R.raw._97;
+        else if(u_pokemon.dexNo == 98) return R.raw._98;
+        else if(u_pokemon.dexNo == 99) return R.raw._99;
+        else if(u_pokemon.dexNo == 100) return R.raw._100;
+        else if(u_pokemon.dexNo == 101) return R.raw._101;
+        else if(u_pokemon.dexNo == 102) return R.raw._102;
+        else if(u_pokemon.dexNo == 103) return R.raw._103;
+        else if(u_pokemon.dexNo == 104) return R.raw._104;
+        else if(u_pokemon.dexNo == 105) return R.raw._105;
+        else if(u_pokemon.dexNo == 106) return R.raw._106;
+        else if(u_pokemon.dexNo == 107) return R.raw._107;
+        else if(u_pokemon.dexNo == 108) return R.raw._108;
+        else if(u_pokemon.dexNo == 109) return R.raw._109;
+        else if(u_pokemon.dexNo == 110) return R.raw._110;
+        else if(u_pokemon.dexNo == 111) return R.raw._111;
+        else if(u_pokemon.dexNo == 112) return R.raw._112;
+        else if(u_pokemon.dexNo == 113) return R.raw._113;
+        else if(u_pokemon.dexNo == 114) return R.raw._114;
+        else if(u_pokemon.dexNo == 115) return R.raw._115;
+        else if(u_pokemon.dexNo == 116) return R.raw._116;
+        else if(u_pokemon.dexNo == 117) return R.raw._117;
+        else if(u_pokemon.dexNo == 118) return R.raw._118;
+        else if(u_pokemon.dexNo == 119) return R.raw._119;
+        else if(u_pokemon.dexNo == 120) return R.raw._120;
+        else if(u_pokemon.dexNo == 121) return R.raw._121;
+        else if(u_pokemon.dexNo == 122) return R.raw._122;
+        else if(u_pokemon.dexNo == 123) return R.raw._123;
+        else if(u_pokemon.dexNo == 124) return R.raw._124;
+        else if(u_pokemon.dexNo == 125) return R.raw._125;
+        else if(u_pokemon.dexNo == 126) return R.raw._126;
+        else if(u_pokemon.dexNo == 127) return R.raw._127;
+        else if(u_pokemon.dexNo == 128) return R.raw._128;
+        else if(u_pokemon.dexNo == 129) return R.raw._129;
+        else if(u_pokemon.dexNo == 130) return R.raw._130;
+        else if(u_pokemon.dexNo == 131) return R.raw._131;
+        else if(u_pokemon.dexNo == 132) return R.raw._132;
+        else if(u_pokemon.dexNo == 133) return R.raw._133;
+        else if(u_pokemon.dexNo == 134) return R.raw._134;
+        else if(u_pokemon.dexNo == 135) return R.raw._135;
+        else if(u_pokemon.dexNo == 136) return R.raw._136;
+        else if(u_pokemon.dexNo == 137) return R.raw._137;
+        else if(u_pokemon.dexNo == 138) return R.raw._138;
+        else if(u_pokemon.dexNo == 139) return R.raw._139;
+        else if(u_pokemon.dexNo == 140) return R.raw._140;
+        else if(u_pokemon.dexNo == 141) return R.raw._141;
+        else if(u_pokemon.dexNo == 142) return R.raw._142;
+        else if(u_pokemon.dexNo == 143) return R.raw._143;
+        else if(u_pokemon.dexNo == 144) return R.raw._144;
+        else if(u_pokemon.dexNo == 145) return R.raw._145;
+        else if(u_pokemon.dexNo == 146) return R.raw._146;
+        else if(u_pokemon.dexNo == 147) return R.raw._147;
+        else if(u_pokemon.dexNo == 148) return R.raw._148;
+        else if(u_pokemon.dexNo == 149) return R.raw._149;
+        else if(u_pokemon.dexNo == 150) return R.raw._150;
+        else return R.raw._151;
+    }
+    
+    private static int getSoundByte(){
         if(u_pokemon.dexNo == 1) return R.raw.cry001;
         else if(u_pokemon.dexNo == 2) return R.raw.cry002;
         else if(u_pokemon.dexNo == 3) return R.raw.cry003;
@@ -1412,8 +1567,8 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         else return R.raw.cry151;
     }
     
-    private void playSoundEffect(int soundbyte){
-        sfx = MediaPlayer.create(this, soundbyte);
+    protected static void playSoundEffect(int soundbyte){
+        sfx = MediaPlayer.create(context, soundbyte);
         sfx.start(); //Play sound
     }
     
@@ -1434,7 +1589,11 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
             Handler handler = globalHolder;
             
             public void run(){
-                if(Animated.user_speedbar >= Animated.speedbar_end_x - Animated.speedbar_start_x) act.initialize(u_pokemon.moves[index]);
+                if(Animated.user_speedbar >= Animated.speedbar_end_x - Animated.speedbar_start_x){
+                    playSoundEffect(getVoice());
+                    act.initialize(u_pokemon.moves[index]);
+                    return;
+                }
                 handler.postDelayed(this, 0);
             }
         };
