@@ -55,9 +55,10 @@ public class Animated extends View {
             user_speed_inc = 0, opponent_speed_inc = 0,
             user_speedbar_percentage = 0, opponent_speedbar_percentage = 0;
     protected static String opponent_pokemon, user_pokemon;
-    protected static short opponent_pokemon_HP = 1, user_pokemon_HP, opponent_pokemon_lvl = 0, user_pokemon_lvl;
+    protected static float opponent_pokemon_HP = 1, opponent_current_HP, user_pokemon_HP, user_current_HP;
     protected static float scaleFactor, opponent_damage_percentage = 0, user_damage_percentage = 0, 
             opponent_speedbar, user_speedbar, commandEnd_startAct_x, speedbar_start_x, speedbar_end_x, AVG_SPEED;
+    protected static short opponent_pokemon_lvl = 0, user_pokemon_lvl;
     
     public Animated(Context context){
         super(context);
@@ -155,12 +156,12 @@ public class Animated extends View {
                 (float)((OPPONENT_FRAME_TOPRIGHT_Y - 30)*adjust(opponent_pokemon)), 
                 brush);
         brush.setStyle(Paint.Style.FILL);
-        brush.setColor(getHealthBarColor((int)Round((1 - opponent_damage_percentage)*100, 0)));
+        brush.setColor(getHealthBarColor((int)Round((1 - Math.min(opponent_damage_percentage, 1))*100, 0)));
         brush.setStrokeWidth(10f);
         //canvas.drawRect(left (x-val), top (y-val), right (x-val), bottom (y-val), Paint)
         canvas.drawRect((float)(OPPONENT_FRAME_TOPLEFT_X + opponent.getWidth()/2.0 - HEALTH_BAR_LENGTH/2.0), 
                 (float)((OPPONENT_FRAME_TOPLEFT_Y - 40)*adjust(opponent_pokemon)), 
-                (float)(OPPONENT_FRAME_TOPLEFT_X + opponent.getWidth()/2.0 + HEALTH_BAR_LENGTH/2.0 - (opponent_damage_percentage*HEALTH_BAR_LENGTH)), 
+                (float)(OPPONENT_FRAME_TOPLEFT_X + opponent.getWidth()/2.0 + HEALTH_BAR_LENGTH/2.0 - (Math.min(opponent_damage_percentage, 1)*HEALTH_BAR_LENGTH)), 
                 (float)((OPPONENT_FRAME_TOPRIGHT_Y - 30)*adjust(opponent_pokemon)), 
                 brush);
         brush.setColor(Color.argb(255, 255, 255, 255));
@@ -190,8 +191,11 @@ public class Animated extends View {
                 (float)((OPPONENT_FRAME_TOPLEFT_Y - 50/*px*/)*adjust(opponent_pokemon)), 
                 brush);
         
+        //Update opponent current HP state
+        opponent_current_HP = opponent_pokemon_HP*(1 - Math.min(opponent_damage_percentage, 1));
+        
         //Draw opponent HP number
-        canvas.drawText(String.valueOf(Round(((opponent_pokemon_HP*(1 - opponent_damage_percentage))/opponent_pokemon_HP)*100/*percentage*/, 1)) + '%', 
+        canvas.drawText(String.valueOf(Round((opponent_current_HP/opponent_pokemon_HP)*100/*percentage*/, 1)) + '%', 
                 (float)(OPPONENT_FRAME_TOPLEFT_X + opponent.getWidth()/2.0 - HEALTH_BAR_LENGTH/2.0), 
                 (float)((OPPONENT_FRAME_TOPLEFT_Y - 5/*px*/)*adjust(opponent_pokemon)), 
                 brush);
@@ -229,7 +233,7 @@ public class Animated extends View {
                 (float)((USER_FRAME_TOPRIGHT_Y - 30)*adjust(user_pokemon)), 
                 brush);
         brush.setStyle(Paint.Style.FILL);
-        brush.setColor(getHealthBarColor((int)Round((1 - user_damage_percentage)*100, 0)));
+        brush.setColor(getHealthBarColor((int)Round((1 - Math.min(user_damage_percentage, 1))*100, 0)));
         brush.setStrokeWidth(10);
         //canvas.drawRect(left (x-val), top (y-val), right (x-val), bottom (y-val), Paint)
         canvas.drawRect(((config.orientation == Configuration.ORIENTATION_PORTRAIT)?
@@ -237,8 +241,8 @@ public class Animated extends View {
                 : (float)(USER_FRAME_TOPLEFT_X + user.getWidth()/2.0 - HEALTH_BAR_LENGTH/2.0)), 
                 (float)((USER_FRAME_TOPLEFT_Y - 40)*adjust(user_pokemon)), 
                 ((config.orientation == Configuration.ORIENTATION_PORTRAIT)?
-                        (float)(USER_FRAME_TOPLEFT_X + user.getWidth()/2.0 + HEALTH_BAR_LENGTH*3/4.0 - (user_damage_percentage*HEALTH_BAR_LENGTH))
-                        : (float)(USER_FRAME_TOPLEFT_X + user.getWidth()/2.0 + HEALTH_BAR_LENGTH/2.0 - (user_damage_percentage*HEALTH_BAR_LENGTH))), 
+                        (float)(USER_FRAME_TOPLEFT_X + user.getWidth()/2.0 + HEALTH_BAR_LENGTH*3/4.0 - (Math.min(user_damage_percentage, 1)*HEALTH_BAR_LENGTH))
+                        : (float)(USER_FRAME_TOPLEFT_X + user.getWidth()/2.0 + HEALTH_BAR_LENGTH/2.0 - (Math.min(user_damage_percentage, 1)*HEALTH_BAR_LENGTH))), 
                 (float)((USER_FRAME_TOPRIGHT_Y - 30)*adjust(user_pokemon)), 
                 brush);
         brush.setColor(Color.argb(255, 255, 255, 255));
@@ -270,8 +274,12 @@ public class Animated extends View {
                 (float)((USER_FRAME_TOPLEFT_Y - 50/*px*/)*adjust(user_pokemon)), 
                 brush);
         
+        //Update opponent current HP state
+        user_current_HP = user_pokemon_HP*(1 - Math.min(user_damage_percentage, 1));
+        
         //Draw user HP numbers
-        canvas.drawText(String.valueOf(Round(Battle.u_pokemon.HP*(1 - user_damage_percentage), 1)) + '/' + String.valueOf((float)Battle.u_pokemon.HP), ((config.orientation == Configuration.ORIENTATION_PORTRAIT)? 
+        canvas.drawText(String.valueOf(Round(user_current_HP, 1)) + '/' + String.valueOf(user_pokemon_HP), 
+                ((config.orientation == Configuration.ORIENTATION_PORTRAIT)? 
                 (float)(USER_FRAME_TOPLEFT_X + user.getWidth()/2.0 - HEALTH_BAR_LENGTH/4.0)
                 : (float)(USER_FRAME_TOPLEFT_X + user.getWidth()/2.0 - HEALTH_BAR_LENGTH/2.0)), 
                 (float)((USER_FRAME_TOPLEFT_Y - 5/*px*/)*adjust(user_pokemon)), 
@@ -365,7 +373,7 @@ public class Animated extends View {
                     opponent_actReady = true;
                 }
             } else {
-                if(opponent_actReady && Battle.actChosen /*make distinct to opponent later*/){
+                if(opponent_actReady && Battle.o_actChosen /*make distinct to opponent later*/){
                     opponent_speed_inc += ((double)(Battle.o_pokemon.Spe*Battle.OPPONENT_SPE_STAGE)/(Battle.u_pokemon.Spe*Battle.USER_SPE_STAGE))*(AVG_SPEED/100f);
                     opponent_speedbar_percentage = opponent_speed_inc/AVG_SPEED;
                 } else {
@@ -500,7 +508,7 @@ public class Animated extends View {
                     user_actReady = true;
                 }
             } else {
-                if(user_actReady && Battle.actChosen){
+                if(user_actReady && Battle.u_actChosen){
                     user_speed_inc += ((double)(Battle.u_pokemon.Spe*Battle.USER_SPE_STAGE)/(Battle.o_pokemon.Spe*Battle.OPPONENT_SPE_STAGE))*(AVG_SPEED/100f);
                     user_speedbar_percentage = user_speed_inc/AVG_SPEED;
                 } else {
