@@ -13,6 +13,7 @@ import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.Html;
+import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -47,9 +48,10 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
     private Button pokeball, buff, cheer, close, moves, forfeit, move1, move2, move3, move4, pkmn1, pkmn2, pkmn3, pkmn4, pkmn5, pkmn6, swap;
     private Configuration config;
     protected static Context context;
+    protected static float scaledDensity;
     private Float delta_x, delta_y, event_x, event_y, x, y;
     private FrameLayout layout;
-    private Handler globalHolder;
+    private Handler globalHandler;
     private ImageView viewer;
     private int frame, index;
     private Integer lastPos = -1;
@@ -88,6 +90,7 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
             text = (TextView)findViewById(R.id.tvException); //Prep for debugging use
             
             /* Used in determining postions of sprites, and sprtie frames */
+            scaledDensity = getResources().getDisplayMetrics().scaledDensity;
             WindowManager window = (WindowManager)getSystemService(Context.WINDOW_SERVICE);
             Display screen = window.getDefaultDisplay();
             Point size = new Point();
@@ -222,13 +225,13 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
             double user_bottomside_midpoint_X = (((SCREEN_WIDTH/6.0 - Animated.user.getWidth()/2.0)*Animated.USER_PLACEMENT_X + Animated.user_shift_x + Animated.user.getWidth()) - ((SCREEN_WIDTH/6.0 - Animated.user.getWidth()/2.0)*Animated.USER_PLACEMENT_X + Animated.user_shift_x))/2 + ((SCREEN_WIDTH/6.0 - Animated.user.getWidth()/2.0)*Animated.USER_PLACEMENT_X + Animated.user_shift_x);
             double opponent_bottomside_midpoint_X = (((SCREEN_WIDTH*5/6.0 - Animated.opponent.getWidth()/2.0)*Animated.OPPONENT_PLACEMENT_X + Animated.opponent_shift_x + Animated.opponent.getWidth()) - ((SCREEN_WIDTH*5/6.0 - Animated.opponent.getWidth()/2.0)*Animated.OPPONENT_PLACEMENT_X + Animated.opponent_shift_x))/2 + ((SCREEN_WIDTH*5/6.0 - Animated.opponent.getWidth()/2.0)*Animated.OPPONENT_PLACEMENT_X + Animated.opponent_shift_x);
 
-            Animated.user_shift_x = opponent_bottomside_midpoint_X - user_bottomside_midpoint_X;
-            Animated.user_shift_y = -(((SCREEN_HEIGHT*2/3.0 + Animated.user.getHeight()/2.0)*Animated.USER_PLACEMENT_Y + Animated.user_shift_y) - ((SCREEN_HEIGHT/3.0 + Animated.opponent.getHeight()/2.0)*Animated.OPPONENT_PLACEMENT_Y + Animated.opponent_shift_y));   
+            Animated.user_shift_x = (int)Animated.Round(opponent_bottomside_midpoint_X - user_bottomside_midpoint_X, 0);
+            Animated.user_shift_y = (int)Animated.Round(-(((SCREEN_HEIGHT*2/3.0 + Animated.user.getHeight()/2.0)*Animated.USER_PLACEMENT_Y + Animated.user_shift_y) - ((SCREEN_HEIGHT/3.0 + Animated.opponent.getHeight()/2.0)*Animated.OPPONENT_PLACEMENT_Y + Animated.opponent_shift_y)), 0);   
             Animated.user_shift_y += (Animated.OPPONENT_FRAME_BOTTOMLEFT_Y - Animated.USER_FRAME_BOTTOMLEFT_Y);
         }
         else if(!savedInstanceState.getBoolean(STATE_INITIAL_SHIFT)){
-            Animated.user_shift_x = SCREEN_WIDTH*Double.parseDouble(savedInstanceState.getString(STATE_MOTION_RATIO_X)) - (SCREEN_WIDTH/6.0 - Animated.user.getWidth()/2.0)*Animated.USER_PLACEMENT_X;
-            Animated.user_shift_y = SCREEN_HEIGHT*Double.parseDouble(savedInstanceState.getString(STATE_MOTION_RATIO_Y)) - (SCREEN_HEIGHT*2/3.0 + Animated.user.getHeight()/2.0)*Animated.USER_PLACEMENT_Y;
+            Animated.user_shift_x = (int)Animated.Round(SCREEN_WIDTH*Double.parseDouble(savedInstanceState.getString(STATE_MOTION_RATIO_X)) - (SCREEN_WIDTH/6.0 - Animated.user.getWidth()/2.0)*Animated.USER_PLACEMENT_X, 0);
+            Animated.user_shift_y = (int)Animated.Round(SCREEN_HEIGHT*Double.parseDouble(savedInstanceState.getString(STATE_MOTION_RATIO_Y)) - (SCREEN_HEIGHT*2/3.0 + Animated.user.getHeight()/2.0)*Animated.USER_PLACEMENT_Y, 0);
             //Animated.user_shift_y += (Animated.OPPONENT_FRAME_BOTTOMLEFT_Y - Animated.USER_FRAME_BOTTOMLEFT_Y);
         }
     }
@@ -325,10 +328,10 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
 
     private void startDrawerAnimation(){
         Handler handler = new Handler();
-        globalHolder = handler;
+        globalHandler = handler;
         
         final Runnable thread = new Runnable(){
-            Handler handler = globalHolder;
+            Handler handler = globalHandler;
             
             public void run(){
                 frame += 30;
@@ -354,7 +357,7 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         };
 
         handler.postDelayed(thread, 0);
-        globalHolder = null;
+        globalHandler = null;
     }
 
     public void onClick(View v){
@@ -439,34 +442,35 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         } else if(v.getId() == CHEER_ID){
 //            playSoundEffect(getVoice());
             // NOTHING YET
-            o_actChosen = true;
-            index = 1;
+            if(/*!u_actChosen && */Animated.opponent_actReady){ 
+                o_actChosen = true;
+                index = 1;
 
-            if(String.valueOf(u_pokemon.PQI[0]).equals(String.valueOf("0")) || String.valueOf(u_pokemon.PQI[2]).equals(String.valueOf("2"))){ 
-                Animated.opponent_speedbar = Animated.speedbar_end_x - Animated.speedbar_start_x + 10;
-                Animated.OPPONENT_SPEED_LOCK = true;
-            }
-
-            Handler handler = new Handler();
-            globalHolder = handler;
-
-            final Runnable thread = new Runnable(){
-                Handler handler = globalHolder;
-
-                public void run(){
-                    if(Animated.opponent_speedbar >= Animated.speedbar_end_x - Animated.speedbar_start_x){
-                        playSoundEffect(getVoice());
-                        ai_act.initialize(u_pokemon.moves[index]);
-                        return;
-                    }
-                    handler.postDelayed(this, 0);
+                if(u_pokemon.moves[index][4].equals("1") || u_pokemon.moves[index][4].equals("3")){ 
+                    Animated.opponent_speedbar = Animated.speedbar_end_x - Animated.speedbar_start_x + 10;
+                    Animated.OPPONENT_SPEED_LOCK = true;
                 }
-            };
 
-            handler.postDelayed(thread, 0);
+                globalHandler = new Handler();
+
+                final Runnable thread = new Runnable(){
+                    Handler handler = globalHandler;
+
+                    public void run(){
+                        if(Animated.opponent_speedbar >= Animated.speedbar_end_x - Animated.speedbar_start_x){
+                            playSoundEffect(getVoice());
+                            ai_act.initialize(u_pokemon.moves[index]);
+                            return;
+                        }
+                        handler.postDelayed(this, 0);
+                    }
+                };
+
+                globalHandler.postDelayed(thread, 0);
             
 //            Animated.opponent_shift_x += 1;
 //            Animated.opponent_shift_y += 1;
+            }
         }
     }
 
@@ -1603,16 +1607,15 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         u_actChosen = true;
         index = move;
         
-        if(String.valueOf(u_pokemon.PQI[0]).equals(String.valueOf(move)) || String.valueOf(u_pokemon.PQI[2]).equals(String.valueOf(move))){ 
+        if(u_pokemon.moves[move][4].equals("1") || u_pokemon.moves[move][4].equals("3")){ 
             Animated.user_speedbar = Animated.speedbar_end_x - Animated.speedbar_start_x + 10;
             Animated.USER_SPEED_LOCK = true;
         }
         
-        Handler handler = new Handler();
-        globalHolder = handler;
+        globalHandler = new Handler();
         
         final Runnable thread = new Runnable(){
-            Handler handler = globalHolder;
+            Handler handler = globalHandler;
             
             public void run(){
                 if(Animated.user_speedbar >= Animated.speedbar_end_x - Animated.speedbar_start_x){
@@ -1624,7 +1627,7 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
             }
         };
 
-        handler.postDelayed(thread, 0);
+        globalHandler.postDelayed(thread, 0);
     }
     
     private void swap(int button){

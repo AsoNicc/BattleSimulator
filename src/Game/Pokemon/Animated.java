@@ -14,6 +14,7 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Path.FillType;
 import android.graphics.Point;
+import android.graphics.Typeface;
 import android.util.AttributeSet;
 import android.view.View;
 import java.io.InputStream;
@@ -29,11 +30,11 @@ public class Animated extends View {
     private boolean nextFrame;
     private final double oneRadian = 0.0174533;
     private final Paint brush = new Paint();
-    private float AVG_SPRITE_WIDTH, AVG_SPRITE_HEIGHT;
+    private float AVG_SPRITE_WIDTH, AVG_SPRITE_HEIGHT, textWidth;
     private int contender, time;
     private static float speedbar_start_y, speedbar_end_y, action_start_x;
     private final int FIXED_FRAME = (int)Round(Battle.ARENABOX/3f, 0), GAP = 5,
-            POINTER_SIDE = 10, SPEED_TEXT_SIZE = 25;
+            POINTER_SIDE = 10, SPEED_TEXT_SIZE = 25, TEXTSIZE_SP_UNITS = 12;
     private static Options Opponent_Options, User_Options; 
     protected final static float USER_PLACEMENT_X = 1.0f, OPPONENT_PLACEMENT_X = 0.9f, 
             USER_PLACEMENT_Y = 0.9f, OPPONENT_PLACEMENT_Y = 1f;
@@ -50,14 +51,17 @@ public class Animated extends View {
             USER_FRAME_BOTTOMLEFT_Y, USER_FRAME_BOTTOMRIGHT_X, 
             USER_FRAME_BOTTOMRIGHT_Y, USER_FRAME_TOPLEFT_X, USER_FRAME_TOPLEFT_Y,
             USER_FRAME_TOPRIGHT_X, USER_FRAME_TOPRIGHT_Y,
-            user_shift_x = 0, opponent_shift_x = 0,
-            user_shift_y = 0, opponent_shift_y = 0,
             user_speed_inc = 0, opponent_speed_inc = 0,
             user_speedbar_percentage = 0, opponent_speedbar_percentage = 0;
     protected static String opponent_pokemon, user_pokemon;
     protected static float opponent_pokemon_HP = 1, opponent_current_HP, user_pokemon_HP, user_current_HP;
     protected static float scaleFactor, opponent_damage_percentage = 0, user_damage_percentage = 0, 
             opponent_speedbar, user_speedbar, commandEnd_startAct_x, speedbar_start_x, speedbar_end_x, AVG_SPEED;
+    
+    /* All _shifts_ should be ints because they reference a physical change in 
+     * sprite positioning/orientation, whereby it cannot be defined by a fraction */
+    protected static int user_shift_x = 0, opponent_shift_x = 0,
+            user_shift_y = 0, opponent_shift_y = 0;
     protected static short opponent_pokemon_lvl = 0, user_pokemon_lvl;
     
     public Animated(Context context){
@@ -126,7 +130,7 @@ public class Animated extends View {
     @Override
     protected void onDraw(Canvas canvas){
         super.onDraw(canvas);
-        
+//        layout.draw(canvas);
         //Evaluate opponent hitbox
         OPPONENT_FRAME_BOTTOMLEFT_X = (Battle.SCREEN_WIDTH*5/6.0 - opponent.getWidth()/2.0)*OPPONENT_PLACEMENT_X + opponent_shift_x;
         OPPONENT_FRAME_BOTTOMLEFT_Y = (Battle.SCREEN_HEIGHT/3.0 + opponent.getHeight()/2.0)*OPPONENT_PLACEMENT_Y + opponent_shift_y;
@@ -167,11 +171,13 @@ public class Animated extends View {
         brush.setColor(Color.argb(255, 255, 255, 255));
         brush.setStyle(Paint.Style.FILL);
         brush.setTextSize(25f);
+        brush.setTypeface(Typeface.create(Typeface.SERIF, Typeface.BOLD_ITALIC));        
+        
         canvas.drawText("HP", 
                 (float)(OPPONENT_FRAME_TOPLEFT_X + opponent.getWidth()/2.0 - HEALTH_BAR_LENGTH/2.0 - 50/*px*/), 
                 (float)((OPPONENT_FRAME_TOPLEFT_Y - 25/*px*/)*adjust(opponent_pokemon)), 
                 brush);
-        brush.setTextSize(35);
+        brush.setTextSize(TEXTSIZE_SP_UNITS*Battle.scaledDensity);
         
         /* Get opponent Pokemon name text */
         if(opponent_pokemon.equals("nidorang")) temp = "Nidoran♀";
@@ -186,10 +192,37 @@ public class Animated extends View {
         temp += " | LVL" + opponent_pokemon_lvl;
 
         //Draw opponent name text
-        canvas.drawText(temp, 
+        if(!(opponent_pokemon.equals("nidoran♀") || opponent_pokemon.equals("nidoran♂"))){
+            canvas.drawText(temp,
+                0, //Beginning of string
+                opponent_pokemon.length() + 2, //end of opponent name + space + |
+                (float)(OPPONENT_FRAME_TOPLEFT_X + opponent.getWidth()/2.0 - HEALTH_BAR_LENGTH/2.0), 
+                (float)((OPPONENT_FRAME_TOPLEFT_Y - 50/*px*/)*adjust(opponent_pokemon)),
+                brush);
+            //Capture width of text with its current configuration <- sequence significant
+            textWidth = brush.measureText(opponent_pokemon.substring(0, 1).toUpperCase() + opponent_pokemon.substring(1) + " | " + Battle.o_pokemon.gender);
+            canvas.drawText(temp,
+                opponent_pokemon.length() + 5, //Latter end of string
+                temp.length(), //end of string
+                textWidth + (float)(OPPONENT_FRAME_TOPLEFT_X + opponent.getWidth()/2.0 - HEALTH_BAR_LENGTH/2.0), 
+                (float)((OPPONENT_FRAME_TOPLEFT_Y - 50/*px*/)*adjust(opponent_pokemon)),
+                brush);
+            //Capture width of text up to writing gender character with its current configuration <- sequence significant
+            textWidth = brush.measureText(opponent_pokemon.substring(0, 1).toUpperCase() + opponent_pokemon.substring(1) + " | ");
+            brush.setColor((Battle.o_pokemon.gender == '♀')? Color.argb(255, 255, 20, 147) : Color.argb(255, 0, 0, 255));
+            brush.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD)); //<-Configuration change by font
+            canvas.drawText(Battle.o_pokemon.gender + "",               
+                    textWidth + (float)(OPPONENT_FRAME_TOPLEFT_X + opponent.getWidth()/2.0 - HEALTH_BAR_LENGTH/2.0), 
+                    (float)((OPPONENT_FRAME_TOPLEFT_Y - 50/*px*/)*adjust(opponent_pokemon)),
+                    brush);
+            brush.setTypeface(Typeface.create(Typeface.SERIF, Typeface.BOLD_ITALIC)); //Reset font configuration
+            brush.setColor(Color.argb(255, 255, 255, 255)); //Reset color
+        } else {
+            canvas.drawText(temp, 
                 (float)(OPPONENT_FRAME_TOPLEFT_X + opponent.getWidth()/2.0 - HEALTH_BAR_LENGTH/2.0), 
                 (float)((OPPONENT_FRAME_TOPLEFT_Y - 50/*px*/)*adjust(opponent_pokemon)), 
                 brush);
+        }
         
         //Update opponent current HP state
         opponent_current_HP = opponent_pokemon_HP*(1 - Math.min(opponent_damage_percentage, 1));
@@ -253,7 +286,7 @@ public class Animated extends View {
                 : (float)(USER_FRAME_TOPLEFT_X + user.getWidth()/2.0 - HEALTH_BAR_LENGTH/2.0 - 50/*px*/)), 
                 (float)((USER_FRAME_TOPLEFT_Y - 25/*px*/)*adjust(user_pokemon)), 
                 brush);
-        brush.setTextSize(35);
+        brush.setTextSize(TEXTSIZE_SP_UNITS*Battle.scaledDensity);
         
         /* Get user Pokemon name text */
         if(user_pokemon.equals("nidorang")) temp = "Nidoran♀";
@@ -264,15 +297,49 @@ public class Animated extends View {
         try {
             if(!(temp.equals("Nidoran♀") || temp.equals("Nidoran♂"))) temp += " | " + Battle.u_pokemon.gender;
         } catch(NullPointerException n){}
-        
+              
         temp += " | LVL" + user_pokemon_lvl;
         
-        //Draw user name text
-        canvas.drawText(temp, ((config.orientation == Configuration.ORIENTATION_PORTRAIT)? 
+        //Draw user name text        
+        if(!(user_pokemon.equals("nidoran♀") || user_pokemon.equals("nidoran♂"))){
+            canvas.drawText(temp,
+                0, //Beginning of string
+                user_pokemon.length() + 2, //end of user name + space + |
+                ((config.orientation == Configuration.ORIENTATION_PORTRAIT)? //x
                 (float)(USER_FRAME_TOPLEFT_X + user.getWidth()/2.0 - HEALTH_BAR_LENGTH/4.0)
                 : (float)(USER_FRAME_TOPLEFT_X + user.getWidth()/2.0 - HEALTH_BAR_LENGTH/2.0)), 
-                (float)((USER_FRAME_TOPLEFT_Y - 50/*px*/)*adjust(user_pokemon)), 
+                (float)((USER_FRAME_TOPLEFT_Y - 50/*px*/)*adjust(user_pokemon)), //y
                 brush);
+            //Capture width of text with its current configuration <- sequence significant
+            textWidth = brush.measureText(user_pokemon.substring(0, 1).toUpperCase() + user_pokemon.substring(1) + " | " + Battle.u_pokemon.gender);
+            canvas.drawText(temp,
+                user_pokemon.length() + 5, //Latter end of string
+                temp.length(), //end of string
+                textWidth + ((config.orientation == Configuration.ORIENTATION_PORTRAIT)? //x
+                (float)(USER_FRAME_TOPLEFT_X + user.getWidth()/2.0 - HEALTH_BAR_LENGTH/4.0)
+                : (float)(USER_FRAME_TOPLEFT_X + user.getWidth()/2.0 - HEALTH_BAR_LENGTH/2.0)),
+                (float)((USER_FRAME_TOPLEFT_Y - 50/*px*/)*adjust(user_pokemon)), //y
+                brush);
+            //Capture width of text up to writing gender character with its current configuration <- sequence significant
+            textWidth = brush.measureText(user_pokemon.substring(0, 1).toUpperCase() + user_pokemon.substring(1) + " | ");
+            brush.setColor((Battle.u_pokemon.gender == '♀')? Color.argb(255, 255, 20, 147) : Color.argb(255, 0, 0, 255));
+            brush.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD)); //<-Configuration change by font
+            canvas.drawText(Battle.u_pokemon.gender + "",               
+                    textWidth + ((config.orientation == Configuration.ORIENTATION_PORTRAIT)? //Width of old config + x-location
+                    (float)(USER_FRAME_TOPLEFT_X + user.getWidth()/2.0 - HEALTH_BAR_LENGTH/4.0)
+                    : (float)(USER_FRAME_TOPLEFT_X + user.getWidth()/2.0 - HEALTH_BAR_LENGTH/2.0)), 
+                    (float)((USER_FRAME_TOPLEFT_Y - 50/*px*/)*adjust(user_pokemon)), //y
+                    brush);
+            brush.setTypeface(Typeface.create(Typeface.SERIF, Typeface.BOLD_ITALIC)); //Reset font configuration
+            brush.setColor(Color.argb(255, 255, 255, 255)); //Reset color
+        } else {
+            canvas.drawText(temp,
+                ((config.orientation == Configuration.ORIENTATION_PORTRAIT)? 
+                (float)(USER_FRAME_TOPLEFT_X + user.getWidth()/2.0 - HEALTH_BAR_LENGTH/4.0)
+                : (float)(USER_FRAME_TOPLEFT_X + user.getWidth()/2.0 - HEALTH_BAR_LENGTH/2.0)), 
+                (float)((USER_FRAME_TOPLEFT_Y - 50/*px*/)*adjust(user_pokemon)),
+                brush);
+        }
         
         //Update opponent current HP state
         user_current_HP = user_pokemon_HP*(1 - Math.min(user_damage_percentage, 1));
@@ -627,7 +694,7 @@ public class Animated extends View {
         Bitmap unscaledBitmap;
         
         if(contender == 1){
-            int depth = ((OPPONENT_FRAME_BOTTOMLEFT_Y - OPPONENT_FRAME_TOPLEFT_Y)/2 + OPPONENT_FRAME_TOPLEFT_Y < Battle.SCREEN_HEIGHT/2.0)? 0 : 1;
+            byte depth = ((OPPONENT_FRAME_BOTTOMLEFT_Y - OPPONENT_FRAME_TOPLEFT_Y)/2 + OPPONENT_FRAME_TOPLEFT_Y <= Battle.SCREEN_HEIGHT*5/12.0)? (byte)0 : (byte)1;
             unscaledBitmap = BitmapFactory.decodeStream(stream, null, Opponent_Options);
             opponent = Bitmap.createScaledBitmap(unscaledBitmap, (int)Round(Opponent_Options.outWidth*(scaleFactor + depth), 0), (int)Round(Opponent_Options.outHeight*(scaleFactor + depth), 0), true);
             
@@ -645,18 +712,18 @@ public class Animated extends View {
                 }   
             }            
         } else {
-            int depth = ((USER_FRAME_BOTTOMLEFT_Y - USER_FRAME_TOPLEFT_Y)/2 + USER_FRAME_TOPLEFT_Y < Battle.SCREEN_HEIGHT/2.0)? 0 : 1;
+            byte depth = ((USER_FRAME_BOTTOMLEFT_Y - USER_FRAME_TOPLEFT_Y)/2 + USER_FRAME_TOPLEFT_Y <= Battle.SCREEN_HEIGHT*7/12.0)? (byte)0 : (byte)1;
             unscaledBitmap = BitmapFactory.decodeStream(stream, null, User_Options);
             user = Bitmap.createScaledBitmap(unscaledBitmap, (int)Round(User_Options.outWidth*(scaleFactor + depth), 0), (int)Round(User_Options.outHeight*(scaleFactor + depth), 0), true);
             
             try { // Set user icon for speed bar
                 stream = asset.open("sprites/" + user_pokemon + "/front/frame_0.png");
-                unscaledBitmap = BitmapFactory.decodeStream(stream, null, Opponent_Options);
+                unscaledBitmap = BitmapFactory.decodeStream(stream, null, User_Options);
                 user_icon = Bitmap.createScaledBitmap(unscaledBitmap, (int)Round(User_Options.outWidth/2f, 0), (int)Round(User_Options.outHeight/2f, 0), true);
             } catch(Exception e){
                 try {
                     stream = asset.open("sprites/" + user_pokemon + "/front/frame_1.png");
-                    unscaledBitmap = BitmapFactory.decodeStream(stream, null, Opponent_Options);
+                    unscaledBitmap = BitmapFactory.decodeStream(stream, null, User_Options);
                     user_icon = Bitmap.createScaledBitmap(unscaledBitmap, (int)Round(User_Options.outWidth/2f, 0), (int)Round(User_Options.outHeight/2f, 0), true);
                 } catch(Exception e2) {
                     

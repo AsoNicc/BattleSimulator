@@ -586,6 +586,9 @@ C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\assets\moves\null \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\assets\moves\pound \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\assets\moves\hit\frame_0.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\assets\moves\null\frame_0.png \
+C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\assets\moves\pound\frame_-0.png \
+C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\assets\moves\pound\frame_-1.png \
+C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\assets\moves\pound\frame_-2.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\assets\moves\pound\frame_0.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\assets\moves\pound\frame_1.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\assets\moves\pound\frame_2.png \
