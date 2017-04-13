@@ -23,7 +23,7 @@ import java.util.Set;
 
 /**
  * @author Nick
- * w:73 h:70
+ width:73 height:70
  */
 public class Motion {
     private Bitmap attackSprite;
@@ -31,31 +31,39 @@ public class Motion {
     private InputStream stream;
     private Runnable thread;
     private String[] move, info;
-    private static boolean MOVE_THREAD_RUNNING = false, BACKPEDAL_THREAD_RUNNING = false,
+    private boolean MOVE_THREAD_RUNNING = false, BACKPEDAL_THREAD_RUNNING = false,
             SHIFT_LorR_THREAD_RUNNING = false, ELLIPSE_LorR_THREAD_RUNNING = false,
-            BLINK_THREAD_RUNNING = false, TERMINATED_SEQUENCE = false, DAMAGE_THREAD = false,
-            DELAY_THREAD_RUNNING = false, COLLISION_THREAD_RUNNING = false;
+            BLINK_THREAD_RUNNING = false, TERMINATED_SEQUENCE = false, DAMAGE_THREAD_RUNNING = false,
+            DELAY_THREAD_RUNNING = false, COLLISION_THREAD_RUNNING = false,
+            DECODER_THREAD_RUNNING = false, isFROZEN_THREAD_RUNNING = false, Crit_Damage = false;
     private final byte attacker;
     private double BOTTOMLEFT_X, BOTTOMLEFT_Y, BOTTOMRIGHT_X, BOTTOMRIGHT_Y, 
             TOPLEFT_X, TOPLEFT_Y, TOPRIGHT_X, TOPRIGHT_Y, user_bottomside_midpoint_X,
             opponent_bottomside_midpoint_X;  
-    private float damageAmount = 0f;
+    private float damageAmount = 0f, Damage_received_effect = 0f;
     private final AssetManager asset;
     private static Context context;
-    private final int INC_RATE = 2, ARC_RATE = 30;
-    private int i = 0, INDEX = 1 /*sequence starts at 1, index[0] = move#*/, soundByteCnt = 0;
-    private static Options Opponent_Space_Options;
-    protected int incX = 0, incY = 0;
+    private Motion opponentInst;
+    private final int INC_RATE = 2, ARC_RATE = 30, TIME = 3000;
+    private static int pauser = 0; //Freeze flag that represents which contender yeilds the right to attack
+    private int i = 0, INDEX = 1 /*sequence starts at 1, SEQUENCE[0] = move#*/, 
+            soundByteCnt = 0, incX = 0, incY = 0;
     protected static boolean SHIFT_BLtoTR_LOCK = false;
+    protected boolean frozen = false;
     
-    Motion(Context tContext, byte contender){
+    
+    public Motion(Context tContext, byte contender){
         context = tContext;
-        Battle.context = context;
         asset = context.getAssets(); //Link assets  
         attacker = contender;
     }
     
+    protected void setInst(Motion tMyOpponentInst){
+        opponentInst = tMyOpponentInst;
+    }
+    
     protected void initialize(String[] tokenMove){
+        /* Collect data of contender's current stance location on screen */
         BOTTOMLEFT_X = (attacker == 1)? (Battle.SCREEN_WIDTH*5/6.0 - Animated.opponent.getWidth()/2.0)*Animated.OPPONENT_PLACEMENT_X// +(0) := opponent_shift_x
                 : (Battle.SCREEN_WIDTH/6.0 - Animated.user.getWidth()/2.0)*Animated.USER_PLACEMENT_X;// +(0) := user_shift_x;
         BOTTOMLEFT_Y = (attacker == 1)? (Battle.SCREEN_HEIGHT/3.0 + Animated.opponent.getHeight()/2.0)*Animated.OPPONENT_PLACEMENT_Y// +(0) := opponent_shift_y;
@@ -101,26 +109,60 @@ public class Motion {
             globalHandler = new Handler();
         
             thread = new Runnable(){
+                Handler sequenceHandler = globalHandler;
+                
                 public void run(){
-                    if(!threadRunning()){
+                    if(!threadRunning() && !isFROZEN_THREAD_RUNNING){ //Then no main threads are running & contender !isFrozen
                         try {
-                            sequence(info[INDEX++]);                    
+                            sequence(info[INDEX++]); //Call next part of sequence                   
                         } catch(NotFoundException e) {
                             Battle.text.setText(e.toString());
                         } catch(ArrayIndexOutOfBoundsException e) { //Reached end of sequence
-                            INDEX = 1;
-                            refresh();
+                            INDEX = 1; //Reset INDEXER
+                            refresh(); //Vars before leaving
                             return;
                         } 
                     }
-                    globalHandler.postDelayed(this, 0);
+                    
+                    sequenceHandler.postDelayed(this, 0);
                 }
             };
 
-            globalHandler.postDelayed(thread, 0);            
+            isFrozen();
+            globalHandler.postDelayed(thread, 0);
+            
+//            // Setup handler for uncaught exceptions.
+//            Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler(){
+//                @Override
+//                public void uncaughtException(Thread thread, Throwable e){
+//                    handleUncaughtException(thread, e);
+//                }
+//            });
         } catch(Exception e) {
             Battle.text.setText(e.toString());
         }
+    }
+    
+//    public void handleUncaughtException(Thread thread, Throwable e){
+//        Battle.text.setText(e.toString());
+//    }
+    
+    private void isFrozen(){
+        globalHandler = new Handler();
+        
+        /* A separate non-global Runnable var that continues to execute, 
+         * regardless of any other instance of another Runnable */
+        Runnable frozenThread = new Runnable(){
+            Handler frozenHandler = globalHandler;
+            
+            public void run(){                
+                if(pauser != attacker && pauser != 0) frozenHandler.postDelayed(this, 0);
+                else isFROZEN_THREAD_RUNNING = false;                
+            }
+        };
+        
+        globalHandler.postDelayed(frozenThread, 0);
+        isFROZEN_THREAD_RUNNING = true;
     }
     
     private void move(){
@@ -130,86 +172,85 @@ public class Motion {
             boolean x_exit = false, y_exit = false, targeted = true;
             
             public void run(){
-                if(attacker == 1){
-                    if(targeted /*@ least once*/ || move[6].equals("TRACKING")){
-                        targeted = false; //Everytime after initial
-                        tracking(targeted); //Towards target
-                    }
-
-                    if(move[6].equals("TRACKING")){
-                        if(Round(Animated.OPPONENT_FRAME_BOTTOMLEFT_X - incX + Animated.opponent.getWidth()/2.0, 0) <= Round(Animated.USER_FRAME_BOTTOMLEFT_X + Animated.user.getWidth()/2.0, 0)){
-                            incX -= (int)Round((Animated.USER_FRAME_BOTTOMLEFT_X + Animated.user.getWidth()/2.0) - (Animated.OPPONENT_FRAME_BOTTOMLEFT_X - incX + Animated.opponent.getWidth()/2.0), 0);
-                            Animated.opponent_shift_x -= incX;
-                            x_exit = true;
+                if(!isFROZEN_THREAD_RUNNING){
+                    if(attacker == 1){
+                        if(targeted /*@ least once*/ || move[6].equals("TRACKING")){
+                            targeted = false; //Everytime after initial pass-thru
+                            tracking(targeted); //Towards target
                         }
-                    }
-                    
-                    if(!x_exit) Animated.opponent_shift_x -= incX;
 
-                    if(Round(Animated.OPPONENT_FRAME_BOTTOMLEFT_Y - (-1*incY), 0) >= Round(Animated.USER_FRAME_BOTTOMLEFT_Y, 0)){
-                        incY -= (int)Round((Animated.OPPONENT_FRAME_BOTTOMLEFT_Y - (-1*incY)) - Animated.USER_FRAME_BOTTOMLEFT_Y, 0);
-                        Animated.opponent_shift_y -= (-1*incY);
-                        y_exit = true;
-                    }
+                        if(move[6].equals("TRACKING")){
+                            if(Round(Animated.OPPONENT_FRAME_BOTTOMLEFT_X - incX + Animated.opponent.getWidth()/2.0, 0) <= Round(Animated.USER_FRAME_BOTTOMLEFT_X + Animated.user.getWidth()/2.0, 0)){
+                                incX -= (int)Round((Animated.USER_FRAME_BOTTOMLEFT_X + Animated.user.getWidth()/2.0) - (Animated.OPPONENT_FRAME_BOTTOMLEFT_X - incX + Animated.opponent.getWidth()/2.0), 0);
+                                Animated.opponent_shift_x -= incX;
+                                x_exit = true;
+                            }
+                        }
 
-                    if(!y_exit) Animated.opponent_shift_y -= (-1*incY);
-                    
-                    /*if(move[6].equals("TRACKING")){ //Save this clause for super-tracking, available for the opponent only
-                        if(x_exit && y_exit){
+                        if(!x_exit) Animated.opponent_shift_x -= incX;
+
+                        if(Round(Animated.OPPONENT_FRAME_BOTTOMLEFT_Y - (-1*incY), 0) >= Round(Animated.USER_FRAME_BOTTOMLEFT_Y, 0)){
+                            incY -= (int)Round((Animated.OPPONENT_FRAME_BOTTOMLEFT_Y - (-1*incY)) - Animated.USER_FRAME_BOTTOMLEFT_Y, 0);
+                            Animated.opponent_shift_y -= (-1*incY);
+                            y_exit = true;
+                        }
+
+                        if(!y_exit) Animated.opponent_shift_y -= (-1*incY);
+
+                        /*if(move[6].equals("TRACKING")){ //Save this clause for super-tracking, available for the opponent only
+                            if(x_exit && y_exit){
+                                MOVE_THREAD_RUNNING = false;
+                                collision();
+                                return;
+                            }
+                        } else*/ if(y_exit || Animated.OPPONENT_FRAME_BOTTOMRIGHT_X < 0){
                             MOVE_THREAD_RUNNING = false;
-                            delay(0);
                             collision();
                             return;
                         }
-                    } else*/ if(y_exit || Animated.OPPONENT_FRAME_BOTTOMRIGHT_X < 0){
-                        MOVE_THREAD_RUNNING = false;
-                        delay(0);
-                        collision();
-                        return;
-                    }
-                } else {
-                    if(targeted /*@ least once*/ || move[6].equals("TRACKING")){
-                        targeted = false; //Everytime after initial
-                        tracking(targeted); //Towards target
-                    }
-
-                    if(move[6].equals("TRACKING")){
-                        if(Round(Animated.USER_FRAME_BOTTOMLEFT_X + incX + Animated.user.getWidth()/2.0, 0) >= Round(Animated.OPPONENT_FRAME_BOTTOMLEFT_X + Animated.opponent.getWidth()/2.0, 0)){
-                            incX -= (int)Round((Animated.USER_FRAME_BOTTOMLEFT_X + incX + Animated.user.getWidth()/2.0) - (Animated.OPPONENT_FRAME_BOTTOMLEFT_X + Animated.opponent.getWidth()/2.0), 0);
-                            Animated.user_shift_x += incX;
-                            x_exit = true;
+                    } else {
+                        if(targeted /*@ least once*/ || move[6].equals("TRACKING")){
+                            targeted = false; //Everytime after initial pass-thru
+                            tracking(targeted); //Towards target
                         }
-                    }
-                    
-                    if(!x_exit) Animated.user_shift_x += incX;
 
-                    if(Round(Animated.USER_FRAME_BOTTOMLEFT_Y + (-1*incY), 0) <= Round(Animated.OPPONENT_FRAME_BOTTOMLEFT_Y, 0)){
-                        incY -= (int)Round(Animated.OPPONENT_FRAME_BOTTOMLEFT_Y - (Animated.USER_FRAME_BOTTOMLEFT_Y + (-1*incY)), 0);
-                        Animated.user_shift_y += (-1*incY);
-                        y_exit = true;
-                    }
+                        if(move[6].equals("TRACKING")){
+                            if(Round(Animated.USER_FRAME_BOTTOMLEFT_X + incX + Animated.user.getWidth()/2.0, 0) >= Round(Animated.OPPONENT_FRAME_BOTTOMLEFT_X + Animated.opponent.getWidth()/2.0, 0)){
+                                incX -= (int)Round((Animated.USER_FRAME_BOTTOMLEFT_X + incX + Animated.user.getWidth()/2.0) - (Animated.OPPONENT_FRAME_BOTTOMLEFT_X + Animated.opponent.getWidth()/2.0), 0);
+                                Animated.user_shift_x += incX;
+                                x_exit = true;
+                            }
+                        }
 
-                    if(!y_exit) Animated.user_shift_y += (-1*incY);
-                    
-                    if(move[6].equals("TRACKING")){
-                        if(x_exit && y_exit || Animated.USER_FRAME_TOPLEFT_Y + Animated.user.getHeight()/2.0 <= Battle.SCREEN_HEIGHT*0.25){
+                        if(!x_exit) Animated.user_shift_x += incX;
+
+                        if(Round(Animated.USER_FRAME_BOTTOMLEFT_Y + (-1*incY), 0) <= Round(Animated.OPPONENT_FRAME_BOTTOMLEFT_Y, 0)){
+                            incY -= (int)Round(Animated.OPPONENT_FRAME_BOTTOMLEFT_Y - (Animated.USER_FRAME_BOTTOMLEFT_Y + (-1*incY)), 0);
+                            Animated.user_shift_y += (-1*incY);
+                            y_exit = true;
+                        }
+
+                        if(!y_exit) Animated.user_shift_y += (-1*incY);
+
+                        if(move[6].equals("TRACKING")){
+                            if(x_exit && y_exit || Animated.USER_FRAME_TOPLEFT_Y + Animated.user.getHeight()/2.0 <= Battle.SCREEN_HEIGHT*0.25){
+                                MOVE_THREAD_RUNNING = false;
+                                collision();
+                                return;
+                            }
+                        } else if(y_exit || Animated.USER_FRAME_BOTTOMRIGHT_X > Battle.SCREEN_WIDTH){
                             MOVE_THREAD_RUNNING = false;
-                            delay(0);
                             collision();
                             return;
                         }
-                    } else if(y_exit || Animated.USER_FRAME_BOTTOMRIGHT_X > Battle.SCREEN_WIDTH){
-                        MOVE_THREAD_RUNNING = false;
-                        delay(0);
-                        collision();
-                        return;
                     }
+                    isFrozen();
                 }
-                
                 globalHandler.postDelayed(this, 0);
             }
         };
         
+        isFrozen();
         globalHandler.postDelayed(thread, 0);
         MOVE_THREAD_RUNNING = true;        
     }
@@ -222,7 +263,7 @@ public class Motion {
             
             @Override
             public void run(){
-                if(COLLISION_THREAD_RUNNING && !DELAY_THREAD_RUNNING){
+                if(COLLISION_THREAD_RUNNING && !DELAY_THREAD_RUNNING && !isFROZEN_THREAD_RUNNING){
                     if(true /*later check if attack is a contact attack that requires sprite-to-sprite collision 
                     otherwise... it is projectile-to-sprite collision which is harder to determine */){
                         if(attacker == 1){
@@ -248,135 +289,158 @@ public class Motion {
                         }
                     }
 
-                    if(!TERMINATED_SEQUENCE){
-        //                if(attacker == 1){ ; //Freeze user's movements
-        //                else ; //Freeze opponent's movements
-                    } else {
-                        int x, y;
-                        String message;
+                    if(!TERMINATED_SEQUENCE){ //Contender wins collision
+                        if(!frozen){ //Cannot execute instructions below if contender is frozen
+                            pauser = attacker;
+                            opponentInst.frozen = true;
+                        }
+                    } else if(!frozen && !Crit_Damage && Damage_received_effect <= 1 && Damage_received_effect > 0){ //Damage received is not super effective, continue command
+                        INDEX--; //Decrement sequence INDEX to execute last motion again
+                        isFrozen(); //Start thread to see if contender is frozen
+                    } else { //Contender missed attack
+                        if(!frozen){ //Cannot execute instructions below if contender is frozen
+                            int x, y;
+                            String message = "Cancelled"; //Default, meaning if displayed, contender received a super effective hit while in motion
 
-                        if(attacker == 1){
-                            x = (int)Round((Animated.USER_FRAME_TOPLEFT_X + Animated.USER_FRAME_TOPRIGHT_X)/2 - Battle.SCREEN_WIDTH/2f, 0);
-                            y = (int)Round((Animated.USER_FRAME_TOPLEFT_Y + Animated.USER_FRAME_BOTTOMLEFT_Y)/2 - Battle.SCREEN_HEIGHT/2f + Animated.user.getHeight()/2f, 0);
-                            message = "Dodged!";
-                        } else {
-                            x = (int)Round((Animated.OPPONENT_FRAME_TOPLEFT_X + Animated.OPPONENT_FRAME_TOPRIGHT_X)/2 - Battle.SCREEN_WIDTH/2f, 0);
-                            y = (int)Round((Animated.OPPONENT_FRAME_TOPLEFT_Y + Animated.OPPONENT_FRAME_BOTTOMLEFT_Y)/2 - Battle.SCREEN_HEIGHT/2f + Animated.opponent.getHeight()/2f, 0);
-                            message = "Missed!";
-                        }            
+                            if(attacker == 2 || Crit_Damage || Damage_received_effect > 1){
+                                x = (int)Round((Animated.OPPONENT_FRAME_TOPLEFT_X + Animated.OPPONENT_FRAME_TOPRIGHT_X)/2 - Battle.SCREEN_WIDTH/2f, 0);
+                                y = (int)Round((Animated.OPPONENT_FRAME_TOPLEFT_Y + Animated.OPPONENT_FRAME_BOTTOMLEFT_Y)/2 - Battle.SCREEN_HEIGHT/2f + Animated.opponent.getHeight()/2f, 0);
+                                if(!Crit_Damage && Damage_received_effect <= 1) message = "Missed!";
+                            } else {
+                                x = (int)Round((Animated.USER_FRAME_TOPLEFT_X + Animated.USER_FRAME_TOPRIGHT_X)/2 - Battle.SCREEN_WIDTH/2f, 0);
+                                y = (int)Round((Animated.USER_FRAME_TOPLEFT_Y + Animated.USER_FRAME_BOTTOMLEFT_Y)/2 - Battle.SCREEN_HEIGHT/2f + Animated.user.getHeight()/2f, 0);
+                                if(!Crit_Damage && Damage_received_effect <= 1) message = "Dodged!";
+                            }             
 
-                        Toast toast = Toast.makeText(context, message, Toast.LENGTH_SHORT);
-                        toast.setGravity(Gravity.CENTER, x, y);
-                        toast.setMargin(0, 0);
-                        toast.show();
+                            Toast toast = Toast.makeText(context, message, Toast.LENGTH_SHORT);
+                            toast.setGravity(Gravity.CENTER, x, y);
+                            toast.setMargin(0, 0);
+                            toast.show();
+                        }
                     }
+
                     COLLISION_THREAD_RUNNING = false;
-                    return;
+                    return;                    
                 }
                 globalHandler.postDelayed(this, 0);
             }
         };
         
+        isFrozen();
         globalHandler.postDelayed(thread, 0);
         COLLISION_THREAD_RUNNING = true;
     }
     
     private void backpedal(){
+        opponentInst.frozen = false; //Attack has finished @tp, unfreeze opponent
+        pauser = 0; //Reset freeze flag
+            
         globalHandler = new Handler();
         
         thread = new Runnable(){
             boolean x_exit = false, y_exit = false;
             
             public void run(){
-                if(attacker == 1){                    
-                    if(Round(Animated.OPPONENT_FRAME_BOTTOMLEFT_X + incX + Animated.opponent.getWidth()/2.0, 0) >= Round(BOTTOMLEFT_X + Animated.opponent.getWidth()/2.0, 0)){
-                        incX -= (int)Round((Animated.OPPONENT_FRAME_BOTTOMLEFT_X + incX + Animated.opponent.getWidth()/2.0) - (BOTTOMLEFT_X + Animated.opponent.getWidth()/2.0), 0);
-                        Animated.opponent_shift_x += incX;
-                        x_exit = true;
-                    }
-                    /* opponent_shift_x is already negative to start off w/, 
-                     * relative to its initial stance, (-n, 0] */
-                    if(!x_exit) Animated.opponent_shift_x += incX;
+                if(!isFROZEN_THREAD_RUNNING){ //Then contender !isFrozen
+                    if(attacker == 1){                    
+                        if(Round(Animated.OPPONENT_FRAME_BOTTOMLEFT_X + incX + Animated.opponent.getWidth()/2.0, 0) >= Round(BOTTOMLEFT_X + Animated.opponent.getWidth()/2.0, 0)){
+                            incX -= (int)Round((Animated.OPPONENT_FRAME_BOTTOMLEFT_X + incX + Animated.opponent.getWidth()/2.0) - (BOTTOMLEFT_X + Animated.opponent.getWidth()/2.0), 0);
+                            Animated.opponent_shift_x += incX;
+                            x_exit = true;
+                        }
+                        /* opponent_shift_x is already negative to start off width/, 
+                         * relative to its initial stance, (-n, 0] */
+                        if(!x_exit) Animated.opponent_shift_x += incX;
 
-                    if(Round(Animated.OPPONENT_FRAME_BOTTOMLEFT_Y + (-1*incY), 0) <= Round(BOTTOMLEFT_Y, 0)){
-                        incY -= (int)Round(BOTTOMLEFT_Y - (Animated.OPPONENT_FRAME_BOTTOMLEFT_Y + (-1*incY)), 0); 
-                        Animated.opponent_shift_y += (-1*incY);
-                        y_exit = true;
-                    }
+                        if(Round(Animated.OPPONENT_FRAME_BOTTOMLEFT_Y + (-1*incY), 0) <= Round(BOTTOMLEFT_Y, 0)){
+                            incY -= (int)Round(BOTTOMLEFT_Y - (Animated.OPPONENT_FRAME_BOTTOMLEFT_Y + (-1*incY)), 0); 
+                            Animated.opponent_shift_y += (-1*incY);
+                            y_exit = true;
+                        }
 
-                    //opponent_shift_y, (+n, 0]
-                    if(!y_exit) Animated.opponent_shift_y += (-1*incY);
-                    
-                    Battle.text.setText("Opponent_shift_x: " + Animated.opponent_shift_x + " | incX: " + incX + " | Opponent_shift_y: " + Animated.opponent_shift_y + " | incY: " + incY);
-                    if(x_exit && y_exit){ //then, it is acceptable to leave thread
-                        Animated.opponent_shift_x = 0; //Ensures proper reset
-                        Animated.opponent_shift_y = 0; //Ensures proper reset
-                        BACKPEDAL_THREAD_RUNNING = false; //Release main thread lock
-                        return;
-                    }
-                } else {
-                    if(Round(Animated.USER_FRAME_BOTTOMLEFT_X - incX + Animated.user.getWidth()/2.0, 0) <= Round(BOTTOMLEFT_X + Animated.user.getWidth()/2.0, 0)){
-                        incX -= (int)Round((BOTTOMLEFT_X + Animated.user.getWidth()/2.0) - (Animated.USER_FRAME_BOTTOMLEFT_X - incX + Animated.user.getWidth()/2.0), 0);
-                        Animated.user_shift_x -= incX;
-                        x_exit = true;
-                    }
-                    
-                    if(!x_exit) Animated.user_shift_x -= incX;
+                        //opponent_shift_y, (+n, 0]
+                        if(!y_exit) Animated.opponent_shift_y += (-1*incY);
 
-                    if(Round(Animated.USER_FRAME_BOTTOMLEFT_Y - (-1*incY), 0) >= Round(BOTTOMLEFT_Y, 0)){
-                        incY -= (int)Round(BOTTOMLEFT_Y - (Animated.USER_FRAME_BOTTOMLEFT_Y - (-1*incY)), 0);
-                        Animated.user_shift_y -= (-1*incY);
-                        y_exit = true;
-                    }
+                        Battle.text.setText("Opponent_shift_x: " + Animated.opponent_shift_x + " | incX: " + incX + " | Opponent_shift_y: " + Animated.opponent_shift_y + " | incY: " + incY);
+                        if(x_exit && y_exit){ //then, it is acceptable to leave thread
+                            Animated.opponent_shift_x = 0; //Ensures proper reset
+                            Animated.opponent_shift_y = 0; //Ensures proper reset
+                            BACKPEDAL_THREAD_RUNNING = false; //Release main thread lock                            
+                            return;
+                        }
+                    } else {
+                        if(Round(Animated.USER_FRAME_BOTTOMLEFT_X - incX + Animated.user.getWidth()/2.0, 0) <= Round(BOTTOMLEFT_X + Animated.user.getWidth()/2.0, 0)){
+                            incX -= (int)Round((BOTTOMLEFT_X + Animated.user.getWidth()/2.0) - (Animated.USER_FRAME_BOTTOMLEFT_X - incX + Animated.user.getWidth()/2.0), 0);
+                            Animated.user_shift_x -= incX;
+                            x_exit = true;
+                        }
 
-                    if(!y_exit) Animated.user_shift_y -= (-1*incY);
+                        if(!x_exit) Animated.user_shift_x -= incX;
 
-                    Battle.text.setText("User_shift_x: " + Animated.user_shift_x + " | incX: " + incX + " | User_shift_y: " + Animated.user_shift_y + " | incY: " + incY);
-                    if(x_exit && y_exit){ //then, it is acceptable to leave thread
-                        Animated.user_shift_x = 0; //Ensures proper reset
-                        Animated.user_shift_y = 0; //Ensures proper reset
-                        BACKPEDAL_THREAD_RUNNING = false; //Release main thread lock
-                        return;
+                        if(Round(Animated.USER_FRAME_BOTTOMLEFT_Y - (-1*incY), 0) >= Round(BOTTOMLEFT_Y, 0)){
+                            incY -= (int)Round(BOTTOMLEFT_Y - (Animated.USER_FRAME_BOTTOMLEFT_Y - (-1*incY)), 0);
+                            Animated.user_shift_y -= (-1*incY);
+                            y_exit = true;
+                        }
+
+                        if(!y_exit) Animated.user_shift_y -= (-1*incY);
+
+                        Battle.text.setText("User_shift_x: " + Animated.user_shift_x + " | incX: " + incX + " | User_shift_y: " + Animated.user_shift_y + " | incY: " + incY);
+                        if(x_exit && y_exit){ //then, it is acceptable to leave thread
+                            Animated.user_shift_x = 0; //Ensures proper reset
+                            Animated.user_shift_y = 0; //Ensures proper reset
+                            BACKPEDAL_THREAD_RUNNING = false; //Release main thread lock
+                            return;
+                        }
                     }
-                }
                 
-                tracking(true); //Always true in this context
+                    tracking(true); //Always true in this context
+                    isFrozen(); //Check to see if contender itself isFrozen
+                }
                 globalHandler.postDelayed(this, 0);
             }
         };
                 
         tracking(true); //Always true in this context
+        isFrozen(); //Check to see if contender itself isFrozen
         globalHandler.postDelayed(thread, 0);
         BACKPEDAL_THREAD_RUNNING = true;
     }
     
     private void shift_LorR(int shift){
         if(TERMINATED_SEQUENCE) return;
-        
+                
         incX = shift;
         globalHandler = new Handler();
         
         thread = new Runnable(){
             int cnt = 0;
+            
             public void run(){
-                if(cnt < incX && incX > 0){
-                    if(attacker == 1) Animated.opponent_shift_x -= 25;
-                    else Animated.user_shift_x += 25/*px*/;
-                    cnt += 25/*px*/;
-                } else if(cnt > incX && incX < 0){
-                    if(attacker == 1) Animated.opponent_shift_x += 25;
-                    else Animated.user_shift_x -= 25/*px*/;
-                    cnt -= 25/*px*/;
-                } else {
-                    SHIFT_LorR_THREAD_RUNNING = false;
-                    return;
+                if(!isFROZEN_THREAD_RUNNING){
+                    if(cnt < incX && incX > 0){
+                        if(attacker == 1) Animated.opponent_shift_x -= 25;
+                        else Animated.user_shift_x += 25/*px*/;
+                        cnt += 25/*px*/;
+                    } else if(cnt > incX && incX < 0){
+                        if(attacker == 1) Animated.opponent_shift_x += 25;
+                        else Animated.user_shift_x -= 25/*px*/;
+                        cnt -= 25/*px*/;
+                    } else {
+                        SHIFT_LorR_THREAD_RUNNING = false;
+                        return;
+                    }
+                    
+                    /* If executed, its the case where its opponent has frozen contender's 
+                     * movements while this thread was running. Start another isFrozen check */
+                    if(frozen) isFrozen(); 
                 }
-                
                 Battle.text.setText("Count: " + cnt + " | incX: " + incX + " | Sound count: " + soundByteCnt);
                 globalHandler.postDelayed(this, 0);
             }
         };
         
+        isFrozen(); //Start self-check before this thread executes
         globalHandler.postDelayed(thread, 0);
         SHIFT_LorR_THREAD_RUNNING = true;
     }
@@ -395,34 +459,40 @@ public class Motion {
             int Y = originY; // Y-origin
             
             public void run(){
-                if(theta - STEP*ARC_RATE/*[0°..180°]*/ <= Math.PI /* a.k.a (theta*180/Math.PI) <= 180° */){ // Half arc
-                    if(displayEvent){
-                        if(Round(theta*180/Math.PI, 0) == 90/*°*/ || Round(theta*180/Math.PI, 0) == 180/*°*/){
-                            setAttackSprite(move[1], (attacker == 1));
-                            setAttackFrontside();
+                if(!isFROZEN_THREAD_RUNNING){
+                    if(theta - STEP*ARC_RATE/*[0°..180°]*/ <= Math.PI /* a.k.a (theta*180/Math.PI) <= 180° */){ // Half arc
+                        if(displayEvent){
+                            if(Round(theta*180/Math.PI, 0) == 90/*°*/ || Round(theta*180/Math.PI, 0) == 180/*°*/){
+                                setAttackSprite(move[1], (attacker == 1));
+                                setAttackFrontside();
+                            }
                         }
-                    }
-                    
-                    if(attacker == 1){
-                        Animated.opponent_shift_x = (int)Round((a*Math.cos(Math.PI + theta) + X) - (Battle.SCREEN_WIDTH*5/6.0 - Animated.opponent.getWidth()/2.0)*Animated.OPPONENT_PLACEMENT_X, 0);
-                        Animated.opponent_shift_y = (int)Round((b*Math.sin(-theta) + Y) - (Battle.SCREEN_HEIGHT/3.0 + Animated.opponent.getHeight()/2.0)*Animated.OPPONENT_PLACEMENT_Y, 0);
-                        Battle.text.setText("Opponent_BL-X: " + Animated.OPPONENT_FRAME_BOTTOMLEFT_X + " | Shift_x: " + Animated.opponent_shift_x + " | Opponent_BL-Y: " + Animated.OPPONENT_FRAME_BOTTOMLEFT_Y + " | Shift_y: " + Animated.opponent_shift_y);
+
+                        if(attacker == 1){
+                            Animated.opponent_shift_x = (int)Round((a*Math.cos(Math.PI + theta) + X) - (Battle.SCREEN_WIDTH*5/6.0 - Animated.opponent.getWidth()/2.0)*Animated.OPPONENT_PLACEMENT_X, 0);
+                            Animated.opponent_shift_y = (int)Round((b*Math.sin(-theta) + Y) - (Battle.SCREEN_HEIGHT/3.0 + Animated.opponent.getHeight()/2.0)*Animated.OPPONENT_PLACEMENT_Y, 0);
+                            Battle.text.setText("Opponent_BL-X: " + Animated.OPPONENT_FRAME_BOTTOMLEFT_X + " | Shift_x: " + Animated.opponent_shift_x + " | Opponent_BL-Y: " + Animated.OPPONENT_FRAME_BOTTOMLEFT_Y + " | Shift_y: " + Animated.opponent_shift_y);
+                        } else {
+                            Animated.user_shift_x = (int)Round((a*Math.cos(theta) + X) - (Battle.SCREEN_WIDTH/6.0 - Animated.user.getWidth()/2.0)*Animated.USER_PLACEMENT_X, 0);
+                            Animated.user_shift_y = (int)Round((b*Math.sin(-theta) + Y) - (Battle.SCREEN_HEIGHT*2/3.0 + Animated.user.getHeight()/2.0)*Animated.USER_PLACEMENT_Y, 0);
+                            Battle.text.setText("User_BL-X: " + Animated.USER_FRAME_BOTTOMLEFT_X + " | Shift_x: " + Animated.user_shift_x + " | User_BL-Y: " + Animated.USER_FRAME_BOTTOMLEFT_Y + " | Shift_y: " + Animated.user_shift_y);
+                        }
+
+                        theta += STEP*ARC_RATE; /* Add STEP to theta */
                     } else {
-                        Animated.user_shift_x = (int)Round((a*Math.cos(theta) + X) - (Battle.SCREEN_WIDTH/6.0 - Animated.user.getWidth()/2.0)*Animated.USER_PLACEMENT_X, 0);
-                        Animated.user_shift_y = (int)Round((b*Math.sin(-theta) + Y) - (Battle.SCREEN_HEIGHT*2/3.0 + Animated.user.getHeight()/2.0)*Animated.USER_PLACEMENT_Y, 0);
-                        Battle.text.setText("User_BL-X: " + Animated.USER_FRAME_BOTTOMLEFT_X + " | Shift_x: " + Animated.user_shift_x + " | User_BL-Y: " + Animated.USER_FRAME_BOTTOMLEFT_Y + " | Shift_y: " + Animated.user_shift_y);
+                        ELLIPSE_LorR_THREAD_RUNNING = false;
+                        return;                   
                     }
-                    
-                    theta += STEP*ARC_RATE; /* Add STEP to theta */
-                } else {
-                    ELLIPSE_LorR_THREAD_RUNNING = false;
-                    return;                   
+                    /* If executed, its the case where its opponent has frozen contender's 
+                     * movements while this thread was running. Start another isFrozen check.
+                     * NOTE2SELF: Should not be possible, considering that if this particular
+                     * motion is executed, opponeent should already be frozen */
+                    if(frozen) isFrozen();
                 }
-                
                 globalHandler.postDelayed(this, 0);
             }
         };
-        
+        isFrozen(); //Start self-check before this thread executes
         globalHandler.postDelayed(thread, 0);
         ELLIPSE_LorR_THREAD_RUNNING = true;
     }
@@ -469,12 +539,15 @@ public class Motion {
         }
     }
     
-    private void setAttackSprite(String token, boolean mirror){       
+    private void setAttackSprite(String token, boolean mirror){
         try {
             stream = asset.open("moves/" + token.toLowerCase() + "/frame_" + ((mirror)? '-' : "") + i++ + ".png");
-            Opponent_Space_Options = new Options();
+            Options Opponent_Space_Options = new Options();
             Bitmap unscaledBitmap = BitmapFactory.decodeStream(stream, null, Opponent_Space_Options);
-            attackSprite = Bitmap.createScaledBitmap(unscaledBitmap, (int)Round(Opponent_Space_Options.outWidth*(Animated.scaleFactor), 0), (int)Round(Opponent_Space_Options.outHeight*Animated.scaleFactor, 0), true);
+            attackSprite = Bitmap.createScaledBitmap(unscaledBitmap, 
+                    (int)Round(Opponent_Space_Options.outWidth*(Animated.scaleFactor + /*1),0),//*/((attacker == 1)? Animated.u_depth : Animated.o_depth)), 0), 
+                    (int)Round(Opponent_Space_Options.outHeight*(Animated.scaleFactor + /*1),0),//*/((attacker == 1)? Animated.u_depth : Animated.o_depth)), 0), 
+                    true);
         } catch(Exception e) {
             Battle.text.setText(e.toString());
         }           
@@ -483,22 +556,23 @@ public class Motion {
     private void hit(){
         if(TERMINATED_SEQUENCE) return;
         
-        clearAttackFrontside();
+        clearAttackFrontside(); //Of opponent
         
         if(damageAmount > 0){
-            i = 0;
+            i = 0; //Reset sprite frame variable
             setAttackSprite("hit", false);
             setAttackFrontside();
 
             Handler hitHandler = new Handler();
 
-            thread = new Runnable(){
+            /* Runnable waits 1/3s before executing simple statement */
+            Runnable hitThread = new Runnable(){
                 public void run(){
                     clearAttackFrontside();
                 }
             };
 
-            hitHandler.postDelayed(thread, 333);
+            hitHandler.postDelayed(hitThread, 333);
         }
     }
     
@@ -508,26 +582,24 @@ public class Motion {
         if(damageAmount > 0){
             i = 0; //Reset i
             setAttackSprite("null", false);
-            attackSprite = decodeSubsetBitmapFromSprite(attackSprite,
-                    (attacker == 1)? Animated.user.getWidth() : Animated.opponent.getWidth(),
-                    (attacker == 1)? Animated.user.getHeight() : Animated.opponent.getHeight());
-
+            decodeNullFieldBitmapFromSprite();
+            
             globalHandler = new Handler();
 
-            thread = new Runnable(){
+            /* Runnable competes with onDraw() in Animated, to constantly overrideSprite */
+            Runnable blinkThread = new Runnable(){
                 Handler blinkHandler = globalHandler;
                 public void run(){
                     overrideSprite();
 
-                    if(DELAY_THREAD_RUNNING) blinkHandler.postDelayed(this, 333);
+                    if(DELAY_THREAD_RUNNING) blinkHandler.postDelayed(this, 333);                        
                     else BLINK_THREAD_RUNNING = false;
-                        
                 }
             };
 
-            delay(3000);
+            delay();
             BLINK_THREAD_RUNNING = true;
-            globalHandler.postDelayed(thread, 0);
+            globalHandler.postDelayed(blinkThread, 0);
         }
     }
     
@@ -536,11 +608,14 @@ public class Motion {
         
         globalHandler = new Handler();
         damageAmount = Damage.Calculator(move, attacker);
-            
-        thread = new Runnable(){
+        opponentInst.Damage_received_effect = Damage.effect;
+        opponentInst.Crit_Damage = Damage.IsaCrit;
+        
+        Runnable damageThread = new Runnable(){
             Handler ref = globalHandler;
-            float limit = (attacker == 1)? Animated.user_current_HP - damageAmount
-                    : ((Animated.opponent_current_HP - damageAmount)/Animated.opponent_pokemon_HP)*100/*percentage*/;
+            float amount = damageAmount, //Local var to deduct damage
+            limit = (attacker == 1)? Animated.user_current_HP - amount
+                    : ((Animated.opponent_current_HP - amount)/Animated.opponent_pokemon_HP)*100/*percentage*/;
             
             public void run(){
 //                Battle.text.setText("(" + limit + " < " + (((Animated.opponent_pokemon_HP*(1 - Animated.opponent_damage_percentage))/Animated.opponent_pokemon_HP)*100) + 
@@ -550,39 +625,37 @@ public class Motion {
 //                        " | STAB: " + Damage.s + " | Effectiveness: " + Damage.effect + 
 //                        " | Critical: " + Damage.c + " | Random: " + Damage.r);
                 
-                if(damageAmount > 0){
+                if(amount > 0){
                     if(attacker == 1){
                         Animated.user_damage_percentage += 0.01f;
                         if(limit < Animated.user_pokemon_HP*(1 - Animated.user_damage_percentage)) ref.postDelayed(this, 0);
-                        else DAMAGE_THREAD = false;                        
+                        else DAMAGE_THREAD_RUNNING = false;                        
                     } else if(attacker == 2) {
                         Animated.opponent_damage_percentage += 0.01f;
                         if(limit < (((Animated.opponent_pokemon_HP*(1 - Animated.opponent_damage_percentage))/Animated.opponent_pokemon_HP)*100)) ref.postDelayed(this, 0);
-                        else DAMAGE_THREAD = false;                        
+                        else DAMAGE_THREAD_RUNNING = false;                        
                     }
-                } else DAMAGE_THREAD = false;                                    
+                } else DAMAGE_THREAD_RUNNING = false;                                    
             }
         };
         
-        globalHandler.postDelayed(thread, 0);
-        DAMAGE_THREAD = true;
+        globalHandler.postDelayed(damageThread, 0);
+        DAMAGE_THREAD_RUNNING = true;
     }
     
-    private void delay(final int millisecs){        
-        globalHandler = new Handler();
-            
-        thread = new Runnable(){
-            Handler timer = globalHandler;
-            
+    private void delay(){
+        Thread delayThread = new Thread(){
             @Override
             public void run(){
-                for(int i = 0; i < millisecs; i++){}
-                
-                DELAY_THREAD_RUNNING = false; 
+                try {
+                    Thread.sleep(TIME);
+                    DELAY_THREAD_RUNNING = false;
+                } catch (InterruptedException e) {
+                } 
             }
         };
         
-        globalHandler.postDelayed(thread, 0);
+        delayThread.start();        
         DELAY_THREAD_RUNNING = true;
     }
     
@@ -630,7 +703,7 @@ public class Motion {
     
     private void displayMessage(){
         if(TERMINATED_SEQUENCE) return;
-        
+        //Normal damage, neither super (in)effective, display nothing
         if(!Damage.IsaCrit && Damage.effect == 1) return;
         
         String message = "";
@@ -656,8 +729,51 @@ public class Motion {
         toast.show();
     }
     
-    private Bitmap decodeSubsetBitmapFromSprite(Bitmap bmp, int width, int height){
-        return Bitmap.createBitmap(bmp, 0/*starting-cnt TL*/, 0/*starting-y TL*/, width/*ending-cnt BR*/, height/*ending-y BR*/);
+    private void decodeNullFieldBitmapFromSprite(){
+        globalHandler = new Handler();
+
+        Runnable decoderThread = new Runnable(){
+            byte opponentDepth = (attacker == 1)? Animated.u_depth : Animated.o_depth;
+            int width = (attacker == 1)? Animated.user.getWidth() : Animated.opponent.getWidth(),
+                height = (attacker == 1)? Animated.user.getHeight() : Animated.opponent.getHeight();
+            Bitmap bmp = Bitmap.createBitmap(attackSprite, 0/*starting-cnt TL*/, 0/*starting-y TL*/, width/*ending-cnt BR*/, height/*ending-y BR*/);
+            Handler decoder = globalHandler;
+            
+            public void run(){
+                if((attacker == 2 && Animated.o_depth != opponentDepth) || (attacker == 1 && Animated.u_depth != opponentDepth)){
+                    setAttackSprite("null", false);
+                    opponentDepth = (attacker == 1)? Animated.u_depth : Animated.o_depth;
+                    
+                    if(attacker == 1){
+                        if(opponentDepth == 0){
+                            width = Animated.user_farWidth;
+                            height = Animated.user_farHeight;
+                        } else {
+                            width = Animated.user_closeWidth;
+                            height = Animated.user_closeHeight;
+                        }
+                    } else {
+                        if(opponentDepth == 0){
+                            width = Animated.opponent_farWidth;
+                            height = Animated.opponent_farHeight;
+                        } else {
+                            width = Animated.opponent_closeWidth;
+                            height = Animated.opponent_closeHeight;
+                        }
+                    }
+                    
+                    bmp = Bitmap.createScaledBitmap(attackSprite, width, height, false);
+                }
+                
+                attackSprite = bmp;
+
+                if(BLINK_THREAD_RUNNING) decoder.postDelayed(this, 333);                        
+                else DECODER_THREAD_RUNNING = false;
+            }
+        };
+        
+        DECODER_THREAD_RUNNING = true;
+        globalHandler.postDelayed(decoderThread, 0);
     }
     
     private void refresh(){
@@ -667,26 +783,26 @@ public class Motion {
             Handler refreshHandler = globalHandler;
             
             public void run(){
-                if(!threadRunning() && !DAMAGE_THREAD){
-                    MOVE_THREAD_RUNNING = false;
-                    COLLISION_THREAD_RUNNING = false;
-                    SHIFT_LorR_THREAD_RUNNING = false;
-                    ELLIPSE_LorR_THREAD_RUNNING = false;
-                    BLINK_THREAD_RUNNING = false;
-                    DELAY_THREAD_RUNNING = false;
+                if(!threadRunning()){ //Should always be TRUE @tp, but added for additional security
                     TERMINATED_SEQUENCE = false;
                     damageAmount = 0f;
                     i = 0;
                     soundByteCnt = 0;
-
+                    Damage_received_effect = 0;
+                    Crit_Damage = false;
+                    opponentInst.frozen = false;
+                    pauser = 0;
+                    
                     if(attacker == 1){
+                        /* Reset exterior class variables */
                         Battle.o_actChosen = false;
                         Animated.opponent_speed_inc = 0;
                         Animated.opponent_speedbar = 0;
                         Animated.opponent_speedbar_percentage = 0;
                         Animated.opponent_actReady = false;
-                        Animated.OPPONENT_SPEED_LOCK = false;
-                    } else {
+                        Animated.OPPONENT_SPEED_LOCK = false;                            
+                    } else {                        
+                        /* Reset exterior class variables */
                         Battle.u_actChosen = false;
                         Animated.user_speed_inc = 0;
                         Animated.user_speedbar = 0;
@@ -694,7 +810,7 @@ public class Motion {
                         Animated.user_actReady = false;
                         Animated.USER_SPEED_LOCK = false;
                     }
-
+                    
                     return;
                 }
                 
@@ -723,17 +839,22 @@ public class Motion {
     }
     
     private void sequence(String token){
-        if(token.equals("0")) move();
-        else if(token.equals("1")) setAttackSprite(move[1], (attacker == 1));
-        else if(token.equals("2")) shift_LorR((Integer.parseInt(formula(token, move[0], null))));
-        else if(token.equals("3")) playSoundEffect(Integer.parseInt(formula(token, move[0], soundByteCnt++)));
-        else if(token.equals("4")) setAttackFrontside();
-        else if(token.equals("5")) ellipseLorR(Integer.parseInt(formula(token, move[0], 0)), Integer.parseInt(formula(token, move[0], 1)), Boolean.parseBoolean(formula(token, move[0], 2)));
-        else if(token.equals("6")) damage();
-        else if(token.equals("7")) hit();
-        else if(token.equals("8")) blink();
-        else if(token.equals("9")) displayMessage();
-        else if(token.equals("10")) backpedal();
+        if(!frozen){
+            if(token.equals("0")) move();
+            else if(token.equals("1")) setAttackSprite(move[1], (attacker == 1));
+            else if(token.equals("2")) shift_LorR((Integer.parseInt(formula(token, move[0], null))));
+            else if(token.equals("3")) playSoundEffect(Integer.parseInt(formula(token, move[0], soundByteCnt++)));
+            else if(token.equals("4")) setAttackFrontside();
+            else if(token.equals("5")) ellipseLorR(Integer.parseInt(formula(token, move[0], 0)), Integer.parseInt(formula(token, move[0], 1)), Boolean.parseBoolean(formula(token, move[0], 2)));
+            else if(token.equals("6")) damage();
+            else if(token.equals("7")) hit();
+            else if(token.equals("8")) blink();
+            else if(token.equals("9")) displayMessage();
+            else if(token.equals("10")) backpedal();
+        } else {
+            INDEX--; //Decrement INDEX to try again
+            isFrozen(); //start isFozen check
+        } 
     }
     
     private String formula(String seqNo, String moveNo, Integer paramNo){
@@ -750,7 +871,7 @@ public class Motion {
     
     private boolean threadRunning(){
         return (MOVE_THREAD_RUNNING == true || SHIFT_LorR_THREAD_RUNNING == true ||
-            ELLIPSE_LorR_THREAD_RUNNING == true || BACKPEDAL_THREAD_RUNNING == true ||
+            ELLIPSE_LorR_THREAD_RUNNING == true || //BACKPEDAL_THREAD_RUNNING == true ||
             COLLISION_THREAD_RUNNING == true);
     }
 }

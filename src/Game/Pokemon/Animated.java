@@ -43,6 +43,7 @@ public class Animated extends View {
             opponent_frontSpace, user_frontSpace, user_backSpace;
     protected static boolean opponent_actReady = false, user_actReady = false, 
             USER_SPEED_LOCK = false, OPPONENT_SPEED_LOCK = false;
+    protected static byte o_depth, u_depth;
     protected static double HEALTH_BAR_LENGTH, OPPONENT_FRAME_BOTTOMLEFT_X, 
             OPPONENT_FRAME_BOTTOMLEFT_Y, OPPONENT_FRAME_BOTTOMRIGHT_X, 
             OPPONENT_FRAME_BOTTOMRIGHT_Y, OPPONENT_FRAME_TOPLEFT_X, 
@@ -57,11 +58,12 @@ public class Animated extends View {
     protected static float opponent_pokemon_HP = 1, opponent_current_HP, user_pokemon_HP, user_current_HP;
     protected static float scaleFactor, opponent_damage_percentage = 0, user_damage_percentage = 0, 
             opponent_speedbar, user_speedbar, commandEnd_startAct_x, speedbar_start_x, speedbar_end_x, AVG_SPEED;
-    
     /* All _shifts_ should be ints because they reference a physical change in 
      * sprite positioning/orientation, whereby it cannot be defined by a fraction */
     protected static int user_shift_x = 0, opponent_shift_x = 0,
-            user_shift_y = 0, opponent_shift_y = 0;
+            user_shift_y = 0, opponent_shift_y = 0, user_closeHeight, opponent_closeHeight,
+            user_closeWidth, opponent_closeWidth, user_farHeight, opponent_farHeight,
+            user_farWidth, opponent_farWidth;
     protected static short opponent_pokemon_lvl = 0, user_pokemon_lvl;
     
     public Animated(Context context){
@@ -186,13 +188,13 @@ public class Animated extends View {
         else temp = opponent_pokemon.substring(0, 1).toUpperCase() + opponent_pokemon.substring(1);
         
         try {
-            if(!(temp.equals("Nidoran♀") || temp.equals("Nidoran♂"))) temp += " | " + Battle.o_pokemon.gender;
+            if(!(temp.equals("Nidoran♀") || temp.equals("Nidoran♂")) && Battle.o_pokemon.gender != '\0') temp += " | " + Battle.o_pokemon.gender;
         } catch(NullPointerException n){}
         
         temp += " | LVL" + opponent_pokemon_lvl;
 
         //Draw opponent name text
-        if(!(opponent_pokemon.equals("nidoran♀") || opponent_pokemon.equals("nidoran♂"))){
+        if(!(opponent_pokemon.equals("nidorang") || opponent_pokemon.equals("nidoranb")) && Battle.o_pokemon.gender != '\0'){
             canvas.drawText(temp,
                 0, //Beginning of string
                 opponent_pokemon.length() + 2, //end of opponent name + space + |
@@ -295,13 +297,13 @@ public class Animated extends View {
         else temp = user_pokemon.substring(0, 1).toUpperCase() + user_pokemon.substring(1);
         
         try {
-            if(!(temp.equals("Nidoran♀") || temp.equals("Nidoran♂"))) temp += " | " + Battle.u_pokemon.gender;
+            if(!(temp.equals("Nidoran♀") || temp.equals("Nidoran♂")) && Battle.u_pokemon.gender != '\0') temp += " | " + Battle.u_pokemon.gender;
         } catch(NullPointerException n){}
               
         temp += " | LVL" + user_pokemon_lvl;
         
         //Draw user name text        
-        if(!(user_pokemon.equals("nidoran♀") || user_pokemon.equals("nidoran♂"))){
+        if(!(user_pokemon.equals("nidorang") || user_pokemon.equals("nidoranb")) && Battle.u_pokemon.gender != '\0'){
             canvas.drawText(temp,
                 0, //Beginning of string
                 user_pokemon.length() + 2, //end of user name + space + |
@@ -694,9 +696,9 @@ public class Animated extends View {
         Bitmap unscaledBitmap;
         
         if(contender == 1){
-            byte depth = ((OPPONENT_FRAME_BOTTOMLEFT_Y - OPPONENT_FRAME_TOPLEFT_Y)/2 + OPPONENT_FRAME_TOPLEFT_Y <= Battle.SCREEN_HEIGHT*5/12.0)? (byte)0 : (byte)1;
+            o_depth = ((OPPONENT_FRAME_BOTTOMLEFT_Y - OPPONENT_FRAME_TOPLEFT_Y)/2 + OPPONENT_FRAME_TOPLEFT_Y <= Battle.SCREEN_HEIGHT*11/24.0)? (byte)0 : (byte)1;
             unscaledBitmap = BitmapFactory.decodeStream(stream, null, Opponent_Options);
-            opponent = Bitmap.createScaledBitmap(unscaledBitmap, (int)Round(Opponent_Options.outWidth*(scaleFactor + depth), 0), (int)Round(Opponent_Options.outHeight*(scaleFactor + depth), 0), true);
+            opponent = Bitmap.createScaledBitmap(unscaledBitmap, (int)Round(Opponent_Options.outWidth*(scaleFactor + o_depth), 0), (int)Round(Opponent_Options.outHeight*(scaleFactor + o_depth), 0), true);
             
             try { // Set opponent icon for speed bar
                 stream = asset.open("sprites/" + opponent_pokemon + "/front/frame_0.png");
@@ -710,11 +712,19 @@ public class Animated extends View {
                 } catch(Exception e2) {
                     
                 }   
-            }            
+            } finally {
+                if(o_depth == 0){
+                    opponent_farHeight = opponent.getHeight();
+                    opponent_farWidth = opponent.getWidth();
+                } else {
+                    opponent_closeHeight = opponent.getHeight();
+                    opponent_closeWidth = opponent.getWidth();
+                }
+            }           
         } else {
-            byte depth = ((USER_FRAME_BOTTOMLEFT_Y - USER_FRAME_TOPLEFT_Y)/2 + USER_FRAME_TOPLEFT_Y <= Battle.SCREEN_HEIGHT*7/12.0)? (byte)0 : (byte)1;
+            u_depth = ((USER_FRAME_BOTTOMLEFT_Y - USER_FRAME_TOPLEFT_Y)/2 + USER_FRAME_TOPLEFT_Y <= Battle.SCREEN_HEIGHT*13/24.0)? (byte)0 : (byte)1;
             unscaledBitmap = BitmapFactory.decodeStream(stream, null, User_Options);
-            user = Bitmap.createScaledBitmap(unscaledBitmap, (int)Round(User_Options.outWidth*(scaleFactor + depth), 0), (int)Round(User_Options.outHeight*(scaleFactor + depth), 0), true);
+            user = Bitmap.createScaledBitmap(unscaledBitmap, (int)Round(User_Options.outWidth*(scaleFactor + u_depth), 0), (int)Round(User_Options.outHeight*(scaleFactor + u_depth), 0), true);
             
             try { // Set user icon for speed bar
                 stream = asset.open("sprites/" + user_pokemon + "/front/frame_0.png");
@@ -728,7 +738,15 @@ public class Animated extends View {
                 } catch(Exception e2) {
                     
                 }    
-            }
+            } finally {
+                if(u_depth == 0){
+                    user_farHeight = user.getHeight();
+                    user_farWidth = user.getWidth();
+                } else {
+                    user_closeHeight = user.getHeight();
+                    user_closeWidth = user.getWidth();
+                }
+            }    
         }
     }
 

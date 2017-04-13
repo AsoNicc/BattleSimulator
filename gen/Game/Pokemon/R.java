@@ -43,11 +43,12 @@ public final class R {
         public static final int ice_bubble=0x7f02001a;
         public static final int normal_bubble=0x7f02001b;
         public static final int poison_bubble=0x7f02001c;
-        public static final int psychic_bubble=0x7f02001d;
-        public static final int rock_bubble=0x7f02001e;
-        public static final int silver_bubble=0x7f02001f;
-        public static final int steel_bubble=0x7f020020;
-        public static final int water_bubble=0x7f020021;
+        public static final int pressed=0x7f02001d;
+        public static final int psychic_bubble=0x7f02001e;
+        public static final int rock_bubble=0x7f02001f;
+        public static final int silver_bubble=0x7f020020;
+        public static final int steel_bubble=0x7f020021;
+        public static final int water_bubble=0x7f020022;
     }
     public static final class id {
         public static final int Animated=0x7f070002;

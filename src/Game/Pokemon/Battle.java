@@ -9,11 +9,12 @@ import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.LayerDrawable;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.Html;
-import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -47,7 +48,7 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
             killHold = false, newTouch = true, touchClear = true, touched_user, touched_opponent;
     private Button pokeball, buff, cheer, close, moves, forfeit, move1, move2, move3, move4, pkmn1, pkmn2, pkmn3, pkmn4, pkmn5, pkmn6, swap;
     private Configuration config;
-    protected static Context context;
+    private final Drawable layers[] = new Drawable[2];
     protected static float scaledDensity;
     private Float delta_x, delta_y, event_x, event_y, x, y;
     private FrameLayout layout;
@@ -55,6 +56,7 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
     private ImageView viewer;
     private int frame, index;
     private Integer lastPos = -1;
+    private LayerDrawable layeredDrawable;
     private static int BACKGROUND_ID, CHEER_ID, SWAP_AND_FORFEIT_ID, BUFF_ID, FORFEIT_ID, MOVES_AND_BUFF_ID, MOVES_ID, SWAP_ID;
     private final int ANGLE = 45, BOUND = 75, BUTTONCLICK = R.raw.choose, MARGIN = 25, MOVES_ROW1_ID = 2131165202, 
             MOVES_ROW2_ID = 2131165203, TEAM_ROW1_ID = 2131165204, TEAM_ROW2_ID = 2131165205, 
@@ -65,7 +67,7 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
     private LinearLayout drawer;
     private final LinearLayout.LayoutParams FULL_MATCH_PARAMS = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
     private static MediaPlayer sfx;
-    private static Motion act, ai_act;
+    protected Motion act, ai_act;
     private static final Pokemon[] team = new Pokemon[6];
     private Pokemon temp;
     private final Random gen = new Random();
@@ -76,7 +78,9 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
             STATE_U_MAXSPEED = "u-speed", STATE_U_SPEEDSUM = "u-speed+", STATE_U_SPEEDPERCENT = "u-speed%",
             STATE_O_ACTIONREADY = "o-cmdEnd", STATE_U_ACTIONREADY = "u-cmdEnd";
     public static TextView text;
-    private static View vMoves, vSwap;
+    protected static String drawerState = "drawer-layout";
+    private WrappingSlidingDrawer handle;
+    private static View vMoves, vSwap, vCheer;
     
     @Override
     protected void onCreate(Bundle savedInstanceState){
@@ -86,7 +90,8 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
             setContentView(root); //Sets view
 
             vMoves = root.findViewById(R.id.bMoves);
-            vSwap = root.findViewById(R.id.bSwap); 
+            vSwap = root.findViewById(R.id.bSwap);
+            vCheer = root.findViewById(R.id.bCheer); //temporary delete @ later time
             text = (TextView)findViewById(R.id.tvException); //Prep for debugging use
             
             /* Used in determining postions of sprites, and sprtie frames */
@@ -110,6 +115,8 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
             surface = new Animated(this);
             ai_act = new Motion(this, (byte)1);
             act = new Motion(this, (byte)2);
+            ai_act.setInst(act);
+            act.setInst(ai_act);
             
             /* Used to setup SharedPreferences, if it has not been set */
             SharedPreferences stat = getSharedPreferences("genOneBaseStatList", MODE_PRIVATE);
@@ -160,9 +167,9 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
             } else {
                 // Probably initialize members with default values for a new instance
                 team[0] = new Pokemon(this, (byte)5, Short.valueOf("35")); //I temporarily specified a lead
-                team[1] = new Pokemon(this);
-                team[2] = new Pokemon(this);
-                team[3] = new Pokemon(this);
+                team[1] = new Pokemon(this, (byte)5, Short.valueOf("6"));
+                team[2] = new Pokemon(this, (byte)5, Short.valueOf("18"));
+                team[3] = new Pokemon(this, (byte)5, Short.valueOf("146"));
                 team[4] = new Pokemon(this);
                 team[5] = new Pokemon(this);
                 u_pokemon = team[0];
@@ -290,12 +297,13 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         cheer = (Button)findViewById(R.id.bCheer);
         pokeball = (Button)findViewById(R.id.bHandle);
         drawer = (LinearLayout)findViewById(R.id.llDrawerContents);
+        handle = (WrappingSlidingDrawer)findViewById(R.id.WrappingSlidingDrawer);
         
         // Assign ids to Button variables
         moves = (Button)findViewById(R.id.bMoves);
         swap = (Button)findViewById(R.id.bSwap);
         buff = (Button)findViewById(R.id.bBuff);
-        forfeit = (Button)findViewById(R.id.bForfeit);
+        forfeit = (Button)findViewById(R.id.bForfeit);        
         
         // Hold Button & Layout id constants for reuse
         BACKGROUND_ID = R.id.ivBackground;
@@ -309,10 +317,25 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         
         // Set up onClick listeners
         cheer.setOnClickListener(this);
-        moves.setOnClickListener(this);
-        swap.setOnClickListener(this);
-        buff.setOnClickListener(this);
-        forfeit.setOnClickListener(this);        
+        // Set up onTouch listeners
+        handle.setOnTouchListener(new View.OnTouchListener(){
+            boolean init = false;
+            
+            private void initialize(){
+                config = getResources().getConfiguration();
+                moves.setOnTouchListener(newListener(1));
+                buff.setOnTouchListener(newListener(2));
+                swap.setOnTouchListener(newListener(3));
+                forfeit.setOnTouchListener(newListener(4));
+                init = true;
+            }
+            
+            public boolean onTouch(View v, MotionEvent event) {
+                if(!init) initialize();
+                handle = null;
+                return false;
+            }
+        });                   
         
         try { // Set up onTouch Listener
             viewer.setOnTouchListener(this);
@@ -326,6 +349,104 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
 //        startDrawerAnimation();
     }
 
+    private View.OnTouchListener newListener(final int num){
+        return (new View.OnTouchListener(){
+            private boolean init = false, moved = false;
+            private float deltaX, deltaY, init_x, init_y;
+            private int action, offset, THRESHOLD = 10;
+                
+            private void initialize(View v){
+                config = getResources().getConfiguration();
+                offset = (v.getId() == BUFF_ID && config.orientation == Configuration.ORIENTATION_LANDSCAPE)? 1 : 
+                        (v.getId() == SWAP_ID && config.orientation == Configuration.ORIENTATION_LANDSCAPE)? -1: 0;
+                init = true;
+            }
+            
+            public boolean onTouch(View v, MotionEvent event){
+                if(!init) initialize(v);
+                
+                action = event.getAction();
+                
+                if(action == MotionEvent.ACTION_DOWN){ // Initial touch
+                    init_x = event.getX();
+                    init_y = event.getY();
+                    
+                    drawer.removeAllViews();
+                    config = getResources().getConfiguration();
+    
+                    if(drawerState.equals("drawer-layout")){
+                        if(config.orientation == Configuration.ORIENTATION_LANDSCAPE) restoreDrawerLayoutLandscape(num + offset); 
+                        else restoreDrawerLayoutPortrait(num);
+                    } else if(drawerState.equals("moves-layout")){
+                        if(config.orientation == Configuration.ORIENTATION_LANDSCAPE) buildMovesLayoutLandscape(num); 
+                        else buildMovesLayoutPortrait(num);
+                    } else if(drawerState.equals("team-layout")){
+                        if(config.orientation == Configuration.ORIENTATION_LANDSCAPE) buildTeamLayoutLandscape(num); 
+                        else buildTeamLayoutPortrait(num);
+                    }
+                } else if(action == MotionEvent.ACTION_MOVE){
+                    deltaX = Math.abs(init_x - event.getX());
+                    deltaY = Math.abs(init_y - event.getY());
+                    if(//Math.sqrt(Math.pow(deltaX, 2)*Math.pow(deltaY, 2)) > THRESHOLD*5 ||
+                            (deltaX >= Math.pow(THRESHOLD, 2)*2 || deltaY >= Math.pow(THRESHOLD, 2)*2)) moved = true;
+                } else if(action == MotionEvent.ACTION_UP){
+                    drawer.removeAllViews();
+                    config = getResources().getConfiguration();
+    
+                    if(drawerState.equals("drawer-layout")){
+                        if(config.orientation == Configuration.ORIENTATION_LANDSCAPE) restoreDrawerLayoutLandscape(0); 
+                        else restoreDrawerLayoutPortrait(0);
+                    } else if(drawerState.equals("moves-layout")){
+                        if(config.orientation == Configuration.ORIENTATION_LANDSCAPE) buildMovesLayoutLandscape(0); 
+                        else buildMovesLayoutPortrait(0);
+                    } else if(drawerState.equals("team-layout")){
+                        if(config.orientation == Configuration.ORIENTATION_LANDSCAPE) buildTeamLayoutLandscape(0); 
+                        else buildTeamLayoutPortrait(0);
+                    }
+
+                    if(drawerState.equals("drawer-layout")){
+                        if(num == 1) moves.setOnTouchListener(newListener(num));
+                        else if(num + offset == 2) buff.setOnTouchListener(newListener(2));
+                        else if(num + offset == 3) swap.setOnTouchListener(newListener(3));
+                        else if(num == 4) forfeit.setOnTouchListener(newListener(num));
+                    } else if(drawerState.equals("moves-layout")){
+                        if(num == 1) move1.setOnTouchListener(newListener(num));
+                        else if(num == 2) move2.setOnTouchListener(newListener(num));
+                        else if(num == 3) move3.setOnTouchListener(newListener(num));
+                        else if(num == 4) move4.setOnTouchListener(newListener(num));
+                        else if(num == 7) close.setOnTouchListener(newListener(num));
+                    } if(drawerState.equals("team-layout")){
+                        if(num == 1) pkmn1.setOnTouchListener(newListener(num));
+                        else if(num == 2) pkmn2.setOnTouchListener(newListener(num));
+                        else if(num == 3) pkmn3.setOnTouchListener(newListener(num));
+                        else if(num == 4) pkmn4.setOnTouchListener(newListener(num));
+                        else if(num == 5) pkmn5.setOnTouchListener(newListener(num));
+                        else if(num == 6) pkmn6.setOnTouchListener(newListener(num));
+                        else if(num == 7) close.setOnTouchListener(newListener(num));
+                    }
+                    
+                    if(!moved) onClick(v);
+                } else {
+                    drawer.removeAllViews();
+                    config = getResources().getConfiguration();
+    
+                    if(drawerState.equals("drawer-layout")){
+                        if(config.orientation == Configuration.ORIENTATION_LANDSCAPE) restoreDrawerLayoutLandscape(0); 
+                        else restoreDrawerLayoutPortrait(0);
+                    } else if(drawerState.equals("moves-layout")){
+                        if(config.orientation == Configuration.ORIENTATION_LANDSCAPE) buildMovesLayoutLandscape(0); 
+                        else buildMovesLayoutPortrait(0);
+                    } else if(drawerState.equals("team-layout")){
+                        if(config.orientation == Configuration.ORIENTATION_LANDSCAPE) buildTeamLayoutLandscape(0); 
+                        else buildTeamLayoutPortrait(0);
+                    }
+                }
+
+                return true;
+            }
+        });
+    }
+    
     private void startDrawerAnimation(){
         Handler handler = new Handler();
         globalHandler = handler;
@@ -366,29 +487,29 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
             drawer.removeAllViews();
             config = getResources().getConfiguration();
             
-            if(config.orientation == Configuration.ORIENTATION_LANDSCAPE) buildMovesLayoutLandscape();
-            else buildMovesLayoutPortait();
+            if(config.orientation == Configuration.ORIENTATION_LANDSCAPE) buildMovesLayoutLandscape(0);
+            else buildMovesLayoutPortrait(0);
         } else if(v.getId() == R.id.bSwap){
             playSoundEffect(BUTTONCLICK);
             drawer.removeAllViews();
             config = getResources().getConfiguration();
             
-            if(config.orientation == Configuration.ORIENTATION_LANDSCAPE) buildTeamLayoutLandscape();
-            else buildTeamLayoutPortait();    
+            if(config.orientation == Configuration.ORIENTATION_LANDSCAPE) buildTeamLayoutLandscape(0);
+            else buildTeamLayoutPortrait(0);    
         } else if(v.getId() == R.id.bBuff){
             playSoundEffect(BUTTONCLICK);
             // NOTHING YET
             text.setText("Buff applied!");
         } else if(v.getId() == R.id.bForfeit){
             playSoundEffect(BUTTONCLICK);
-            finish();
+//            finish();
         } else if(v.getId() == X_ID){
             playSoundEffect(BUTTONCLICK);
             drawer.removeAllViews();
             config = getResources().getConfiguration();
             
-            if(config.orientation == Configuration.ORIENTATION_LANDSCAPE) restoreDrawerLayoutLandscape();
-            else restoreDrawerLayoutPortrait();
+            if(config.orientation == Configuration.ORIENTATION_LANDSCAPE) restoreDrawerLayoutLandscape(0);
+            else restoreDrawerLayoutPortrait(0);
         } else if(v.getId() == MOVE1_ID){ 
             if(!u_actChosen && Animated.user_actReady){ 
                 playSoundEffect(BUTTONCLICK);
@@ -440,7 +561,6 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
                 swap(5); 
             }
         } else if(v.getId() == CHEER_ID){
-//            playSoundEffect(getVoice());
             // NOTHING YET
             if(/*!u_actChosen && */Animated.opponent_actReady){ 
                 o_actChosen = true;
@@ -450,7 +570,7 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
                     Animated.opponent_speedbar = Animated.speedbar_end_x - Animated.speedbar_start_x + 10;
                     Animated.OPPONENT_SPEED_LOCK = true;
                 }
-
+                
                 globalHandler = new Handler();
 
                 final Runnable thread = new Runnable(){
@@ -467,14 +587,12 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
                 };
 
                 globalHandler.postDelayed(thread, 0);
-            
-//            Animated.opponent_shift_x += 1;
-//            Animated.opponent_shift_y += 1;
             }
         }
     }
 
-    private void restoreDrawerLayoutLandscape(){
+    private void restoreDrawerLayoutLandscape(int pressedButton){
+        drawerState = "drawer-layout";
         drawer.setWeightSum(0f);
         
         LinearLayout movesRow = new LinearLayout(this);
@@ -486,7 +604,12 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         
         moves = new Button(this);
         moves.setId(MOVES_ID);
-        moves.setBackgroundResource(R.drawable.normal_bubble);
+        if(pressedButton == 1){
+            layers[0] = getResources().getDrawable(R.drawable.normal_bubble);
+            layers[1] = getResources().getDrawable(R.drawable.pressed);
+            layeredDrawable = new LayerDrawable(layers);
+            moves.setBackground(layeredDrawable);
+        } else moves.setBackgroundResource(R.drawable.normal_bubble);
         LinearLayout.LayoutParams WRAP_MATCH_WEIGHT_PARAMS = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT, 1f);
         moves.setLayoutParams(WRAP_MATCH_WEIGHT_PARAMS);
         moves.setPadding(0, 0, 0, 0);
@@ -497,7 +620,12 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         
         swap = new Button(this);
         swap.setId(SWAP_ID);
-        swap.setBackgroundResource(R.drawable.normal_bubble);
+        if(pressedButton == 2){
+            layers[0] = getResources().getDrawable(R.drawable.normal_bubble);
+            layers[1] = getResources().getDrawable(R.drawable.pressed);
+            layeredDrawable = new LayerDrawable(layers);
+            swap.setBackground(layeredDrawable);
+        } else swap.setBackgroundResource(R.drawable.normal_bubble);
         swap.setLayoutParams(WRAP_MATCH_WEIGHT_PARAMS);
         swap.setPadding(0, 0, 0, 0);
         swap.setText(R.string.swap);
@@ -507,7 +635,12 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         
         buff = new Button(this);
         buff.setId(BUFF_ID);
-        buff.setBackgroundResource(R.drawable.normal_bubble);
+        if(pressedButton == 3){
+            layers[0] = getResources().getDrawable(R.drawable.normal_bubble);
+            layers[1] = getResources().getDrawable(R.drawable.pressed);
+            layeredDrawable = new LayerDrawable(layers);
+            buff.setBackground(layeredDrawable);
+        } else buff.setBackgroundResource(R.drawable.normal_bubble);
         buff.setLayoutParams(WRAP_MATCH_WEIGHT_PARAMS);
         buff.setPadding(0, 0, 0, 0);
         buff.setText(R.string.buff);
@@ -517,7 +650,12 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         
         forfeit = new Button(this);
         forfeit.setId(FORFEIT_ID);
-        forfeit.setBackgroundResource(R.drawable.normal_bubble);
+        if(pressedButton == 4){
+            layers[0] = getResources().getDrawable(R.drawable.normal_bubble);
+            layers[1] = getResources().getDrawable(R.drawable.pressed);
+            layeredDrawable = new LayerDrawable(layers);
+            forfeit.setBackground(layeredDrawable);
+        } else forfeit.setBackgroundResource(R.drawable.normal_bubble);
         forfeit.setLayoutParams(WRAP_MATCH_WEIGHT_PARAMS);
         forfeit.setPadding(0, 0, 0, 0);
         forfeit.setText(R.string.forfeit);
@@ -528,14 +666,15 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         // Add layout
         drawer.addView(movesRow);
         
-        // Set up onClick listeners
-        moves.setOnClickListener(this);
-        swap.setOnClickListener(this);
-        buff.setOnClickListener(this);
-        forfeit.setOnClickListener(this);
+        // Set up onTouch listeners
+        moves.setOnTouchListener(newListener(1));
+        buff.setOnTouchListener(newListener(2));
+        swap.setOnTouchListener(newListener(3));
+        forfeit.setOnTouchListener(newListener(4));        
     }
     
-    private void restoreDrawerLayoutPortrait(){
+    private void restoreDrawerLayoutPortrait(int pressedButton){
+        drawerState = "drawer-layout";
         drawer.setWeightSum(2f);
         
         LinearLayout movesAndBuff = new LinearLayout(this);
@@ -548,7 +687,12 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         
         moves = new Button(this);
         moves.setId(MOVES_ID);
-        moves.setBackgroundResource(R.drawable.normal_bubble);
+        if(pressedButton == 1){
+            layers[0] = getResources().getDrawable(R.drawable.normal_bubble);
+            layers[1] = getResources().getDrawable(R.drawable.pressed);
+            layeredDrawable = new LayerDrawable(layers);
+            moves.setBackground(layeredDrawable);
+        } else moves.setBackgroundResource(R.drawable.normal_bubble);
         LinearLayout.LayoutParams WRAP_MATCH_WEIGHT_PARAMS = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT, 1f);
         moves.setLayoutParams(WRAP_MATCH_WEIGHT_PARAMS);
         moves.setPadding(0, 0, 0, 0);
@@ -559,7 +703,12 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         
         buff = new Button(this);
         buff.setId(BUFF_ID);
-        buff.setBackgroundResource(R.drawable.normal_bubble);
+        if(pressedButton == 2){
+            layers[0] = getResources().getDrawable(R.drawable.normal_bubble);
+            layers[1] = getResources().getDrawable(R.drawable.pressed);
+            layeredDrawable = new LayerDrawable(layers);
+            buff.setBackground(layeredDrawable);
+        } else buff.setBackgroundResource(R.drawable.normal_bubble);
         buff.setLayoutParams(WRAP_MATCH_WEIGHT_PARAMS);
         buff.setPadding(0, 0, 0, 0);
         buff.setText(R.string.buff);
@@ -575,7 +724,12 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         
         swap = new Button(this);
         swap.setId(SWAP_ID);
-        swap.setBackgroundResource(R.drawable.normal_bubble);
+        if(pressedButton == 3){
+            layers[0] = getResources().getDrawable(R.drawable.normal_bubble);
+            layers[1] = getResources().getDrawable(R.drawable.pressed);
+            layeredDrawable = new LayerDrawable(layers);
+            swap.setBackground(layeredDrawable);
+        } else swap.setBackgroundResource(R.drawable.normal_bubble);
         swap.setLayoutParams(WRAP_MATCH_WEIGHT_PARAMS);
         swap.setPadding(0, 0, 0, 0);
         swap.setText(R.string.swap);
@@ -585,7 +739,12 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         
         forfeit = new Button(this);
         forfeit.setId(FORFEIT_ID);
-        forfeit.setBackgroundResource(R.drawable.normal_bubble);
+        if(pressedButton == 4){
+            layers[0] = getResources().getDrawable(R.drawable.normal_bubble);
+            layers[1] = getResources().getDrawable(R.drawable.pressed);
+            layeredDrawable = new LayerDrawable(layers);
+            forfeit.setBackground(layeredDrawable);
+        } else forfeit.setBackgroundResource(R.drawable.normal_bubble);
         forfeit.setLayoutParams(WRAP_MATCH_WEIGHT_PARAMS);
         forfeit.setPadding(0, 0, 0, 0);
         forfeit.setText(R.string.forfeit);
@@ -597,14 +756,15 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         drawer.addView(movesAndBuff);
         drawer.addView(swapAndForfeit);
         
-        // Set up onClick listeners
-        moves.setOnClickListener(this);
-        swap.setOnClickListener(this);
-        buff.setOnClickListener(this);
-        forfeit.setOnClickListener(this); 
+        // Set up onTouch listeners
+        moves.setOnTouchListener(newListener(1));
+        buff.setOnTouchListener(newListener(2));
+        swap.setOnTouchListener(newListener(3));
+        forfeit.setOnTouchListener(newListener(4));
     }
     
-    private void buildMovesLayoutLandscape(){ try{       
+    private void buildMovesLayoutLandscape(int pressedButton){
+        drawerState = "moves-layout";
         drawer.setWeightSum(10f);
         
         LinearLayout goBack = new LinearLayout(this);
@@ -616,7 +776,12 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         
         close = new Button(this);
         close.setId(X_ID);
-        close.setBackgroundResource(R.drawable.normal_bubble);
+        if(pressedButton == 7){
+            layers[0] = getResources().getDrawable(R.drawable.normal_bubble);
+            layers[1] = getResources().getDrawable(R.drawable.pressed);
+            layeredDrawable = new LayerDrawable(layers);
+            close.setBackground(layeredDrawable);
+        } else close.setBackgroundResource(R.drawable.normal_bubble);
         LinearLayout.LayoutParams WRAP_HARD_WEIGHT_PARAMS = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, 60, 1f);
         close.setLayoutParams(WRAP_HARD_WEIGHT_PARAMS);
         close.setPadding(0, 0, 0, 0);
@@ -641,7 +806,12 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         move1.setPadding(0, 0, 0, 0);
         
         if(u_pokemon.moves[0] != null && u_pokemon.moves[0]/**/[1] != null && u_pokemon.moves[0]/**/[2] != null && u_pokemon.moves[0]/**/[5] != null){
-            move1.setBackgroundResource(buttonBackground(u_pokemon.moves[0][2]));
+            if(pressedButton == 1/**/){
+                layers[0] = getResources().getDrawable(buttonBackground(u_pokemon.moves[0/**/][2]));
+                layers[1] = getResources().getDrawable(R.drawable.pressed);
+                layeredDrawable = new LayerDrawable(layers);
+                move1/**/.setBackground(layeredDrawable);
+            } else move1.setBackgroundResource(buttonBackground(u_pokemon.moves[0][2]));
             styledText = "<font color='#000000'><b>"
             + u_pokemon.moves[0][1] + "</b></font>" + "<br/><small><font color='#FFFFFF'>" 
             + u_pokemon.moves[0][2] + "\t\tPWR:" + ((u_pokemon.moves[0][5].equals("null"))? "---" : u_pokemon.moves[0][5]) + "</font></small>";
@@ -660,7 +830,12 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         move2.setPadding(0, 0, 0, 0);
             
         if(u_pokemon.moves[1] != null && u_pokemon.moves[1]/**/[1] != null && u_pokemon.moves[1]/**/[2] != null && u_pokemon.moves[1]/**/[5] != null){
-            move2.setBackgroundResource(buttonBackground(u_pokemon.moves[1][2]));
+            if(pressedButton == 2/**/){
+                layers[0] = getResources().getDrawable(buttonBackground(u_pokemon.moves[1/**/][2]));
+                layers[1] = getResources().getDrawable(R.drawable.pressed);
+                layeredDrawable = new LayerDrawable(layers);
+                move2/**/.setBackground(layeredDrawable);
+            } else move2.setBackgroundResource(buttonBackground(u_pokemon.moves[1][2]));
             styledText = "<font color='#000000'><b>"
             + u_pokemon.moves[1][1] + "</b></font>" + "<br/><small><font color='#FFFFFF'>" 
             + u_pokemon.moves[1][2] + "\t\tPWR:" + ((u_pokemon.moves[1][5].equals("null"))? "---" : u_pokemon.moves[1][5]) + "</font></small>";
@@ -679,7 +854,12 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         move3.setPadding(0, 0, 0, 0);
         
         if(u_pokemon.moves[2] != null&& u_pokemon.moves[2]/**/[1] != null && u_pokemon.moves[2]/**/[2] != null && u_pokemon.moves[2]/**/[5] != null){
-            move3.setBackgroundResource(buttonBackground(u_pokemon.moves[2][2]));
+            if(pressedButton == 3/**/){
+                layers[0] = getResources().getDrawable(buttonBackground(u_pokemon.moves[2/**/][2]));
+                layers[1] = getResources().getDrawable(R.drawable.pressed);
+                layeredDrawable = new LayerDrawable(layers);
+                move3/**/.setBackground(layeredDrawable);
+            } else move3.setBackgroundResource(buttonBackground(u_pokemon.moves[2][2]));
             styledText = "<font color='#000000'><b>"
             + u_pokemon.moves[2][1] + "</b></font>" + "<br/><small><font color='#FFFFFF'>" 
             + u_pokemon.moves[2][2] + "\t\tPWR:" + ((u_pokemon.moves[2][5].equals("null"))? "---" : u_pokemon.moves[2][5]) + "</font></small>";
@@ -698,7 +878,12 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         move4.setPadding(0, 0, 0, 0);
         
         if(u_pokemon.moves[3] != null&& u_pokemon.moves[3]/**/[1] != null && u_pokemon.moves[3]/**/[2] != null && u_pokemon.moves[3]/**/[5] != null){
-            move4.setBackgroundResource(buttonBackground(u_pokemon.moves[3][2]));
+            if(pressedButton == 4/**/){
+                layers[0] = getResources().getDrawable(buttonBackground(u_pokemon.moves[3/**/][2]));
+                layers[1] = getResources().getDrawable(R.drawable.pressed);
+                layeredDrawable = new LayerDrawable(layers);
+                move4/**/.setBackground(layeredDrawable);
+            } else move4.setBackgroundResource(buttonBackground(u_pokemon.moves[3][2]));
             styledText = "<font color='#000000'><b>"
             + u_pokemon.moves[3][1] + "</b></font>" + "<br/><small><font color='#FFFFFF'>" 
             + u_pokemon.moves[3][2] + "\t\tPWR:" + ((u_pokemon.moves[3][5].equals("null"))? "---" : u_pokemon.moves[3][5]) + "</font></small>";
@@ -714,15 +899,16 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         drawer.addView(goBack);
         drawer.addView(movesRow);
         
-        // Set up onClick listeners
-        close.setOnClickListener(this);
-        if(u_pokemon.moves[0][1] != null) move1.setOnClickListener(this);
-        if(u_pokemon.moves[1][1] != null) move2.setOnClickListener(this);
-        if(u_pokemon.moves[2][1] != null) move3.setOnClickListener(this);
-        if(u_pokemon.moves[3][1] != null) move4.setOnClickListener(this); } catch(Exception e) { text.setText(e.toString()); }
+        // Set up onTouch listeners
+        close.setOnTouchListener(newListener(7));        
+        if(u_pokemon.moves[0][1] != null) move1.setOnTouchListener(newListener(1));        
+        if(u_pokemon.moves[1][1] != null) move2.setOnTouchListener(newListener(2));        
+        if(u_pokemon.moves[2][1] != null) move3.setOnTouchListener(newListener(3));        
+        if(u_pokemon.moves[3][1] != null) move4.setOnTouchListener(newListener(4));        
     }
 
-    private void buildMovesLayoutPortait(){ try {
+    private void buildMovesLayoutPortrait(int pressedButton){
+        drawerState = "moves-layout";
         drawer.setWeightSum(10f);
         
         LinearLayout goBack = new LinearLayout(this);
@@ -734,7 +920,12 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         
         close = new Button(this);
         close.setId(X_ID);
-        close.setBackgroundResource(R.drawable.normal_bubble);
+        if(pressedButton == 7/**/){
+            layers[0] = getResources().getDrawable(R.drawable.normal_bubble);
+            layers[1] = getResources().getDrawable(R.drawable.pressed);
+            layeredDrawable = new LayerDrawable(layers);
+            close/**/.setBackground(layeredDrawable);
+        } else close.setBackgroundResource(R.drawable.normal_bubble);
         LinearLayout.LayoutParams WRAP_HARD_WEIGHT_PARAMS = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, 50, 1f);
         close.setLayoutParams(WRAP_HARD_WEIGHT_PARAMS);
         close.setPadding(0, 0, 0, 0);
@@ -759,7 +950,12 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         move1.setPadding(0, 0, 0, 0);
         
         if(u_pokemon.moves[0] != null && u_pokemon.moves[0]/**/[1] != null && u_pokemon.moves[0]/**/[2] != null && u_pokemon.moves[0]/**/[5] != null){
-            move1.setBackgroundResource(buttonBackground(u_pokemon.moves[0][2]));
+            if(pressedButton == 1/**/){
+                layers[0] = getResources().getDrawable(buttonBackground(u_pokemon.moves[0/**/][2]));
+                layers[1] = getResources().getDrawable(R.drawable.pressed);
+                layeredDrawable = new LayerDrawable(layers);
+                move1/**/.setBackground(layeredDrawable);
+            } else move1.setBackgroundResource(buttonBackground(u_pokemon.moves[0][2]));
             styledText = "<font color='#000000'><b>"
             + u_pokemon.moves[0][1] + "</b></font>" + "<br/><small><font color='#FFFFFF'>" 
             + u_pokemon.moves[0][2] + "\t\tPWR:" + ((u_pokemon.moves[0]/**/[5] == null)? "Error @move1/**/" : ((u_pokemon.moves[0][5].equals("null"))? "---" : u_pokemon.moves[0][5]) + "</font></small>");
@@ -778,7 +974,12 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         move2.setPadding(0, 0, 0, 0);
         
         if(u_pokemon.moves[1] != null && u_pokemon.moves[1]/**/[1] != null && u_pokemon.moves[1]/**/[2] != null && u_pokemon.moves[1]/**/[5] != null){
-            move2.setBackgroundResource(buttonBackground(u_pokemon.moves[1][2]));
+            if(pressedButton == 2/**/){
+                layers[0] = getResources().getDrawable(buttonBackground(u_pokemon.moves[1/**/][2]));
+                layers[1] = getResources().getDrawable(R.drawable.pressed);
+                layeredDrawable = new LayerDrawable(layers);
+                move2/**/.setBackground(layeredDrawable);
+            } else move2.setBackgroundResource(buttonBackground(u_pokemon.moves[1][2]));
             styledText = "<font color='#000000'><b>"
             + u_pokemon.moves[1][1] + "</b></font>" + "<br/><small><font color='#FFFFFF'>" 
             + u_pokemon.moves[1][2] + "\t\tPWR:" + ((u_pokemon.moves[1][5].equals("null"))? "---" : u_pokemon.moves[1][5] + "</font></small>");
@@ -803,7 +1004,12 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         move3.setPadding(0, 0, 0, 0);
         
         if(u_pokemon.moves[2] != null && u_pokemon.moves[2]/**/[1] != null && u_pokemon.moves[2]/**/[2] != null && u_pokemon.moves[2]/**/[5] != null){
-            move3.setBackgroundResource(buttonBackground(u_pokemon.moves[2][2]));
+            if(pressedButton == 3/**/){
+                layers[0] = getResources().getDrawable(buttonBackground(u_pokemon.moves[2/**/][2]));
+                layers[1] = getResources().getDrawable(R.drawable.pressed);
+                layeredDrawable = new LayerDrawable(layers);
+                move3/**/.setBackground(layeredDrawable);
+            } else move3.setBackgroundResource(buttonBackground(u_pokemon.moves[2][2]));
             styledText = "<font color='#000000'><b>"
             + u_pokemon.moves[2][1] + "</b></font>" + "<br/><small><font color='#FFFFFF'>" 
             + u_pokemon.moves[2][2] + "\t\tPWR:" + ((u_pokemon.moves[2][5].equals("null"))? "---" : u_pokemon.moves[2][5] + "</font></small>");
@@ -822,7 +1028,12 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         move4.setPadding(0, 0, 0, 0);
         
         if(u_pokemon.moves[3] != null && u_pokemon.moves[3]/**/[1] != null && u_pokemon.moves[3]/**/[2] != null && u_pokemon.moves[3]/**/[5] != null){
-            move4.setBackgroundResource(buttonBackground(u_pokemon.moves[3][2]));
+            if(pressedButton == 4/**/){
+                layers[0] = getResources().getDrawable(buttonBackground(u_pokemon.moves[3/**/][2]));
+                layers[1] = getResources().getDrawable(R.drawable.pressed);
+                layeredDrawable = new LayerDrawable(layers);
+                move4/**/.setBackground(layeredDrawable);
+            } else move4.setBackgroundResource(buttonBackground(u_pokemon.moves[3][2]));
             styledText = "<font color='#000000'><b>"
             + u_pokemon.moves[3][1] + "</b></font>" + "<br/><small><font color='#FFFFFF'>" 
             + u_pokemon.moves[3][2] + "\t\tPWR:" + ((u_pokemon.moves[3][5].equals("null"))? "---" : u_pokemon.moves[3][5] + "</font></small>");
@@ -839,15 +1050,16 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         drawer.addView(movesRow1);
         drawer.addView(movesRow2);
         
-        // Set up onClick listeners
-        close.setOnClickListener(this);
-        if(u_pokemon.moves[0][1] != null) move1.setOnClickListener(this);
-        if(u_pokemon.moves[1][1] != null) move2.setOnClickListener(this);
-        if(u_pokemon.moves[2][1] != null) move3.setOnClickListener(this);
-        if(u_pokemon.moves[3][1] != null) move4.setOnClickListener(this); } catch(Exception e) { text.setText(e.toString()); }
+        // Set up onTouch listeners
+        close.setOnTouchListener(newListener(7));        
+        if(u_pokemon.moves[0][1] != null) move1.setOnTouchListener(newListener(1));        
+        if(u_pokemon.moves[1][1] != null) move2.setOnTouchListener(newListener(2));        
+        if(u_pokemon.moves[2][1] != null) move3.setOnTouchListener(newListener(3));        
+        if(u_pokemon.moves[3][1] != null) move4.setOnTouchListener(newListener(4));
     }
 
-    private void buildTeamLayoutLandscape(){
+    private void buildTeamLayoutLandscape(int pressedButton){
+        drawerState = "team-layout";
         drawer.setWeightSum(10f);
         
         LinearLayout goBack = new LinearLayout(this);
@@ -859,7 +1071,12 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         
         close = new Button(this);
         close.setId(X_ID);
-        close.setBackgroundResource(R.drawable.normal_bubble);
+        if(pressedButton == 7/**/){
+            layers[0] = getResources().getDrawable(R.drawable.normal_bubble);
+            layers[1] = getResources().getDrawable(R.drawable.pressed);
+            layeredDrawable = new LayerDrawable(layers);
+            close/**/.setBackground(layeredDrawable);
+        } else close.setBackgroundResource(R.drawable.normal_bubble);
         LinearLayout.LayoutParams WRAP_HARD_WEIGHT_PARAMS = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, 60, 1f);
         close.setLayoutParams(WRAP_HARD_WEIGHT_PARAMS);
         close.setPadding(0, 0, 0, 0);
@@ -879,7 +1096,12 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         String styledText;
         pkmn1 = new Button(this);
         pkmn1.setId(PKMN1_ID);
-        pkmn1.setBackgroundResource(R.drawable.normal_bubble);
+        if(pressedButton == 1/**/){
+            layers[0] = getResources().getDrawable(R.drawable.normal_bubble);
+            layers[1] = getResources().getDrawable(R.drawable.pressed);
+            layeredDrawable = new LayerDrawable(layers);
+            pkmn1/**/.setBackground(layeredDrawable);
+        } else pkmn1.setBackgroundResource(R.drawable.normal_bubble);
         LinearLayout.LayoutParams FULL_MATCH_WEIGHT_PARAMS = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT, 1f);
         pkmn1.setLayoutParams(FULL_MATCH_WEIGHT_PARAMS);
         pkmn1.setPadding(0, 0, 0, 0);
@@ -895,7 +1117,12 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         
         pkmn2 = new Button(this);
         pkmn2.setId(PKMN2_ID);
-        pkmn2.setBackgroundResource(R.drawable.normal_bubble);
+        if(pressedButton == 2/**/){
+            layers[0] = getResources().getDrawable(R.drawable.normal_bubble);
+            layers[1] = getResources().getDrawable(R.drawable.pressed);
+            layeredDrawable = new LayerDrawable(layers);
+            pkmn2/**/.setBackground(layeredDrawable);
+        } else pkmn2.setBackgroundResource(R.drawable.normal_bubble);
         pkmn2.setLayoutParams(FULL_MATCH_WEIGHT_PARAMS);
         pkmn2.setPadding(0, 0, 0, 0);
         
@@ -910,7 +1137,12 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         
         pkmn3 = new Button(this);
         pkmn3.setId(PKMN3_ID);
-        pkmn3.setBackgroundResource(R.drawable.normal_bubble);
+        if(pressedButton == 3/**/){
+            layers[0] = getResources().getDrawable(R.drawable.normal_bubble);
+            layers[1] = getResources().getDrawable(R.drawable.pressed);
+            layeredDrawable = new LayerDrawable(layers);
+            pkmn3/**/.setBackground(layeredDrawable);
+        } else pkmn3.setBackgroundResource(R.drawable.normal_bubble);
         pkmn3.setLayoutParams(FULL_MATCH_WEIGHT_PARAMS);
         pkmn3.setPadding(0, 0, 0, 0);
         
@@ -925,7 +1157,12 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         
         pkmn4 = new Button(this);
         pkmn4.setId(PKMN4_ID);
-        pkmn4.setBackgroundResource(R.drawable.normal_bubble);
+        if(pressedButton == 4/**/){
+            layers[0] = getResources().getDrawable(R.drawable.normal_bubble);
+            layers[1] = getResources().getDrawable(R.drawable.pressed);
+            layeredDrawable = new LayerDrawable(layers);
+            pkmn4/**/.setBackground(layeredDrawable);
+        } else pkmn4.setBackgroundResource(R.drawable.normal_bubble);
         pkmn4.setLayoutParams(FULL_MATCH_WEIGHT_PARAMS);
         pkmn4.setPadding(0, 0, 0, 0);
         
@@ -940,7 +1177,12 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         
         pkmn5 = new Button(this);
         pkmn5.setId(PKMN5_ID);
-        pkmn5.setBackgroundResource(R.drawable.normal_bubble);
+        if(pressedButton == 5/**/){
+            layers[0] = getResources().getDrawable(R.drawable.normal_bubble);
+            layers[1] = getResources().getDrawable(R.drawable.pressed);
+            layeredDrawable = new LayerDrawable(layers);
+            pkmn5/**/.setBackground(layeredDrawable);
+        } else pkmn5.setBackgroundResource(R.drawable.normal_bubble);
         pkmn5.setLayoutParams(FULL_MATCH_WEIGHT_PARAMS);
         pkmn5.setPadding(0, 0, 0, 0);
         
@@ -955,7 +1197,12 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         
         pkmn6 = new Button(this);
         pkmn6.setId(PKMN6_ID);
-        pkmn6.setBackgroundResource(R.drawable.normal_bubble);
+        if(pressedButton == 6/**/){
+            layers[0] = getResources().getDrawable(R.drawable.normal_bubble);
+            layers[1] = getResources().getDrawable(R.drawable.pressed);
+            layeredDrawable = new LayerDrawable(layers);
+            pkmn6/**/.setBackground(layeredDrawable);
+        } else pkmn6.setBackgroundResource(R.drawable.normal_bubble);
         pkmn6.setLayoutParams(FULL_MATCH_WEIGHT_PARAMS);
         pkmn6.setPadding(0, 0, 0, 0);
         
@@ -972,17 +1219,18 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         drawer.addView(goBack);
         drawer.addView(teamRow);
         
-        // Set up onClick listeners
-        close.setOnClickListener(this);
-        pkmn1.setOnClickListener(this);
-        pkmn2.setOnClickListener(this);
-        pkmn3.setOnClickListener(this);
-        pkmn4.setOnClickListener(this);
-        pkmn5.setOnClickListener(this);
-        pkmn6.setOnClickListener(this);
+        // Set up onTouch listeners
+        close.setOnTouchListener(newListener(7));
+        pkmn1.setOnTouchListener(newListener(1));
+        pkmn2.setOnTouchListener(newListener(2));
+        pkmn3.setOnTouchListener(newListener(3));
+        pkmn4.setOnTouchListener(newListener(4));
+        pkmn5.setOnTouchListener(newListener(5));
+        pkmn6.setOnTouchListener(newListener(6));
     }
 
-    private void buildTeamLayoutPortait(){
+    private void buildTeamLayoutPortrait(int pressedButton){
+        drawerState = "team-layout";
         drawer.setWeightSum(10f);
         
         LinearLayout goBack = new LinearLayout(this);
@@ -994,7 +1242,12 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         
         close = new Button(this);
         close.setId(X_ID);
-        close.setBackgroundResource(R.drawable.normal_bubble);
+        if(pressedButton == 7/**/){
+            layers[0] = getResources().getDrawable(R.drawable.normal_bubble);
+            layers[1] = getResources().getDrawable(R.drawable.pressed);
+            layeredDrawable = new LayerDrawable(layers);
+            close/**/.setBackground(layeredDrawable);
+        } else close.setBackgroundResource(R.drawable.normal_bubble);
         LinearLayout.LayoutParams WRAP_HARD_WEIGHT_PARAMS = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, 50, 1f);
         close.setLayoutParams(WRAP_HARD_WEIGHT_PARAMS);
         close.setPadding(0, 0, 0, 0);
@@ -1014,7 +1267,12 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         String styledText;
         pkmn1 = new Button(this);
         pkmn1.setId(PKMN1_ID);
-        pkmn1.setBackgroundResource(R.drawable.normal_bubble);
+        if(pressedButton == 1/**/){
+            layers[0] = getResources().getDrawable(R.drawable.normal_bubble);
+            layers[1] = getResources().getDrawable(R.drawable.pressed);
+            layeredDrawable = new LayerDrawable(layers);
+            pkmn1/**/.setBackground(layeredDrawable);
+        } else pkmn1.setBackgroundResource(R.drawable.normal_bubble);
         LinearLayout.LayoutParams FULL_MATCH_WEIGHT_PARAMS = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT, 1f);
         pkmn1.setLayoutParams(FULL_MATCH_WEIGHT_PARAMS);
         pkmn1.setPadding(0, 0, 0, 0);
@@ -1030,7 +1288,12 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         
         pkmn2 = new Button(this);
         pkmn2.setId(PKMN2_ID);
-        pkmn2.setBackgroundResource(R.drawable.normal_bubble);
+        if(pressedButton == 2/**/){
+            layers[0] = getResources().getDrawable(R.drawable.normal_bubble);
+            layers[1] = getResources().getDrawable(R.drawable.pressed);
+            layeredDrawable = new LayerDrawable(layers);
+            pkmn2/**/.setBackground(layeredDrawable);
+        } else pkmn2.setBackgroundResource(R.drawable.normal_bubble);
         pkmn2.setLayoutParams(FULL_MATCH_WEIGHT_PARAMS);
         pkmn2.setPadding(0, 0, 0, 0);
         
@@ -1045,7 +1308,12 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         
         pkmn3 = new Button(this);
         pkmn3.setId(PKMN3_ID);
-        pkmn3.setBackgroundResource(R.drawable.normal_bubble);
+        if(pressedButton == 3/**/){
+            layers[0] = getResources().getDrawable(R.drawable.normal_bubble);
+            layers[1] = getResources().getDrawable(R.drawable.pressed);
+            layeredDrawable = new LayerDrawable(layers);
+            pkmn3/**/.setBackground(layeredDrawable);
+        } else pkmn3.setBackgroundResource(R.drawable.normal_bubble);
         pkmn3.setLayoutParams(FULL_MATCH_WEIGHT_PARAMS);
         pkmn3.setPadding(0, 0, 0, 0);
         
@@ -1066,7 +1334,12 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         
         pkmn4 = new Button(this);
         pkmn4.setId(PKMN4_ID);
-        pkmn4.setBackgroundResource(R.drawable.normal_bubble);
+        if(pressedButton == 4/**/){
+            layers[0] = getResources().getDrawable(R.drawable.normal_bubble);
+            layers[1] = getResources().getDrawable(R.drawable.pressed);
+            layeredDrawable = new LayerDrawable(layers);
+            pkmn4/**/.setBackground(layeredDrawable);
+        } else pkmn4.setBackgroundResource(R.drawable.normal_bubble);
         pkmn4.setLayoutParams(FULL_MATCH_WEIGHT_PARAMS);
         pkmn4.setPadding(0, 0, 0, 0);
         
@@ -1081,7 +1354,12 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         
         pkmn5 = new Button(this);
         pkmn5.setId(PKMN5_ID);
-        pkmn5.setBackgroundResource(R.drawable.normal_bubble);
+        if(pressedButton == 5/**/){
+            layers[0] = getResources().getDrawable(R.drawable.normal_bubble);
+            layers[1] = getResources().getDrawable(R.drawable.pressed);
+            layeredDrawable = new LayerDrawable(layers);
+            pkmn5/**/.setBackground(layeredDrawable);
+        } else pkmn5.setBackgroundResource(R.drawable.normal_bubble);
         pkmn5.setLayoutParams(FULL_MATCH_WEIGHT_PARAMS);
         pkmn5.setPadding(0, 0, 0, 0);
         
@@ -1096,7 +1374,12 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         
         pkmn6 = new Button(this);
         pkmn6.setId(PKMN6_ID);
-        pkmn6.setBackgroundResource(R.drawable.normal_bubble);
+        if(pressedButton == 6/**/){
+            layers[0] = getResources().getDrawable(R.drawable.normal_bubble);
+            layers[1] = getResources().getDrawable(R.drawable.pressed);
+            layeredDrawable = new LayerDrawable(layers);
+            pkmn6/**/.setBackground(layeredDrawable);
+        } else pkmn6.setBackgroundResource(R.drawable.normal_bubble);
         pkmn6.setLayoutParams(FULL_MATCH_WEIGHT_PARAMS);
         pkmn6.setPadding(0, 0, 0, 0);
         
@@ -1114,14 +1397,14 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         drawer.addView(teamRow1);
         drawer.addView(teamRow2);
         
-        // Set up onClick listeners
-        close.setOnClickListener(this);
-        pkmn1.setOnClickListener(this);
-        pkmn2.setOnClickListener(this);
-        pkmn3.setOnClickListener(this);
-        pkmn4.setOnClickListener(this);
-        pkmn5.setOnClickListener(this);
-        pkmn6.setOnClickListener(this);
+        // Set up onTouch listeners
+        close.setOnTouchListener(newListener(7));
+        pkmn1.setOnTouchListener(newListener(1));
+        pkmn2.setOnTouchListener(newListener(2));
+        pkmn3.setOnTouchListener(newListener(3));
+        pkmn4.setOnTouchListener(newListener(4));
+        pkmn5.setOnTouchListener(newListener(5));
+        pkmn6.setOnTouchListener(newListener(6));
     }
 
     public boolean onTouch(View v, MotionEvent event){
@@ -1182,7 +1465,7 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
                             delta_y = event_x;
 
                             if(Math.atan2((y - event_y), (x - event_x))*(180/Math.PI) < ANGLE){ // Make sure delta motion has made less than ?° angle
-                                Animated.user_shift_x = -1*(int)(x - event_x); // Shift user sprite
+                                if(!act.frozen) Animated.user_shift_x = -1*(int)(x - event_x); // Shift user sprite
 
                                 killHold = true; // Kill determination of hold thread
                                 Thread move = new Thread(){ 
@@ -1206,7 +1489,7 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
                         } // else not moving right-to-left, NEVER back-tracked left-to-right
                     } // else treat as though it is still a held ACTION_DOWN event
                 } else Animated.user_shift_x = 0; // Reset shift because ACTION_MOVE lasted too long
-            } else if(event.getAction() == MotionEvent.ACTION_UP){
+            } else if(action == MotionEvent.ACTION_UP){
                 touchClear = true;
 
                 /* Classify the touchEvent */
@@ -1597,8 +1880,8 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         else return R.raw.cry151;
     }
     
-    protected static void playSoundEffect(int soundbyte){
-        sfx = MediaPlayer.create(context, soundbyte);
+    protected void playSoundEffect(int soundbyte){
+        sfx = MediaPlayer.create(this, soundbyte);
         sfx.start(); //Play sound
     }
     

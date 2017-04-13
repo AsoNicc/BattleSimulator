@@ -7,6 +7,9 @@ C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemo
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Battle$4.class \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Battle$5.class \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Battle$6.class \
+C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Battle$7.class \
+C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Battle$8.class \
+C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Battle$9.class \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Battle.class \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\BuildConfig.class \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Damage.class \
@@ -14,6 +17,9 @@ C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemo
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Motion$1.class \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Motion$10.class \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Motion$11.class \
+C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Motion$12.class \
+C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Motion$13.class \
+C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Motion$14.class \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Motion$2.class \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Motion$3.class \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Motion$4.class \
