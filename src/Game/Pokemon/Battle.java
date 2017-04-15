@@ -533,32 +533,26 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
             }
         } else if(v.getId() == PKMN1_ID){ 
             if(!u_actChosen){ 
-                playSoundEffect(BUTTONCLICK);
                 swap(0); 
             }
         } else if(v.getId() == PKMN2_ID){ 
             if(!u_actChosen){ 
-                playSoundEffect(BUTTONCLICK);
                 swap(1); 
             }
         } else if(v.getId() == PKMN3_ID){ 
             if(!u_actChosen){ 
-                playSoundEffect(BUTTONCLICK);
                 swap(2); 
             }
         } else if(v.getId() == PKMN4_ID){ 
             if(!u_actChosen){ 
-                playSoundEffect(BUTTONCLICK);
                 swap(3); 
             }
         } else if(v.getId() == PKMN5_ID){ 
             if(!u_actChosen){ 
-                playSoundEffect(BUTTONCLICK);
                 swap(4); 
             }
         } else if(v.getId() == PKMN6_ID){ 
             if(!u_actChosen){ 
-                playSoundEffect(BUTTONCLICK);
                 swap(5); 
             }
         } else if(v.getId() == CHEER_ID){
@@ -1936,6 +1930,6 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
             Animated.opponent_speedbar = 0;
             Animated.opponent_speedbar_percentage = 0;
             Animated.opponent_actReady = false;
-        } //else //text.setText("Same Pokemon");
+        } //else text.setText("Same Pokemon");
     }
 }
