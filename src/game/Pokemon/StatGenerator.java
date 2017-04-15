@@ -6,7 +6,6 @@
 package Game.Pokemon;
 
 import java.util.Random;
-
 /**
  * @author Nick
  */

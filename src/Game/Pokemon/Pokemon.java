@@ -11,7 +11,6 @@ import android.content.SharedPreferences;
 import java.util.Iterator;
 import java.util.Random;
 import java.util.Set;
-
 /**
  * @author Nick
  */

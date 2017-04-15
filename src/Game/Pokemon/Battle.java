@@ -32,7 +32,8 @@ import android.widget.LinearLayout;
 import android.widget.SpinnerAdapter;
 import android.widget.TextView;
 import static java.lang.Thread.sleep;
-import java.util.Random;
+import java.util.Random; 
+
 
 public class Battle extends Activity implements OnClickListener, OnTouchListener {
     protected static boolean u_actChosen = false, o_actChosen = false, u_unfocusedEnergy = true, o_unfocusedEnergy = true, buffPressed = false;

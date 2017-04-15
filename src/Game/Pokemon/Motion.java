@@ -20,7 +20,6 @@ import android.widget.Toast;
 import java.io.InputStream;
 import java.util.Iterator;
 import java.util.Set;
-
 /**
  * @author Nick
  width:73 height:70

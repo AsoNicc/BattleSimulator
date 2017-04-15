@@ -10,7 +10,6 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.widget.SlidingDrawer;
 
-
 public class WrappingSlidingDrawer extends SlidingDrawer {
     public WrappingSlidingDrawer(Context context, AttributeSet attrs, int defStyle){
         super(context, attrs, defStyle);

@@ -70,7 +70,6 @@ public class Animated extends View {
         super(context);
         initialize(context);
     }
-
     /* For the utilization of custom views, provide these following two case
      * constructors parameters 'Context, AttributeSet'. Also, give the 
      * constructor(s) public access. */
