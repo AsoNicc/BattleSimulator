@@ -2883,7 +2883,6 @@ C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\assets\sprites\clefairy
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\assets\sprites\clefairy\back\frame_35.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\assets\sprites\clefairy\back\frame_36.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\assets\sprites\clefairy\back\frame_37.png \
-C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\assets\sprites\clefairy\back\frame_38.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\assets\sprites\clefairy\back\frame_4.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\assets\sprites\clefairy\back\frame_5.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\assets\sprites\clefairy\back\frame_6.png \

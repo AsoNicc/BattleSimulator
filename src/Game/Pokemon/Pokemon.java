@@ -20,7 +20,8 @@ public final class Pokemon {
     protected Byte[] PQI = new Byte[4];
     protected Context context;
     protected Short dexNo;
-    protected String buff, name, nickname, nature, TYPE1, TYPE2;
+    protected String name, nickname, nature, TYPE1, TYPE2;
+    protected String[] buff = new String[3];
     protected String[][] moves = new String[4][8];
     protected byte approxLevel = 100, level;
     protected char gender;
@@ -53,7 +54,7 @@ public final class Pokemon {
     Pokemon(char tGender, byte tLevel, short tDexNo, short tHP, short tAtk, short tDef, 
             short tSpA, short tSpD, short tSpe, Byte[] tPQI, float tHeight, float tWeight, 
             String tName, String tNickname, String tNature, String tTYPE1, String tTYPE2, 
-            String[][] tMoveSet, int tExp, String tBuff){
+            String[][] tMoveSet, int tExp, String[] tBuff){
         
         dexNo = tDexNo;
         name = tName;
@@ -87,24 +88,7 @@ public final class Pokemon {
         
         /* Initialize variables */
         try {
-            Set<String>tempSet = details.getStringSet((dexNo == null)? String.valueOf(gen.nextInt(151) + 1) : String.valueOf(dexNo), null);
-            Iterator position = tempSet.iterator();
-            String[] info = new String[tempSet.size()];
-
-            String data, index;
-            int i;
-            /* Unscramble hashset data */
-            while(position.hasNext()){
-                index = "";
-                data = position.next().toString();
-                /* Builds index of array out of string form */            
-                for(i = 0; i < data.length(); i++){
-                    if(data.charAt(i) == '_') break;
-                    else index += data.charAt(i);
-                }
-                /* Load into the array */
-                info[Integer.parseInt(index)] = data.substring(i + 1);
-            }
+            String[] info = gatherDataByDexNo(details);
             /* Establish gender */
             if(info[1].equals("Nidoran♀") || info[1].equals("Nidoran♂")) gender = info[1].charAt(info[1].length() - 1);
             else {
@@ -137,12 +121,51 @@ public final class Pokemon {
             nature = stat.nature;
             TYPE1 = info[10];
             TYPE2 = info[11];
-            buff = null;
-
+            
+            /* Obtain Settings for the abilities of any u_pokemon */
+            details = context.getSharedPreferences("hidden", MODE_PRIVATE);
+            if(!details.getBoolean("setState", false)){
+                Settings load = new Settings(context);
+                load.setAbilities();
+                details = context.getSharedPreferences("hidden", MODE_PRIVATE);   
+            }
+            
+            info = gatherDataByDexNo(details);
+            int pos = gen.nextInt(info.length - 1) + 1/*offset*/;
+            pos = Math.max(pos - (3 - pos%3) + (pos + 1)%3, 1);
+            if(info.length > 3){
+                buff[0] = info[pos];
+                buff[1] = info[pos + 1];
+                buff[2] = info[pos + 2];
+            } //else buff not set yet for pkmn
+            
             loadMoves();
         } catch(Exception e){
-            Battle.text.setText("From Pokemon.initialize: Unknown key value. " + e.toString());
+            //Battle.text.setText("From Pokemon.initialize: Unknown key value. " + e.toString());
         }
+    }
+    
+    private String[] gatherDataByDexNo(SharedPreferences prefs){
+        Set<String>tempSet = prefs.getStringSet((dexNo == null)? String.valueOf(gen.nextInt(151) + 1) : String.valueOf(dexNo), null);
+        Iterator position = tempSet.iterator();
+        String[] array = new String[tempSet.size()];
+
+        String data, index;
+        int i;
+        /* Unscramble hashset data */
+        while(position.hasNext()){
+            index = "";
+            data = position.next().toString();
+            /* Builds index of array out of string form */            
+            for(i = 0; i < data.length(); i++){
+                if(data.charAt(i) == '_') break;
+                else index += data.charAt(i);
+            }
+            /* Load into the array */
+            array[Integer.parseInt(index)] = data.substring(i + 1);
+        }
+        
+        return array;
     }
     
     private void loadMoves(){
@@ -196,7 +219,7 @@ public final class Pokemon {
                                 else temp[Integer.parseInt(values.substring(0, 1))] = "";
                             }
                         } catch(Exception e) {
-                            Battle.text.setText("From Pokemon.loadMoves:Move1: " + e.toString());
+                            //Battle.text.setText("From Pokemon.loadMoves:Move1: " + e.toString());
                         } finally {
                             if(!((temp[1]).equals(moves[1][1]) || (temp[1]).equals(moves[2][1]) || (temp[1]).equals(moves[3][1]))){ //Then record of move already exist
                                 PQI[Integer.parseInt(temp[4]) - 1] = 0; //Nullify corresponding PQ
@@ -218,7 +241,7 @@ public final class Pokemon {
                         if(PQI[((Integer.parseInt(moves[0][4]) - 1) + 3)%4] != null)
                             if(PQI[((Integer.parseInt(moves[0][4]) - 1) + 3)%4] == 0) PQI[((Integer.parseInt(moves[0][4]) - 1) + 3)%4] = null;                        
                     } catch(Exception err){
-                        Battle.text.setText("From Pokemon.loadMoves:Move1: " + err.toString());
+                        //Battle.text.setText("From Pokemon.loadMoves:Move1: " + err.toString());
                     }
                 } else if(k%4 == 1){
                     try {
@@ -234,7 +257,7 @@ public final class Pokemon {
                                 else temp[Integer.parseInt(values.substring(0, 1))] = "";
                             }
                         } catch(Exception e) {
-                            Battle.text.setText("From Pokemon.loadMoves:Move2: " + e.toString());
+                            //Battle.text.setText("From Pokemon.loadMoves:Move2: " + e.toString());
                         } finally {
                             if(!((temp[1]).equals(moves[0][1]))){
                                 PQI[Integer.parseInt(temp[4]) - 1] = 1;
@@ -256,7 +279,7 @@ public final class Pokemon {
                         if(PQI[((Integer.parseInt(moves[1][4]) - 1) + 3)%4] != null)
                             if(PQI[((Integer.parseInt(moves[1][4]) - 1) + 3)%4] == 1) PQI[((Integer.parseInt(moves[1][4]) - 1) + 3)%4] = null;                        
                     } catch(Exception err){
-                        Battle.text.setText("From Pokemon.loadMoves:Move2: " + err.toString());
+                        //Battle.text.setText("From Pokemon.loadMoves:Move2: " + err.toString());
                     }
                 } else if(k%4 == 2){
                     try {
@@ -272,7 +295,7 @@ public final class Pokemon {
                                 else temp[Integer.parseInt(values.substring(0, 1))] = "";
                             }
                         } catch(Exception e) {
-                            Battle.text.setText("From Pokemon.loadMoves:Move3: " + e.toString());
+                            //Battle.text.setText("From Pokemon.loadMoves:Move3: " + e.toString());
                         } finally {                        
                             if(!((temp[1]).equals(moves[0][1]) || (temp[1]).equals(moves[1][1]))){
                                 PQI[Integer.parseInt(temp[4]) - 1] = 2;
@@ -294,7 +317,7 @@ public final class Pokemon {
                         if(PQI[((Integer.parseInt(moves[2][4]) - 1) + 3)%4] != null)
                             if(PQI[((Integer.parseInt(moves[2][4]) - 1) + 3)%4] == 2) PQI[((Integer.parseInt(moves[2][4]) - 1) + 3)%4] = null;                        
                     } catch(Exception err){
-                        Battle.text.setText("From Pokemon.loadMoves:Move3: " + err.toString());
+                        //Battle.text.setText("From Pokemon.loadMoves:Move3: " + err.toString());
                     }
                 } else if(k%4 == 3){
                     try {
@@ -310,7 +333,7 @@ public final class Pokemon {
                                 else temp[Integer.parseInt(values.substring(0, 1))] = "";
                             }
                         } catch(Exception e) {
-                            Battle.text.setText("From Pokemon.loadMoves:Move4: " + e.toString());
+                            //Battle.text.setText("From Pokemon.loadMoves:Move4: " + e.toString());
                         } finally {                        
                             if(!((temp[1]).equals(moves[0][1]) || (temp[1]).equals(moves[1][1]) || (temp[1]).equals(moves[2][1]))){
                                 PQI[Integer.parseInt(temp[4]) - 1] = 3;
@@ -332,12 +355,12 @@ public final class Pokemon {
                         if(PQI[((Integer.parseInt(moves[3][4]) - 1) + 3)%4] != null)
                             if(PQI[((Integer.parseInt(moves[3][4]) - 1) + 3)%4] == 3) PQI[((Integer.parseInt(moves[3][4]) - 1) + 3)%4] = null;                        
                     } catch(Exception err){
-                        Battle.text.setText("From Pokemon.loadMoves:Move4: " + err.toString());
+                        //Battle.text.setText("From Pokemon.loadMoves:Move4: " + err.toString());
                     }
                 }
             }
         } catch(Exception e){
-            Battle.text.setText("Unknown key value for moveSet: " + e.toString());
+            //Battle.text.setText("Unknown key value for moveSet: " + e.toString());
         } finally {
             
         }

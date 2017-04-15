@@ -1,4 +1,5 @@
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes.dex : \
+C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Abilities.class \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Animated$1.class \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Animated.class \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Battle$1.class \
@@ -9,7 +10,6 @@ C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemo
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Battle$6.class \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Battle$7.class \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Battle$8.class \
-C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Battle$9.class \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Battle.class \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\BuildConfig.class \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Damage.class \
@@ -19,7 +19,6 @@ C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemo
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Motion$11.class \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Motion$12.class \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Motion$13.class \
-C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Motion$14.class \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Motion$2.class \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Motion$3.class \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Motion$4.class \
@@ -38,6 +37,7 @@ C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemo
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\R$raw.class \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\R$string.class \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\R.class \
+C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Settings$Abilities.class \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Settings$BaseInfo.class \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Settings$LearnedMoves.class \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\bin\classes\Game\Pokemon\Settings$Moves.class \

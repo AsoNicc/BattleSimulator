@@ -35,7 +35,7 @@ import static java.lang.Thread.sleep;
 import java.util.Random;
 
 public class Battle extends Activity implements OnClickListener, OnTouchListener {
-    protected static boolean u_actChosen = false, o_actChosen = false, u_unfocusedEnergy = true, o_unfocusedEnergy = true;
+    protected static boolean u_actChosen = false, o_actChosen = false, u_unfocusedEnergy = true, o_unfocusedEnergy = true, buffPressed = false;
     protected static byte OPPONENT_ATK_STAGE = 1, OPPONENT_DEF_STAGE = 1, OPPONENT_SpA_STAGE = 1, 
             OPPONENT_SpD_STAGE = 1, OPPONENT_SPE_STAGE = 1, OPPONENT_ACC_STAGE = 1, 
             OPPONENT_EVADE_STAGE = 1, USER_ATK_STAGE = 1, USER_DEF_STAGE = 1, 
@@ -107,9 +107,9 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
             /* Used to clear EVERY SharedPreferences */
 //            if(true){
 //                Settings load = new Settings(this);
-//                load.setMoveSequence();
+//                load.setAbilities();
 //                load.clear();
-//                load.setMoveSequence();
+//                load.setAbilities();
 //            }
             
             surface = new Animated(this);
@@ -124,8 +124,8 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
                 Settings load = new Settings(this);
                 load.setOrient();
                 stat = getSharedPreferences("genOneBaseStatList", MODE_PRIVATE);
-                //text.setText("Stats have not been analyzed");    
-            } //else text.setText("Stats analyzed");
+                ////text.setText("Stats have not been analyzed");    
+            } //else //text.setText("Stats analyzed");
 
             Animated.AVG_SPEED = stat.getFloat("avg_speed", 0); //Defaults to 0 if not found
       
@@ -180,7 +180,7 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
 
             initialize();
         } catch(Exception e) {
-            text.setText(e.toString());
+            //text.setText(e.toString());
         }
     }
     
@@ -496,15 +496,16 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
             
             if(config.orientation == Configuration.ORIENTATION_LANDSCAPE) buildTeamLayoutLandscape(0);
             else buildTeamLayoutPortrait(0);    
-        } else if(v.getId() == R.id.bBuff){
-            playSoundEffect(BUTTONCLICK);
-            // NOTHING YET
-            text.setText("Buff applied!");
         } else if(v.getId() == R.id.bForfeit){
             playSoundEffect(BUTTONCLICK);
 //            finish();
-        } else if(v.getId() == X_ID){
+        } else if(v.getId() == X_ID || v.getId() == R.id.bBuff){
             playSoundEffect(BUTTONCLICK);
+            if(v.getId() == R.id.bBuff){
+                buffPressed = true;
+                if(u_pokemon.buff[1] != null) Abilities.get(u_pokemon.buff[1]);
+                //text.setText(u_pokemon.buff[0] + ", " + u_pokemon.buff[1] + ", " + u_pokemon.buff[2]);
+            }
             drawer.removeAllViews();
             config = getResources().getConfiguration();
             
@@ -644,7 +645,7 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         buff.setLayoutParams(WRAP_MATCH_WEIGHT_PARAMS);
         buff.setPadding(0, 0, 0, 0);
         buff.setText(R.string.buff);
-        buff.setTextColor(Color.argb(255, 0, 0, 0));
+        buff.setTextColor((buffPressed)? Color.argb(255, 255, 140, 0) : Color.argb(255, 0, 0, 0));
         buff.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
         movesRow.addView(buff);
         
@@ -712,7 +713,7 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
         buff.setLayoutParams(WRAP_MATCH_WEIGHT_PARAMS);
         buff.setPadding(0, 0, 0, 0);
         buff.setText(R.string.buff);
-        buff.setTextColor(Color.argb(255, 0, 0, 0));
+        buff.setTextColor((buffPressed)? Color.argb(255, 255, 140, 0) : Color.argb(255, 0, 0, 0));
         buff.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
         movesAndBuff.addView(buff);
         
@@ -1497,25 +1498,25 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
                     if(!held){
                         if(u_pokemon.PQI[0] != null){
                             if(!u_actChosen && Animated.user_actReady) action(u_pokemon.PQI[0]);
-                        } else text.setText("Low-Mid Power (Physical | Special) Attack");
+                        } else ;//text.setText("Low-Mid Power (Physical | Special) Attack");
                     } else {
                         if(u_pokemon.PQI[1] != null){
                             if(!u_actChosen && Animated.user_actReady) action(u_pokemon.PQI[1]);
-                        } else text.setText("Mid-High Power (Physical | Special) Attack");
+                        } else ;//text.setText("Mid-High Power (Physical | Special) Attack");
                     }
                 } else if(touched_user){ // Determine what type of defense or Dodge
                     if(held){
                         if(u_pokemon.PQI[3] != null){
                             if(!u_actChosen && Animated.user_actReady) action(u_pokemon.PQI[3]);
-                        } else text.setText("Hard defensive/healing move");
+                        } else ;//text.setText("Hard defensive/healing move");
                     } else if(killHold){
-                        text.setText("Dodge attempt");
+                        //text.setText("Dodge attempt");
                     } else if(!error){
                         if(u_pokemon.PQI[2] != null){
                             if(!u_actChosen && Animated.user_actReady) action(u_pokemon.PQI[2]);
-                        } else text.setText("Soft defensive/tactical move");
-                    } else text.setText("Nothing");
-                } else text.setText("Nothing");
+                        } else ;//text.setText("Soft defensive/tactical move");
+                    } else ;//text.setText("Nothing");
+                } else ;//text.setText("Nothing");
 
                 // Reset ALL variables
                 touched_opponent = false;
@@ -1886,7 +1887,7 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
     }
     
     private void action(int move){ 
-        text.setText("Button" + (move + 1) + ": " + u_pokemon.moves[move][0] + ", " + u_pokemon.moves[move][1] + ", " + u_pokemon.moves[move][2] + ", " + u_pokemon.moves[move][3] + ", " + u_pokemon.moves[move][4] + ", " + u_pokemon.moves[move][5] + ", " + u_pokemon.moves[move][6] + ", " + u_pokemon.moves[move][7]);
+        //text.setText("Button" + (move + 1) + ": " + u_pokemon.moves[move][0] + ", " + u_pokemon.moves[move][1] + ", " + u_pokemon.moves[move][2] + ", " + u_pokemon.moves[move][3] + ", " + u_pokemon.moves[move][4] + ", " + u_pokemon.moves[move][5] + ", " + u_pokemon.moves[move][6] + ", " + u_pokemon.moves[move][7]);
         u_actChosen = true;
         index = move;
         
@@ -1935,6 +1936,6 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
             Animated.opponent_speedbar = 0;
             Animated.opponent_speedbar_percentage = 0;
             Animated.opponent_actReady = false;
-        } //else text.setText("Same Pokemon");
+        } //else //text.setText("Same Pokemon");
     }
 }

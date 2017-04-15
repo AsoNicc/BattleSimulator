@@ -2,7 +2,7 @@
 <resources>
     <string name="app_name">Battle Activity</string>
     <string name="buff">Buff</string>
-    <string name="error_code">Error 404</string>
+    <string name="error_code"></string>
     <string name="forfeit">Forfeit</string>
     <string name="handle">Handle</string>
     <string name="move1">Move 1</string>

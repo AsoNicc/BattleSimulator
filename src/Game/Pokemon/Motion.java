@@ -116,7 +116,7 @@ public class Motion {
                         try {
                             sequence(info[INDEX++]); //Call next part of sequence                   
                         } catch(NotFoundException e) {
-                            Battle.text.setText(e.toString());
+                            //Battle.text.setText(e.toString());
                         } catch(ArrayIndexOutOfBoundsException e) { //Reached end of sequence
                             INDEX = 1; //Reset INDEXER
                             refresh(); //Vars before leaving
@@ -139,12 +139,12 @@ public class Motion {
 //                }
 //            });
         } catch(Exception e) {
-            Battle.text.setText(e.toString());
+            //Battle.text.setText(e.toString());
         }
     }
     
 //    public void handleUncaughtException(Thread thread, Throwable e){
-//        Battle.text.setText(e.toString());
+//        //Battle.text.setText(e.toString());
 //    }
     
     private void isFrozen(){
@@ -361,7 +361,7 @@ public class Motion {
                         //opponent_shift_y, (+n, 0]
                         if(!y_exit) Animated.opponent_shift_y += (-1*incY);
 
-                        Battle.text.setText("Opponent_shift_x: " + Animated.opponent_shift_x + " | incX: " + incX + " | Opponent_shift_y: " + Animated.opponent_shift_y + " | incY: " + incY);
+                        //Battle.text.setText("Opponent_shift_x: " + Animated.opponent_shift_x + " | incX: " + incX + " | Opponent_shift_y: " + Animated.opponent_shift_y + " | incY: " + incY);
                         if(x_exit && y_exit){ //then, it is acceptable to leave thread
                             Animated.opponent_shift_x = 0; //Ensures proper reset
                             Animated.opponent_shift_y = 0; //Ensures proper reset
@@ -385,7 +385,7 @@ public class Motion {
 
                         if(!y_exit) Animated.user_shift_y -= (-1*incY);
 
-                        Battle.text.setText("User_shift_x: " + Animated.user_shift_x + " | incX: " + incX + " | User_shift_y: " + Animated.user_shift_y + " | incY: " + incY);
+                        //Battle.text.setText("User_shift_x: " + Animated.user_shift_x + " | incX: " + incX + " | User_shift_y: " + Animated.user_shift_y + " | incY: " + incY);
                         if(x_exit && y_exit){ //then, it is acceptable to leave thread
                             Animated.user_shift_x = 0; //Ensures proper reset
                             Animated.user_shift_y = 0; //Ensures proper reset
@@ -435,7 +435,7 @@ public class Motion {
                      * movements while this thread was running. Start another isFrozen check */
                     if(frozen) isFrozen(); 
                 }
-                Battle.text.setText("Count: " + cnt + " | incX: " + incX + " | Sound count: " + soundByteCnt);
+                //Battle.text.setText("Count: " + cnt + " | incX: " + incX + " | Sound count: " + soundByteCnt);
                 globalHandler.postDelayed(this, 0);
             }
         };
@@ -471,11 +471,11 @@ public class Motion {
                         if(attacker == 1){
                             Animated.opponent_shift_x = (int)Round((a*Math.cos(Math.PI + theta) + X) - (Battle.SCREEN_WIDTH*5/6.0 - Animated.opponent.getWidth()/2.0)*Animated.OPPONENT_PLACEMENT_X, 0);
                             Animated.opponent_shift_y = (int)Round((b*Math.sin(-theta) + Y) - (Battle.SCREEN_HEIGHT/3.0 + Animated.opponent.getHeight()/2.0)*Animated.OPPONENT_PLACEMENT_Y, 0);
-                            Battle.text.setText("Opponent_BL-X: " + Animated.OPPONENT_FRAME_BOTTOMLEFT_X + " | Shift_x: " + Animated.opponent_shift_x + " | Opponent_BL-Y: " + Animated.OPPONENT_FRAME_BOTTOMLEFT_Y + " | Shift_y: " + Animated.opponent_shift_y);
+                            //Battle.text.setText("Opponent_BL-X: " + Animated.OPPONENT_FRAME_BOTTOMLEFT_X + " | Shift_x: " + Animated.opponent_shift_x + " | Opponent_BL-Y: " + Animated.OPPONENT_FRAME_BOTTOMLEFT_Y + " | Shift_y: " + Animated.opponent_shift_y);
                         } else {
                             Animated.user_shift_x = (int)Round((a*Math.cos(theta) + X) - (Battle.SCREEN_WIDTH/6.0 - Animated.user.getWidth()/2.0)*Animated.USER_PLACEMENT_X, 0);
                             Animated.user_shift_y = (int)Round((b*Math.sin(-theta) + Y) - (Battle.SCREEN_HEIGHT*2/3.0 + Animated.user.getHeight()/2.0)*Animated.USER_PLACEMENT_Y, 0);
-                            Battle.text.setText("User_BL-X: " + Animated.USER_FRAME_BOTTOMLEFT_X + " | Shift_x: " + Animated.user_shift_x + " | User_BL-Y: " + Animated.USER_FRAME_BOTTOMLEFT_Y + " | Shift_y: " + Animated.user_shift_y);
+                            //Battle.text.setText("User_BL-X: " + Animated.USER_FRAME_BOTTOMLEFT_X + " | Shift_x: " + Animated.user_shift_x + " | User_BL-Y: " + Animated.USER_FRAME_BOTTOMLEFT_Y + " | Shift_y: " + Animated.user_shift_y);
                         }
 
                         theta += STEP*ARC_RATE; /* Add STEP to theta */
@@ -535,7 +535,7 @@ public class Motion {
             } while(((incX > 45*INC_RATE || incY > 74*INC_RATE) && Battle.SCREEN_HEIGHT > Battle.SCREEN_WIDTH) ||
                     ((incX > 74*INC_RATE || incY > 45*INC_RATE) && Battle.SCREEN_WIDTH > Battle.SCREEN_HEIGHT));
         } catch(ArithmeticException e) {
-            Battle.text.setText(e.toString() + " w/ DeltaX: " + deltaX + " | DeltaY: " + deltaY);
+            //Battle.text.setText(e.toString() + " w/ DeltaX: " + deltaX + " | DeltaY: " + deltaY);
         }
     }
     
@@ -549,7 +549,7 @@ public class Motion {
                     (int)Round(Opponent_Space_Options.outHeight*(Animated.scaleFactor + /*1),0),//*/((attacker == 1)? Animated.u_depth : Animated.o_depth)), 0), 
                     true);
         } catch(Exception e) {
-            Battle.text.setText(e.toString());
+            //Battle.text.setText(e.toString());
         }           
     }
     
@@ -618,7 +618,7 @@ public class Motion {
                     : ((Animated.opponent_current_HP - amount)/Animated.opponent_pokemon_HP)*100/*percentage*/;
             
             public void run(){
-//                Battle.text.setText("(" + limit + " < " + (((Animated.opponent_pokemon_HP*(1 - Animated.opponent_damage_percentage))/Animated.opponent_pokemon_HP)*100) + 
+//                //Battle.text.setText("(" + limit + " < " + (((Animated.opponent_pokemon_HP*(1 - Animated.opponent_damage_percentage))/Animated.opponent_pokemon_HP)*100) + 
 //                        ") | Damage: " + damageAmount + " | OpponentHP: " + Animated.opponent_pokemon_HP +
 //                        " | Opponent_type: " + Battle.o_pokemon.TYPE1 + "/" + Battle.o_pokemon.TYPE2 + 
 //                        " | User_type: " + Battle.u_pokemon.TYPE1 + "/" + Battle.u_pokemon.TYPE2 + 
