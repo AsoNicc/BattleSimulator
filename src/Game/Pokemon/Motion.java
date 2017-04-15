@@ -34,7 +34,7 @@ public class Motion {
     private boolean MOVE_THREAD_RUNNING = false, BACKPEDAL_THREAD_RUNNING = false,
             SHIFT_LorR_THREAD_RUNNING = false, ELLIPSE_LorR_THREAD_RUNNING = false,
             BLINK_THREAD_RUNNING = false, TERMINATED_SEQUENCE = false, DAMAGE_THREAD_RUNNING = false,
-            DELAY_THREAD_RUNNING = false, COLLISION_THREAD_RUNNING = false,
+            DELAY_THREAD_RUNNING = false, COLLISION_THREAD_RUNNING = false, skip = false,
             DECODER_THREAD_RUNNING = false, isFROZEN_THREAD_RUNNING = false, Crit_Damage = false;
     private final byte attacker;
     private double BOTTOMLEFT_X, BOTTOMLEFT_Y, BOTTOMRIGHT_X, BOTTOMRIGHT_Y, 
@@ -259,8 +259,6 @@ public class Motion {
         globalHandler = new Handler();
         
         thread = new Runnable(){
-            Double cond1, cond2;
-            
             @Override
             public void run(){
                 if(COLLISION_THREAD_RUNNING && !DELAY_THREAD_RUNNING && !isFROZEN_THREAD_RUNNING){
@@ -268,20 +266,20 @@ public class Motion {
                     otherwise... it is projectile-to-sprite collision which is harder to determine */){
                         if(attacker == 1){
                             TERMINATED_SEQUENCE = (
-                                    (cond1 = Math.abs(Round(Math.abs((Animated.OPPONENT_FRAME_BOTTOMLEFT_X + Animated.opponent.getWidth()/2.0) /
+                                    (Math.abs(Round(Math.abs((Animated.OPPONENT_FRAME_BOTTOMLEFT_X + Animated.opponent.getWidth()/2.0) /
                                     (Animated.USER_FRAME_BOTTOMLEFT_X + Animated.user.getWidth()/2.0)), 2) - 1)) > 0.1
                                     ||
-                                    (cond2 = Math.abs(Round(Math.abs((Animated.USER_FRAME_BOTTOMLEFT_Y - Animated.OPPONENT_FRAME_BOTTOMLEFT_Y) /
+                                    (Math.abs(Round(Math.abs((Animated.USER_FRAME_BOTTOMLEFT_Y - Animated.OPPONENT_FRAME_BOTTOMLEFT_Y) /
                                     Animated.USER_FRAME_BOTTOMLEFT_Y), 2))) > 0.1
                             );
 
                             if(!TERMINATED_SEQUENCE) Animated.OPPONENT_FRAME_BOTTOMLEFT_Y = Animated.USER_FRAME_BOTTOMLEFT_Y;
                         } else {
                             TERMINATED_SEQUENCE = (
-                                    (cond1 = Math.abs(Round(Math.abs((Animated.USER_FRAME_BOTTOMLEFT_X + Animated.user.getWidth()/2.0) /
+                                    (Math.abs(Round(Math.abs((Animated.USER_FRAME_BOTTOMLEFT_X + Animated.user.getWidth()/2.0) /
                                     (Animated.OPPONENT_FRAME_BOTTOMLEFT_X + Animated.opponent.getWidth()/2.0)), 2) - 1)) > 0.1
                                     ||
-                                    (cond2 = Math.abs(Round(Math.abs((Animated.USER_FRAME_BOTTOMLEFT_Y - Animated.OPPONENT_FRAME_BOTTOMLEFT_Y) /
+                                    (Math.abs(Round(Math.abs((Animated.USER_FRAME_BOTTOMLEFT_Y - Animated.OPPONENT_FRAME_BOTTOMLEFT_Y) /
                                     Animated.USER_FRAME_BOTTOMLEFT_Y), 2))) > 0.1
                             );
 
@@ -289,14 +287,15 @@ public class Motion {
                         }
                     }
 
-                    if(!TERMINATED_SEQUENCE){ //Contender wins collision
+                    if(!frozen && !(Crit_Damage || Damage_received_effect > 1) && Damage_received_effect > 0 && !skip){ //Damage received is not super effective, continue command
+                        skip = true;
+                        INDEX--; //Decrement sequence INDEX to execute last motion again
+                        isFrozen(); //Start thread to see if contender is frozen
+                    } else if(!TERMINATED_SEQUENCE && !(Crit_Damage || Damage_received_effect > 1)){ //Contender wins collision
                         if(!frozen){ //Cannot execute instructions below if contender is frozen
                             pauser = attacker;
                             opponentInst.frozen = true;
                         }
-                    } else if(!frozen && !Crit_Damage && Damage_received_effect <= 1 && Damage_received_effect > 0){ //Damage received is not super effective, continue command
-                        INDEX--; //Decrement sequence INDEX to execute last motion again
-                        isFrozen(); //Start thread to see if contender is frozen
                     } else { //Contender missed attack
                         if(!frozen){ //Cannot execute instructions below if contender is frozen
                             int x, y;
@@ -305,11 +304,15 @@ public class Motion {
                             if(attacker == 2 || Crit_Damage || Damage_received_effect > 1){
                                 x = (int)Round((Animated.OPPONENT_FRAME_TOPLEFT_X + Animated.OPPONENT_FRAME_TOPRIGHT_X)/2 - Battle.SCREEN_WIDTH/2f, 0);
                                 y = (int)Round((Animated.OPPONENT_FRAME_TOPLEFT_Y + Animated.OPPONENT_FRAME_BOTTOMLEFT_Y)/2 - Battle.SCREEN_HEIGHT/2f + Animated.opponent.getHeight()/2f, 0);
+                                
                                 if(!Crit_Damage && Damage_received_effect <= 1) message = "Missed!";
+                                else TERMINATED_SEQUENCE = true;
                             } else {
                                 x = (int)Round((Animated.USER_FRAME_TOPLEFT_X + Animated.USER_FRAME_TOPRIGHT_X)/2 - Battle.SCREEN_WIDTH/2f, 0);
                                 y = (int)Round((Animated.USER_FRAME_TOPLEFT_Y + Animated.USER_FRAME_BOTTOMLEFT_Y)/2 - Battle.SCREEN_HEIGHT/2f + Animated.user.getHeight()/2f, 0);
+                                
                                 if(!Crit_Damage && Damage_received_effect <= 1) message = "Dodged!";
+                                else TERMINATED_SEQUENCE = true;
                             }             
 
                             Toast toast = Toast.makeText(context, message, Toast.LENGTH_SHORT);
@@ -792,6 +795,7 @@ public class Motion {
                     Crit_Damage = false;
                     opponentInst.frozen = false;
                     pauser = 0;
+                    skip = false;
                     
                     if(attacker == 1){
                         /* Reset exterior class variables */

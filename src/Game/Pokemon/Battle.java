@@ -503,7 +503,7 @@ public class Battle extends Activity implements OnClickListener, OnTouchListener
             playSoundEffect(BUTTONCLICK);
             if(v.getId() == R.id.bBuff){
                 buffPressed = true;
-                if(u_pokemon.buff[1] != null) Abilities.get(u_pokemon.buff[1]);
+                if(u_pokemon.buff[1] != null) Abilities.get(u_pokemon.buff[1], 2);
                 //text.setText(u_pokemon.buff[0] + ", " + u_pokemon.buff[1] + ", " + u_pokemon.buff[2]);
             }
             drawer.removeAllViews();
