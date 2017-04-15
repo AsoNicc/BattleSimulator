@@ -2858,6 +2858,7 @@ C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\assets\sprites\clefairy
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\assets\sprites\clefairy\back\frame_12.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\assets\sprites\clefairy\back\frame_13.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\assets\sprites\clefairy\back\frame_14.png \
+C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\assets\sprites\clefairy\back\frame_14n.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\assets\sprites\clefairy\back\frame_15.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\assets\sprites\clefairy\back\frame_16.png \
 C:\Users\Nick\Documents\NetBeansProjects\BattleSimulator\assets\sprites\clefairy\back\frame_17.png \

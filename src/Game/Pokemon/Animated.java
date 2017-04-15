@@ -132,7 +132,6 @@ public class Animated extends View {
     @Override
     protected void onDraw(Canvas canvas){
         super.onDraw(canvas);
-//        layout.draw(canvas);
         //Evaluate opponent hitbox
         OPPONENT_FRAME_BOTTOMLEFT_X = (Battle.SCREEN_WIDTH*5/6.0 - opponent.getWidth()/2.0)*OPPONENT_PLACEMENT_X + opponent_shift_x;
         OPPONENT_FRAME_BOTTOMLEFT_Y = (Battle.SCREEN_HEIGHT/3.0 + opponent.getHeight()/2.0)*OPPONENT_PLACEMENT_Y + opponent_shift_y;
