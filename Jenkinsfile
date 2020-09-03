@@ -9,7 +9,11 @@ pipeline {
       }
       stage('Docker Build') {
          steps {
-            echo "echo 'hi'"
+            bat(script: """
+            	@echo off
+            	for %%i in (.) do set a=%%~nxi
+            	echo %a%
+            """)
          }
       }
    }
