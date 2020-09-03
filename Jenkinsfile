@@ -9,7 +9,7 @@ pipeline {
       }
       stage('Docker Build') {
          steps {
-            pwsh(script: '(dir).Parent.name[0]')
+            pwsh(script: '$(dir).Parent.name[0]')
          }
       }
    }
