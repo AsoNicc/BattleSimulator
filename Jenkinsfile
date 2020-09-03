@@ -9,9 +9,7 @@ pipeline {
       }
       stage('Docker Build') {
          steps {
-         	pwsh(script: """
-               cd src/Game/Pokemon/
-            """)
+            echo "cd src/Game/Pokemon/"
          }
       }
    }
