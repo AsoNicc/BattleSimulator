@@ -9,7 +9,7 @@ pipeline {
       }
       stage('Docker Build') {
          steps {
-            echo "cd src/Game/Pokemon/"
+            echo "echo 'hi'"
          }
       }
    }
