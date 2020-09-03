@@ -10,7 +10,7 @@ pipeline {
       stage('Docker Build') {
          steps {
             bat(script: """
-            	echo dir
+            	dir
             """)
          }
       }
