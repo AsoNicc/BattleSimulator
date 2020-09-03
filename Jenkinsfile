@@ -9,7 +9,7 @@ pipeline {
       }
       stage('Docker Build') {
          steps {
-            echo "$dir"
+            pwsh(script: '(dir).Parent.name[0]')
          }
       }
    }
